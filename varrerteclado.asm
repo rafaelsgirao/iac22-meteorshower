@@ -24,7 +24,7 @@ MASCARA    EQU 0FH     ; para isolar os 4 bits de menor peso, ao ler as colunas 
 ; * Código
 ; **********************************************************************
 PLACE      0
-inicio:		
+inicio:
 ; inicializações
     MOV  R2, TEC_LIN   ; endereço do periférico das linhas
     MOV  R3, TEC_COL   ; endereço do periférico das colunas
@@ -33,27 +33,36 @@ inicio:
 
 ; corpo principal do programa
 ciclo:
-    MOV  R1, 0 
+    MOV  R1, 0
     MOVB [R4], R1      ; escreve linha e coluna a zero nos displays
+    MOV  R1, LINHA     ; testar a linha 4
+	JMP espera_tecla   ;
+
+muda_linha:
+	SHR  R1, 1         ; mudar a linha que estamos a testar (linha nº 4->3->2->1->4)
+	MOV  R11, 0        ; Inicializar registo auxiliar
+    CMP  R11, R1       ; Testar se a linha atual é 0 (inválida)
+	JZ ciclo           ; Recomeçar o ciclo
 
 espera_tecla:          ; neste ciclo espera-se até uma tecla ser premida
-    MOV  R1, LINHA     ; testar a linha 4 
     MOVB [R2], R1      ; escrever no periférico de saída (linhas)
     MOVB R0, [R3]      ; ler do periférico de entrada (colunas)
     AND  R0, R5        ; elimina bits para além dos bits 0-3
     CMP  R0, 0         ; há tecla premida?
-    JZ   espera_tecla  ; se nenhuma tecla premida, repete
+    JZ   muda_linha    ; se nenhuma tecla premida, repete na próxima linha
                        ; vai mostrar a linha e a coluna da tecla
+
+	MOV  R11, R1       ; Salvaguardar valor da linha FIXME: isto deve ficar na pilha quando for o projeto
     SHL  R1, 4         ; coloca linha no nibble high
     OR   R1, R0        ; junta coluna (nibble low)
     MOVB [R4], R1      ; escreve linha e coluna nos displays
-    
+
 ha_tecla:              ; neste ciclo espera-se até NENHUMA tecla estar premida
-    MOV  R1, LINHA     ; testar a linha 4  (R1 tinha sido alterado)
+    ; MOV  R1, LINHA     ; testar a linha 4  (R1 tinha sido alterado)
+	MOV  R1, R11       ; 'Resgatar' valor da linha (R1 tinha sido alterado)
     MOVB [R2], R1      ; escrever no periférico de saída (linhas)
     MOVB R0, [R3]      ; ler do periférico de entrada (colunas)
     AND  R0, R5        ; elimina bits para além dos bits 0-3
     CMP  R0, 0         ; há tecla premida?
     JNZ  ha_tecla      ; se ainda houver uma tecla premida, espera até não haver
     JMP  ciclo         ; repete ciclo
-
