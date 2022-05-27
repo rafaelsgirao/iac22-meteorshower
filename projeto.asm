@@ -24,7 +24,7 @@ APAGA_ECRÃ	 		EQU 6002H      ; endereço do comando para apagar todos os pixels
 SELECIONA_CENARIO_FUNDO  EQU 6042H      ; endereço do comando para selecionar uma imagem de fundo
 TOCA_SOM				EQU 605AH      ; endereço do comando para tocar um som
 
-LINHA        	EQU  32        ; linha do boneco (a meio do ecrã))
+LINHA        	EQU  31        ; linha do boneco (a meio do ecrã))
 COLUNA			EQU  30        ; coluna do boneco (a meio do ecrã)
 
 MIN_COLUNA		EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
