@@ -1,7 +1,7 @@
 Laranja nave: bf8f00
 Azul: 305496
-Meteoro bom (fora): 00ff00
-Meteoro bom (dentro): 92d050
+Meteoro bom (fora): 00ff00 (verde)
+Meteoro bom (dentro): 92d050 (verde)
 Rosa (explosão): f8cbad
 Meteoro mau: ff0000
 Cinzento (meteoro de longe): 757171

@@ -29,14 +29,14 @@ MIN_COLUNA		EQU  0		; número da coluna mais à esquerda que o objeto pode ocupa
 MAX_COLUNA		EQU  63        ; número da coluna mais à direita que o objeto pode ocupar
 ATRASO			EQU	0400H		; atraso para limitar a velocidade de movimento do boneco
 
-LARGURA		EQU	5			; largura do boneco
-CASTANHO		EQU	0FF00H		
-AZUL			EQU	0FF00H
-ROSA_EXP		EQU	0FF00H  ; Cor rosa da explosão dos meteoros
-VERDE_FORA		EQU	0FF00H
-VERDE_DENTRO	EQU	0FF00H
-VERMELHO		EQU	0FF00H
-CINZENTO		EQU	0FF00H
+LARGURA			EQU	05H		; largura do boneco
+CASTANHO		EQU	fbf8f00H		
+AZUL			EQU	0F00FH	
+ROSA_EXP		EQU	ff8cbadH  ; Cor rosa da explosão dos meteoros
+VERDE_FORA		EQU	0F0F0H		; Meteoros bons
+VERDE_DENTRO	EQU	f92d050H	; Meteoros bons
+VERMELHO		EQU	0FF00H	; Meteoros maus
+CINZENTO		EQU	f757171H	; Cor neutra - Meteoros de longe
 
 ; *********************************************************************************
 ; * Dados 
