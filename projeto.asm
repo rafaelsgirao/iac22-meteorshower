@@ -1,9 +1,8 @@
 ; *********************************************************************************
 ; * IST-UL
-; * Modulo:    lab5-move-boneco-teclado-toque.asm
+; * Modulo:    lab5-move-boneco-teclado.asm
 ; * Descrição: Este programa ilustra o movimento de um boneco do ecrã, sob controlo
-; *			do teclado, em que o boneco só se movimenta um pixel por cada
-; *			tecla carregada (produzindo também um efeito sonoro).
+; *			do teclado.
 ; *********************************************************************************
 
 ; *********************************************************************************
@@ -14,7 +13,7 @@ TEC_COL				EQU 0E000H	; endereço das colunas do teclado (periférico PIN)
 LINHA_TECLADO			EQU 1		; linha a testar (1ª linha, 1000b)
 MASCARA				EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 TECLA_ESQUERDA			EQU 1		; tecla na primeira coluna do teclado (tecla 0)
-TECLA_DIREITA			EQU 4		; tecla na terceira coluna do teclado (tecla 2)
+TECLA_DIREITA			EQU 4		; tecla na segunda coluna do teclado (tecla 2)
 
 DEFINE_LINHA    		EQU 600AH      ; endereço do comando para definir a linha
 DEFINE_COLUNA   		EQU 600CH      ; endereço do comando para definir a coluna
@@ -22,14 +21,13 @@ DEFINE_PIXEL    		EQU 6012H      ; endereço do comando para escrever um pixel
 APAGA_AVISO     		EQU 6040H      ; endereço do comando para apagar o aviso de nenhum cenário selecionado
 APAGA_ECRÃ	 		EQU 6002H      ; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO  EQU 6042H      ; endereço do comando para selecionar uma imagem de fundo
-TOCA_SOM				EQU 605AH      ; endereço do comando para tocar um som
 
-LINHA        	EQU  31        ; linha do boneco (a meio do ecrã))
+LINHA        		EQU  31        ; linha do boneco (a meio do ecrã))
 COLUNA			EQU  30        ; coluna do boneco (a meio do ecrã)
 
 MIN_COLUNA		EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
 MAX_COLUNA		EQU  63        ; número da coluna mais à direita que o objeto pode ocupar
-ATRASO			EQU	400H		; atraso para limitar a velocidade de movimento do boneco
+ATRASO			EQU	0400H		; atraso para limitar a velocidade de movimento do boneco
 
 LARGURA		EQU	5			; largura do boneco
 COR_PIXEL		EQU	0FF00H		; cor do pixel: vermelho em ARGB (opaco e vermelho no máximo, verde e azul a 0)
@@ -72,30 +70,22 @@ posicao_boneco:
 mostra_boneco:
 	CALL	desenha_boneco		; desenha o boneco a partir da tabela
 
-espera_nao_tecla:			; neste ciclo espera-se até NÃO haver nenhuma tecla premida
-	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
-	CALL	teclado			; leitura às teclas
-	CMP	R0, 0
-	JNZ	espera_nao_tecla	; espera, enquanto houver tecla uma tecla carregada
-
 espera_tecla:				; neste ciclo espera-se até uma tecla ser premida
+	MOV R11, ATRASO
 	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, 0
 	JZ	espera_tecla		; espera, enquanto não houver tecla
-	
-	MOV	R9, 0			; som com número 0
-	MOV [TOCA_SOM], R9		; comando para tocar o som
-	
 	CMP	R0, TECLA_ESQUERDA
 	JNZ	testa_direita
 	MOV	R7, -1			; vai deslocar para a esquerda
+	CALL atraso
 	JMP	ve_limites
 testa_direita:
 	CMP	R0, TECLA_DIREITA
 	JNZ	espera_tecla		; tecla que não interessa
-	MOV	R7, +1			; vai deslocar para a direita
-	
+	MOV	R7, +1	; vai deslocar para a direita
+	CALL atraso
 ve_limites:
 	MOV	R6, [R4]			; obtém a largura do boneco
 	CALL	testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
@@ -250,7 +240,5 @@ teclado:
 	POP	R3
 	POP	R2
 	RET
-
-
 
 
