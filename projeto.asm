@@ -30,7 +30,13 @@ MAX_COLUNA		EQU  63        ; número da coluna mais à direita que o objeto pode
 ATRASO			EQU	0400H		; atraso para limitar a velocidade de movimento do boneco
 
 LARGURA		EQU	5			; largura do boneco
-COR_PIXEL		EQU	0FF00H		; cor do pixel: vermelho em ARGB (opaco e vermelho no máximo, verde e azul a 0)
+CASTANHO		EQU	0FF00H		
+AZUL			EQU	0FF00H
+ROSA_EXP		EQU	0FF00H  ; Cor rosa da explosão dos meteoros
+VERDE_FORA		EQU	0FF00H
+VERDE_DENTRO	EQU	0FF00H
+VERMELHO		EQU	0FF00H
+CINZENTO		EQU	0FF00H
 
 ; *********************************************************************************
 ; * Dados 
