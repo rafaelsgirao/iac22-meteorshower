@@ -45,7 +45,10 @@ SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
 							
 DEF_BONECO:					; tabela que define o boneco (cor, largura, pixels)
 	WORD		LARGURA
-	WORD		COR_PIXEL, 0, COR_PIXEL, 0, COR_PIXEL		; # # #   as cores podem ser diferentes
+	WORD		0, 0, CASTANHO, 0, 0
+	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
+	WORD		CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
+	WORD		0, CASTANHO, 0, CASTANHO, 0	
      
 
 ; *********************************************************************************
