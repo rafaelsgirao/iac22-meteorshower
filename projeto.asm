@@ -1,8 +1,11 @@
 ; *********************************************************************************
 ; * IST-UL
-; * Modulo:    lab5-move-boneco-teclado.asm
-; * Descrição: Este programa ilustra o movimento de um boneco do ecrã, sob controlo
-; *			do teclado.
+; * Projeto de Introdução à Arquitetura de Computadores 2021/2022
+; * Chuva de Meteoros
+; *
+; * ist1103860 Henrique Caroço
+; * ist1103883 Luís Calado
+; * ist199309  Rafael Girão
 ; *********************************************************************************
 
 ; *********************************************************************************
