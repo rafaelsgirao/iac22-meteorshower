@@ -58,7 +58,7 @@ SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
 DEF_ROVER:			    ; tabela que define o rover.
 	; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
 	; A linha e coluna são alteradas quando o Rover é movimentado
-	WORD        LINHA_INICIAL_ROVER  
+	WORD        LINHA_INICIAL_ROVER
 	WORD        COLUNA_INICIAL_ROVER
 	WORD		LARGURA
 	WORD        ALTURA
@@ -142,10 +142,10 @@ coluna_seguinte:
 ;                R2 - Linha de referência do boneco
 ;                R3 - Coluna de referência do boneco
 ;                R4 - Largura do boneco
-;                R5 - Altura do boneco 
+;                R5 - Altura do boneco
 ;                R6 - Cor do pixel a ser desenhado
 ;
-; A posição do boneco e dimensões do boneco são lidas a partir da tabela.
+; A posição e dimensões do boneco são lidas a partir da tabela.
 ;
 ; **********************************************************************
 desenha_boneco:
@@ -155,6 +155,8 @@ desenha_boneco:
 	PUSH	R4
 	PUSH	R5
 	PUSH    R6
+	PUSH    R11
+	MOV R11, R1             ; Guardar endereço inicial da tabela TODO: ver se isto é válido
 	MOV R2, [R1]            ; Obtém a linha do boneco
 
 	ADD R1, 2               ; Endereço da coluna
@@ -164,37 +166,34 @@ desenha_boneco:
 	MOV R4, [R1]            ; Obtém a largura do boneco
 
 	ADD R1, 2               ; Endereço da altura do boneco
-	MOV R4, [R1]            ; Obtém a altura do boneco
- 
-	ADD	R4, 2			; endereço da cor do 1º pixel (2 porque a largura é uma word)
+	MOV R5, [R1]            ; Obtém a altura do boneco
+
+	ADD	R1, 2			; Endereço da cor do 1º pixel (2 porque a largura é uma word)
 	JMP desenha_linha   ; Começar a desenhar a linha
 
-linha_seguinte:
+desenha_muda_linha:
+	PUSH R11               ; Salvaguardar endereço inicial da tabela
+	ADD R11, 4             ; Endereço da largura do boneco
+	MOV R4, [R11]          ; Reinicializa a largura do boneco
+	SUB R2, 1              ; Passa a escrever na linha de cima do Mediacenter
+	SUB R5, 1              ; Decrementa a altura do boneco (menos uma linha a tratar)
+	POP R11
+	JNZ desenha_linha      ; Desenhar a nova linha
+	JMP sai_desenha_boneco ; Caso não haja nova linha, sair
 
-coluna_seguinte:
-	SUB R4, 1               ; Menos uma coluna a tratar
 
 desenha_linha:             ; Desenha uma linha de pixels do boneco a partir da tabela
     MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
 	CALL escreve_pixel     ; Escreve o pixel atual
 	ADD R1, 2              ; Endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
 	ADD R3, 1              ; Próxima coluna
-	
+	SUB R4, 1              ; Diminui largura do boneco (menos uma coluna a tratar)
+	JNZ desenha_linha      ; Desenhar  próxima coluna
+	JMP desenha_muda_linha     ; Caso não haja mais colunas, passar à próxima linha
 
-
-desenha_pixels:       		; desenha os pixels do boneco a partir da tabela
-	MOV	R3, [R4]			; obtém a cor do próximo pixel do boneco
-	CALL	escreve_pixel		; escreve cada pixel do boneco
-	ADD	R4, 2			; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD  R2, 1               ; próxima coluna
-    SUB  R5, 1			; menos uma coluna para tratar
-    JNZ  desenha_pixels      ; continua até percorrer toda a largura do objeto
-						     ; Caso ainda estejamos aqui, acabámos de escrever a linha. Passar à próxima
-	SUB R11 , 1              ; Menos uma linha a tratar
-	SUB R1, 1                ; Mover "cursor" para a linha acima
-	JMP sai_desenha_boneco
 
 sai_desenha_boneco:
+	POP R11
 	POP R6
 	POP R5
 	POP R4
@@ -206,31 +205,84 @@ sai_desenha_boneco:
 ; **********************************************************************
 ; APAGA_BONECO - Apaga um boneco na linha e coluna indicadas
 ;			  com a forma definida na tabela indicada.
-; Argumentos:   R1 - tabela que define o boneco  
-;				R2 - linha
-;               R3 - coluna
+; Argumentos:   R1 - tabela que define o boneco
 
+
+; Outros registos usados:
+;                R2 - Linha de referência do boneco
+;                R3 - Coluna de referência do boneco
+;                R4 - Largura do boneco
+;                R5 - Altura do boneco
+;                R6 - Cor do pixel (sempre 0)
+;                R11 - Cópia do argumento da tabela
+;
 ;
 ; **********************************************************************
-apaga_boneco:
-	PUSH	R2
-	PUSH	R3
-	PUSH	R4
-	PUSH	R5
-	MOV	R5, [R4]			; obtém a largura do boneco
-	ADD	R4, 2			; endereço da cor do 1º pixel (2 porque a largura é uma word)
 
-apaga_pixels:       		; desenha os pixels do boneco a partir da tabela
-	MOV	R3, 0			; cor para apagar o próximo pixel do boneco
+	; WORD        LINHA_INICIAL_ROVER
+	; WORD        COLUNA_INICIAL_ROVER
+	; WORD		LARGURA
+	; WORD        ALTURA
+
+apaga_boneco:
+	PUSH    R1
+	PUSH    R2
+	PUSH    R3
+	PUSH    R4
+	PUSH    R5
+	PUSH    R6
+	PUSH    R11
+	MOV R2, [R1] ; Obtém a linha de referência do boneco
+
+	ADD R1, 2    ; Endereço da coluna de referência do boneco
+	MOV R3, [R1] ; Obtém a coluna de referência do boneco
+
+	ADD R1, 2    ; Endereço da largura do boneco
+	MOV R4, [R1] ; Obtém a largura do boneco
+
+	ADD R1, 2    ; Endereço da altura do boneco
+	MOV R5, [R1] ; Obtém a altura do boneco
+	JMP apaga_linha
+
+
+apaga_muda_linha:
+	PUSH R11               ; Salvaguardar endereço inicial da tabela
+	ADD R11, 4             ; Endereço da largura do boneco
+	MOV R4, [R11]          ; Reinicializa a largura do boneco
+	SUB R2, 1              ; Passa a escrever na linha de cima do Mediacenter
+	SUB R5, 1              ; Decrementa a altura do boneco (menos uma linha a tratar)
+	POP R11
+	JNZ apaga_linha      ; Apagar a próxima linha
+	JMP sai_apaga_boneco ; Caso não haja próxima linha, sair
+
+; desenha_linha:             ; Desenha uma linha de pixels do boneco a partir da tabela
+;     MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
+; 	CALL escreve_pixel     ; Escreve o pixel atual
+; 	ADD R1, 2              ; Endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
+; 	ADD R3, 1              ; Próxima coluna
+; 	SUB R4, 1              ; Diminui largura do boneco (menos uma coluna a tratar)
+; 	JNZ desenha_linha      ; Desenhar  próxima coluna
+; 	JMP desenha_muda_linha     ; Caso não haja mais colunas, passar à próxima linha
+
+
+apaga_linha:       		; desenha os pixels do boneco a partir da tabela
+	MOV	R6, 0			; cor para apagar o próximo pixel do boneco
 	CALL	escreve_pixel		; escreve cada pixel do boneco
-	ADD	R4, 2			; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-    ADD  R2, 1               ; próxima coluna
-    SUB  R5, 1			; menos uma coluna para tratar
-    JNZ  apaga_pixels      ; continua até percorrer toda a largura do objeto
-	POP	R5
-	POP	R4
-	POP	R3
-	POP	R2
+    ADD  R3, 1               ; próxima coluna
+    SUB  R4, 1			; menos uma coluna para tratar
+    JNZ  apaga_linha      ; continua até percorrer toda a largura do objeto
+	JMP apaga_muda_linha  ; Linha atual acabou - passar à seguinte
+	; JMP sai_apaga_boneco
+
+
+sai_apaga_boneco:
+	POP R11
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
 	RET
 
 
