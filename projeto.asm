@@ -58,14 +58,14 @@ SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
 DEF_ROVER:			    ; tabela que define o rover.
 	; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
 	; A linha e coluna são alteradas quando o Rover é movimentado
-	WORD        LINHA_INICIAL_ROVER
-	WORD        COLUNA_INICIAL_ROVER
-	WORD		LARGURA
-	WORD        ALTURA
-	WORD		0, 0, CASTANHO, 0, 0
-	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
-	WORD		CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
+	WORD            LINHA_INICIAL_ROVER
+	WORD            COLUNA_INICIAL_ROVER
+	WORD	        LARGURA_ROVER
+	WORD            ALTURA_ROVER
 	WORD		0, CASTANHO, 0, CASTANHO, 0
+	WORD		CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
+	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
+	WORD		0, 0, CASTANHO, 0, 0
 
 
 ; *********************************************************************************
