@@ -82,7 +82,7 @@ inicio:
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
 	JMP ciclo           ; Começar ciclo do jogo
-	CALL desenha_rover_inicial ; Inicializa o desenho do rover
+;	CALL desenha_rover_inicial ; Inicializa o desenho do rover
 
 ciclo:
 	CALL desenha_rover
