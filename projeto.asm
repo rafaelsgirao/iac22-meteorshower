@@ -14,9 +14,10 @@
 TEC_LIN				EQU 0C000H	; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL				EQU 0E000H	; endereço das colunas do teclado (periférico PIN)
 LINHA_TECLADO			EQU 1		; linha a testar (1ª linha, 1000b)
+LINHA_START 		EQU 8       ; linha a testar para começar o jogo(4ª linha)
 MASCARA				EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 TECLA_ESQUERDA			EQU 1		; tecla na primeira coluna do teclado (tecla 0)
-TECLA_DIREITA			EQU 4		; tecla na segunda coluna do teclado (tecla 2)
+TECLA_DIREITA			EQU 4		; tecla na terceira coluna do teclado (tecla 2)
 
 DEFINE_LINHA    		EQU 600AH      ; endereço do comando para definir a linha
 DEFINE_COLUNA   		EQU 600CH      ; endereço do comando para definir a coluna
@@ -25,7 +26,7 @@ APAGA_AVISO     		EQU 6040H      ; endereço do comando para apagar o aviso de n
 APAGA_ECRÃ	 		EQU 6002H      ; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO  EQU 6042H      ; endereço do comando para selecionar uma imagem de fundo
 
-LINHA        		EQU  31        ; linha do boneco (a meio do ecrã))
+LINHA        	EQU  31        ; linha do boneco (a fim do ecrã))
 COLUNA			EQU  30        ; coluna do boneco (a meio do ecrã)
 
 MIN_COLUNA		EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
@@ -73,7 +74,18 @@ inicio:
 	MOV	R1, 0			; cenário de fundo número 0
      MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
-     
+
+comeca:
+	MOV R11, ATRASO
+	MOV  R6, LINHA_START	; linha a testar no teclado
+	CALL	teclado			; leitura às teclas
+	CMP	R0, 0
+	JZ	comeca		; espera, enquanto não houver tecla
+	CMP	R0, TECLA_ESQUERDA
+	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 1			; cenário de fundo número 0
+     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+
 posicao_boneco:
      MOV  R1, LINHA			; linha do boneco
      MOV  R2, COLUNA		; coluna do boneco
