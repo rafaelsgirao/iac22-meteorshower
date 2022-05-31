@@ -168,9 +168,8 @@ comeca:
 	MOV R11, ATRASO
 	MOV  R6, LINHA_START	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
-	CMP	R0, 0
-	JZ	comeca		; espera, enquanto não houver tecla
 	CMP	R0, TECLA_ESQUERDA
+	JNZ comeca
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 1			; cenário de fundo número 0
      MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
