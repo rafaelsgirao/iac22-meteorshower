@@ -35,9 +35,9 @@ LINHA_METEORO_NEUTRO_2      EQU 4
 
 LINHA_INICIAL_METEOROS      EQU 7
 LINHA_METEOROS_2            EQU 10
-LINHA_METEOROS_3            EQU 13
+LINHA_METEOROS_3           	EQU 13
 
-LINHA_EXPLOSAO             	EQU 1
+LINHA_EXPLOSAO              EQU 1
 LINHA_DISPARO               EQU 1
 ;--------------------------------
 
