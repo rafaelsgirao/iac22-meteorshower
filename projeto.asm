@@ -26,8 +26,13 @@ APAGA_AVISO     		EQU 6040H      ; endereço do comando para apagar o aviso de n
 APAGA_ECRÃ	 		EQU 6002H      ; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO  EQU 6042H      ; endereço do comando para selecionar uma imagem de fundo
 
-LINHA        	EQU  31        ; linha do boneco (a fim do ecrã))
-COLUNA			EQU  30        ; coluna do boneco (a meio do ecrã)
+
+; Constantes do Rover
+LINHA_INICIAL_ROVER        		EQU  31        ; linha do boneco (a meio do ecrã)
+COLUNA_INICIAL_ROVER			EQU  30        ; coluna do boneco (a meio do ecrã)
+LARGURA_ROVER			EQU	05H		; largura do boneco
+ALTURA_ROVER          EQU 04H
+
 
 ;--------------------------------
 LINHA_INICIAL               EQU 1
@@ -45,7 +50,7 @@ MIN_COLUNA		EQU  0		; número da coluna mais à esquerda que o objeto pode ocupa
 MAX_COLUNA		EQU  63        ; número da coluna mais à direita que o objeto pode ocupar
 ATRASO			EQU	0400H		; atraso para limitar a velocidade de movimento do boneco
 
-LARGURA			EQU	05H		; largura do boneco
+; Cores
 CASTANHO		EQU	0FA52H		
 AZUL			EQU	0F00FH	
 ROSA_EXP		EQU	04F0EH  ; Cor rosa da explosão dos meteoros
@@ -55,26 +60,32 @@ VERMELHO		EQU	0FF00H	; Meteoros maus
 CINZENTO		EQU	0C777H	; Cor neutra - Meteoros de longe
 
 ; *********************************************************************************
-; * Dados 
+; * Dados
 ; *********************************************************************************
 	PLACE       1000H
 pilha:
-	STACK 100H			; espaço reservado para a pilha 
+	STACK 100H			; espaço reservado para a pilha
 						; (200H bytes, pois são 100H words)
-SP_inicial:				; este é o endereço (1200H) com que o SP deve ser 
-						; inicializado. O 1.º end. de retorno será 
+SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
+						; inicializado. O 1.º end. de retorno será
 						; armazenado em 11FEH (1200H-2)
+
 
 ;---------------------------------------------------------------------------------;
 ;----------------------TABELAS DE DEFINICAO DAS FIGURAS---------------------------;		
 ;---------------------------------------------------------------------------------;
-
-DEF_BONECO:					; tabela que define o boneco (cor, largura, pixels)
-	WORD		LARGURA
-	WORD		0, 0, CASTANHO, 0, 0
-	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
+  
+DEF_ROVER:			    ; tabela que define o rover.
+	; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
+	; A linha e coluna são alteradas quando o Rover é movimentado
+	WORD            LINHA_INICIAL_ROVER
+	WORD            COLUNA_INICIAL_ROVER
+	WORD	        LARGURA_ROVER
+	WORD            ALTURA_ROVER
+	WORD		0, CASTANHO, 0, CASTANHO, 0
 	WORD		CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
-	WORD		0, CASTANHO, 0, CASTANHO, 0	
+	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
+	WORD		0, 0, CASTANHO, 0, 0
      
 METEORO_NEUTRO_1:           ; Definicao do primeiro meteoro neutro
     WORD LINHA_INICIAL
@@ -148,168 +159,305 @@ DISPARO:                    ; Definicao dos disparos da nave
     WORD LINHA_DISPARO
 
     WORD AZUL
+>>>>>>> main
 
 
 ; *********************************************************************************
 ; * Código
 ; *********************************************************************************
 PLACE   0                     ; o código tem de começar em 0000H
-inicio:
-	MOV  SP, SP_inicial		; inicializa SP para a palavra a seguir
+init:
+	      MOV  SP, SP_inicial		; inicializa SP para a palavra a seguir
 						; à última da pilha
-                            
-     MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-     MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 0			; cenário de fundo número 0
-     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
 
-comeca:
+        MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+        MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+            MOV	R1, 0			; cenário de fundo número 0
+        MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
+        JMP ecra_inicial ; Ecrã de início de jogo
+
+ecra_inicial:
 	MOV R11, ATRASO
 	MOV  R6, LINHA_START	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, TECLA_ESQUERDA
-	JNZ comeca
+	JNZ ecra_inicial
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 1			; cenário de fundo número 0
-     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+  MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+  JMP ciclo_jogo                      ; Iniciar o jogo
 
-posicao_boneco:
-     MOV  R1, LINHA			; linha do boneco
-     MOV  R2, COLUNA		; coluna do boneco
-	MOV	R4, DEF_BONECO		; endereço da tabela que define o boneco
 
-mostra_boneco:
-	CALL	desenha_boneco		; desenha o boneco a partir da tabela
+ciclo_jogo:                    ; O ciclo principal do jogo.
+	CALLF le_tecla_rover  ; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
+	JMP ciclo_jogo
 
-espera_tecla:				; neste ciclo espera-se até uma tecla ser premida
-	MOV R11, ATRASO
+; *********************************************************************************
+; * Desenha o rover no ecrã.
+; *********************************************************************************
+desenha_rover:
+	PUSH R1             ; Resguardar registo a ser alterado
+	MOV R1, DEF_ROVER   ; Endereço da tabela que define o Rover (argumento de desenha_boneco)
+	CALL desenha_boneco
+	POP R1              ; Resgatar registo alterado
+	RETF
+
+
+le_tecla_rover:				; Verificar se uma tecla para mover o rover está pressionada
+	PUSH R0
+	PUSH R6
+	PUSH R7
+	PUSH R11 ; FIXME: ver se é alterado mais a fundo
 	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, 0
-	JZ	espera_tecla		; espera, enquanto não houver tecla
+	JZ	sai_ler_tecla_rover		; se não há tecla pressionada, sair da rotina
 	CMP	R0, TECLA_ESQUERDA
 	JNZ	testa_direita
 	MOV	R7, -1			; vai deslocar para a esquerda
 	CALL atraso
-	JMP	ve_limites
+	JMP	ve_limites_rover
+
+sai_ler_tecla_rover:
+	POP R11
+	POP R7
+	POP R6
+	POP R0
+	RETF
+
 testa_direita:
 	CMP	R0, TECLA_DIREITA
-	JNZ	espera_tecla		; tecla que não interessa
+	JNZ	sai_ler_tecla_rover	; tecla que não interessa -> sair
 	MOV	R7, +1	; vai deslocar para a direita
 	CALL atraso
-ve_limites:
-	MOV	R6, [R4]			; obtém a largura do boneco
+	JMP    ve_limites_rover
+
+ve_limites_rover:
 	CALL	testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
 	CMP	R7, 0
-	JZ	espera_tecla		; se não é para movimentar o objeto, vai ler o teclado de novo
+	JZ	sai_ler_tecla_rover		; se não é para movimentar o objeto, sai da rotina
+	JMP     move_rover              ; Caso contrário, movimentar rover
 
-move_boneco:
+; ****************************
+; * move_rover
+; * Argumentos:
+; *    - R7-> a -1 ou 1; mover o boneco ou para a esquerda ou direita.
+; ****************************
+move_rover:
+	PUSH R1
+	MOV R1, DEF_ROVER           ; Argumento do apaga_boneco
 	CALL	apaga_boneco		; apaga o boneco na sua posição corrente
-	
-coluna_seguinte:
-	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda)
+	POP R1
+	JMP     coluna_seguinte
 
-	JMP	mostra_boneco		; vai desenhar o boneco de novo
+coluna_seguinte:
+	PUSH R1             ; Guarda R1
+	MOV R1, DEF_ROVER   ; Endereço do desenho do rover
+	ADD R1, 2           ; Endereço da coluna atual do rover
+	MOV R2, [R1]        ; Coluna atual do rover
+	ADD R2, R7          ; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
+	MOV [R1], R2        ; Escreve a nova coluna na memória do rover
+	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda)
+	POP R1              ; Restaura R1
+	JMP	desenha_rover		; vai desenhar o boneco de novo
 
 
 ; **********************************************************************
-; DESENHA_BONECO - Desenha um boneco na linha e coluna indicadas
+; DESENHA_BONECO - Desenha um boneco a partir da linha e coluna indicadas
 ;			    com a forma e cor definidas na tabela indicada.
-; Argumentos:   R1 - linha
-;               R2 - coluna
-;               R4 - tabela que define o boneco
+; Argumentos:   R1 - Tabela que define o boneco
+;
+; Outros registos usados:
+;                R2 - Linha de referência do boneco
+;                R3 - Coluna de referência do boneco
+;                R4 - Largura do boneco
+;                R5 - Altura do boneco
+;                R6 - Cor do pixel a ser desenhado
+;
+; A posição e dimensões do boneco são lidas a partir da tabela.
 ;
 ; **********************************************************************
 desenha_boneco:
+	PUSH    R1
 	PUSH	R2
 	PUSH	R3
 	PUSH	R4
 	PUSH	R5
-	MOV	R5, [R4]			; obtém a largura do boneco
-	ADD	R4, 2			; endereço da cor do 1º pixel (2 porque a largura é uma word)
-desenha_pixels:       		; desenha os pixels do boneco a partir da tabela
-	MOV	R3, [R4]			; obtém a cor do próximo pixel do boneco
-	CALL	escreve_pixel		; escreve cada pixel do boneco
-	ADD	R4, 2			; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-     ADD  R2, 1               ; próxima coluna
-     SUB  R5, 1			; menos uma coluna para tratar
-     JNZ  desenha_pixels      ; continua até percorrer toda a largura do objeto
-	POP	R5
-	POP	R4
-	POP	R3
-	POP	R2
+	PUSH    R6
+	PUSH    R11
+	MOV R11, R1             ; Guardar endereço inicial da tabela
+	MOV R2, [R1]            ; Obtém a linha do boneco
+
+	ADD R1, 2               ; Endereço da coluna
+	MOV R3, [R1]			; Obtém a coluna do boneco
+
+	ADD R1, 2               ; Endereço da largura do boneco
+	MOV R4, [R1]            ; Obtém a largura do boneco
+
+	ADD R1, 2               ; Endereço da altura do boneco
+	MOV R5, [R1]            ; Obtém a altura do boneco
+
+	ADD	R1, 2			; Endereço da cor do 1º pixel (2 porque a largura é uma word)
+	JMP desenha_linha   ; Começar a desenhar a linha
+
+desenha_muda_linha:
+	PUSH R11               ; Salvaguardar endereço inicial da tabela
+	ADD R11, 2             ; Endereço da coluna inicial do boneco
+	MOV R3, [R11]          ; Voltar à coluna inicial
+	ADD R11, 2             ; Endereço da largura do boneco
+	MOV R4, [R11]          ; Reinicializa a largura do boneco
+	SUB R2, 1              ; Passa a escrever na linha de cima do Mediacenter
+	SUB R5, 1              ; Decrementa a altura do boneco (menos uma linha a tratar)
+	
+	POP R11
+	JNZ desenha_linha      ; Desenhar a nova linha
+	JMP sai_desenha_boneco ; Caso não haja nova linha, sair
+
+
+desenha_linha:             ; Desenha uma linha de pixels do boneco a partir da tabela
+    MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
+	CALL escreve_pixel     ; Escreve o pixel atual
+	ADD R1, 2              ; Endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
+	ADD R3, 1              ; Próxima coluna
+	SUB R4, 1              ; Diminui largura do boneco (menos uma coluna a tratar)
+	JNZ desenha_linha      ; Desenhar  próxima coluna
+	JMP desenha_muda_linha     ; Caso não haja mais colunas, passar à próxima linha
+
+
+sai_desenha_boneco:
+	POP R11
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
 	RET
 
 ; **********************************************************************
 ; APAGA_BONECO - Apaga um boneco na linha e coluna indicadas
 ;			  com a forma definida na tabela indicada.
-; Argumentos:   R1 - linha
-;               R2 - coluna
-;               R4 - tabela que define o boneco
+; Argumentos:   R1 - tabela que define o boneco
+
+
+; Outros registos usados:
+;                R2 - Linha de referência do boneco
+;                R3 - Coluna de referência do boneco
+;                R4 - Largura do boneco
+;                R5 - Altura do boneco
+;                R6 - Cor do pixel (sempre 0)
+;                R11 - Cópia do argumento da tabela
+;
 ;
 ; **********************************************************************
+
 apaga_boneco:
-	PUSH	R2
-	PUSH	R3
-	PUSH	R4
-	PUSH	R5
-	MOV	R5, [R4]			; obtém a largura do boneco
-	ADD	R4, 2			; endereço da cor do 1º pixel (2 porque a largura é uma word)
-apaga_pixels:       		; desenha os pixels do boneco a partir da tabela
-	MOV	R3, 0			; cor para apagar o próximo pixel do boneco
+	PUSH    R1
+	PUSH    R2
+	PUSH    R3
+	PUSH    R4
+	PUSH    R5
+	PUSH    R6
+	PUSH    R11
+	MOV R11, R1             ; Guardar endereço inicial da tabela
+	MOV R2, [R1] ; Obtém a linha de referência do boneco
+
+	ADD R1, 2    ; Endereço da coluna de referência do boneco
+	MOV R3, [R1] ; Obtém a coluna de referência do boneco
+
+	ADD R1, 2    ; Endereço da largura do boneco
+	MOV R4, [R1] ; Obtém a largura do boneco
+
+	ADD R1, 2    ; Endereço da altura do boneco
+	MOV R5, [R1] ; Obtém a altura do boneco
+	JMP apaga_linha
+
+
+apaga_muda_linha:
+	PUSH R11               ; Salvaguardar endereço inicial da tabela
+	ADD R11, 2             ; Endereço da coluna inicial do boneco
+	MOV R3, [R11]          ; Voltar à coluna inicial
+	ADD R11, 2             ; Endereço da largura do boneco
+	MOV R4, [R11]          ; Reinicializa a largura do boneco
+	SUB R2, 1              ; Passa a escrever na linha de cima do Mediacenter
+	SUB R5, 1              ; Decrementa a altura do boneco (menos uma linha a tratar)
+	POP R11                ; Restaura o endereço inicial
+	JNZ apaga_linha      ; Apagar a próxima linha
+	JMP sai_apaga_boneco ; Caso não haja próxima linha, sair
+
+
+apaga_linha:       		; desenha os pixels do boneco a partir da tabela
+	MOV	R6, 0			; cor para apagar o próximo pixel do boneco
 	CALL	escreve_pixel		; escreve cada pixel do boneco
-	ADD	R4, 2			; endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
-     ADD  R2, 1               ; próxima coluna
-     SUB  R5, 1			; menos uma coluna para tratar
-     JNZ  apaga_pixels      ; continua até percorrer toda a largura do objeto
-	POP	R5
-	POP	R4
-	POP	R3
-	POP	R2
+        ADD  R3, 1               ; próxima coluna
+        SUB  R4, 1			; menos uma coluna para tratar
+        JNZ  apaga_linha      ; continua até percorrer toda a largura do objeto
+	JMP apaga_muda_linha  ; Linha atual acabou - passar à seguinte
+
+
+sai_apaga_boneco:
+	POP R11
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
 	RET
 
 
 ; **********************************************************************
 ; ESCREVE_PIXEL - Escreve um pixel na linha e coluna indicadas.
-; Argumentos:   R1 - linha
-;               R2 - coluna
-;               R3 - cor do pixel (em formato ARGB de 16 bits)
+; Argumentos:   R2 - linha
+;               R3 - coluna
+;               R6 - cor do pixel (em formato ARGB de 16 bits)
 ;
 ; **********************************************************************
 escreve_pixel:
-	MOV  [DEFINE_LINHA], R1		; seleciona a linha
-	MOV  [DEFINE_COLUNA], R2		; seleciona a coluna
-	MOV  [DEFINE_PIXEL], R3		; altera a cor do pixel na linha e coluna já selecionadas
+	MOV  [DEFINE_LINHA], R2		; seleciona a linha
+	MOV  [DEFINE_COLUNA], R3		; seleciona a coluna
+	MOV  [DEFINE_PIXEL], R6 	; altera a cor do pixel na linha e coluna já selecionadas
 	RET
 
 
 ; **********************************************************************
 ; ATRASO - Executa um ciclo para implementar um atraso.
-; Argumentos:   R11 - valor que define o atraso
+; Argumentos:   R1 - valor que define o atraso
 ;
 ; **********************************************************************
 atraso:
-	PUSH	R11
+	PUSH	R1
+	MOV R1, ATRASO
 ciclo_atraso:
-	SUB	R11, 1
+	SUB	R1, 1
 	JNZ	ciclo_atraso
-	POP	R11
+	POP	R1
 	RET
 
 ; **********************************************************************
-; TESTA_LIMITES - Testa se o boneco chegou aos limites do ecrã e nesse caso
+; TESTA_LIMITES - Testa se o Rover chegou aos limites do ecrã e nesse caso
 ;			   impede o movimento (força R7 a 0)
-; Argumentos:	R2 - coluna em que o objeto está
-;			R6 - largura do boneco
-;			R7 - sentido de movimento do boneco (valor a somar à coluna
+; Registos Usados:	
+;			R1 - Endereço da definição do Rover
+;			R2 - coluna em que o objeto está
+;			R6 - largura do Rover
+;			R7 - sentido de movimento do Rover (valor a somar à coluna
 ;				em cada movimento: +1 para a direita, -1 para a esquerda)
 ;
-; Retorna: 	R7 - 0 se já tiver chegado ao limite, inalterado caso contrário	
+; Retorna: 	R7 - 0 se já tiver chegado ao limite, inalterado caso contrário
 ; **********************************************************************
 testa_limites:
+	PUSH    R1
+	PUSH    R2
 	PUSH	R5
 	PUSH	R6
+	MOV     R1, DEF_ROVER ; Endereço da definição do Rover
+	ADD     R1, 2         ; Endereço da coluna em que o Rover está
+	MOV     R2, [R1]      ; Obtém coluna
+	ADD     R1, 2         ; Endereço da largura do Rover
+	MOV     R6, [R1]      ; Obtém largura do Rover
+	JMP     testa_limite_esquerdo
 testa_limite_esquerdo:		; vê se o boneco chegou ao limite esquerdo
 	MOV	R5, MIN_COLUNA
 	CMP	R2, R5
@@ -323,20 +471,25 @@ testa_limite_direito:		; vê se o boneco chegou ao limite direito
 	CMP	R6, R5
 	JLE	sai_testa_limites	; entre limites. Mantém o valor do R7
 	CMP	R7, 0			; passa a deslocar-se para a direita
-	JGT	impede_movimento
+	JGT	impede_movimento ; Impedir movimento se este for p/ a direita
 	JMP	sai_testa_limites
+
 impede_movimento:
 	MOV	R7, 0			; impede o movimento, forçando R7 a 0
-sai_testa_limites:	
+	JMP sai_testa_limites ; Sair
+
+sai_testa_limites:
 	POP	R6
 	POP	R5
+	POP R2
+	POP R1
 	RET
 
 ; **********************************************************************
 ; TECLADO - Faz uma leitura às teclas de uma linha do teclado e retorna o valor lido
 ; Argumentos:	R6 - linha a testar (em formato 1, 2, 4 ou 8)
 ;
-; Retorna: 	R0 - valor lido das colunas do teclado (0, 1, 2, 4, ou 8)	
+; Retorna: 	R0 - valor lido das colunas do teclado (0, 1, 2, 4, ou 8)
 ; **********************************************************************
 teclado:
 	PUSH	R2
@@ -352,5 +505,4 @@ teclado:
 	POP	R3
 	POP	R2
 	RET
-
 
