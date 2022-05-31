@@ -23,8 +23,21 @@ MASCARA    EQU 0FH     ; para isolar os 4 bits de menor peso, ao ler as colunas 
 ; **********************************************************************
 ; * C�digo
 ; **********************************************************************
-PLACE      0
-inicio:		
+
+varre_teclado:
+    PUSH R0
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    PUSH R4
+    PUSH R5
+    PUSH R6
+    PUSH R7
+    PUSH R8
+    PUSH R9
+    PUSH R10
+    PUSH R11
+    
 ; inicializa��es
     MOV R1, 00H    ; Inicializa contador de linhas
     MOV  R2, TEC_LIN   ; endere�o do perif�rico das linhas
@@ -64,6 +77,10 @@ espera_tecla:          ; neste ciclo espera-se at� uma tecla ser premida
     JMP altera_linha
 
 ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar premida
+
+    MOV R9, 0          ; Reinicializa contadores auxiliares
+    MOV R10, 0
+
     MOV  R1, R11       ; R1 tinha sido alterado (altera_display)
     MOVB [R2], R1      ; escrever no perif�rico de sa�da (linhas)
     MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
@@ -168,4 +185,18 @@ diminui_display:
     JMP ha_tecla
 
 desce_meteoro:
-    
+    JMP ha_tecla
+
+    POP R11
+    POP R10
+    POP R9
+    POP R8
+    POP R7
+    POP R6
+    POP R5
+    POP R4
+    POP R3
+    POP R2
+    POP R1
+    POP R0
+    RET
