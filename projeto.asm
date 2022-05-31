@@ -76,16 +76,17 @@ inicio:
 	MOV  SP, SP_inicial		; inicializa SP para a palavra a seguir
 						; à última da pilha
 
-    MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 0			; cenário de fundo número 0
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+        MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+        MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+            MOV	R1, 0			; cenário de fundo número 0
+        MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
+	CALLF desenha_rover       ; Desenhar o rover na posição inicial
 	JMP ciclo           ; Começar ciclo do jogo
-;	CALL desenha_rover_inicial ; Inicializa o desenho do rover
 
-ciclo:
-	CALLF desenha_rover
+ciclo:                    ; O ciclo principal do jogo.
+	CALLF le_tecla_rover  ; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
+	JMP ciclo
 
 ; *********************************************************************************
 ; * Desenha o rover no ecrã.
@@ -98,39 +99,63 @@ desenha_rover:
 	RETF
 
 
-mostra_boneco:
-	CALL	desenha_boneco		; desenha o boneco a partir da tabela
-
-espera_tecla:				; neste ciclo espera-se até uma tecla ser premida
-	MOV R11, ATRASO
+le_tecla_rover:				; Verificar se uma tecla para mover o rover está pressionada
+	PUSH R0
+	PUSH R6
+	PUSH R7
+	PUSH R11 ; FIXME: ver se é alterado mais a fundo
 	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, 0
-	JZ	espera_tecla		; espera, enquanto não houver tecla
+	JZ	sai_ler_tecla_rover		; se não há tecla pressionada, sair da rotina
 	CMP	R0, TECLA_ESQUERDA
 	JNZ	testa_direita
 	MOV	R7, -1			; vai deslocar para a esquerda
 	CALL atraso
-	JMP	ve_limites
+	JMP	ve_limites_rover
+
+sai_ler_tecla_rover:
+	POP R11
+	POP R7
+	POP R6
+	POP R0
+	RETF
 
 testa_direita:
 	CMP	R0, TECLA_DIREITA
-	JNZ	espera_tecla		; tecla que não interessa
+	JNZ	sai_ler_tecla_rover	; tecla que não interessa -> sair
 	MOV	R7, +1	; vai deslocar para a direita
 	CALL atraso
+	JMP    ve_limites_rover
 
-ve_limites:
-	MOV	R6, [R4]			; obtém a largura do boneco
+ve_limites_rover:
 	CALL	testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
 	CMP	R7, 0
-	JZ	espera_tecla		; se não é para movimentar o objeto, vai ler o teclado de novo
+	JZ	sai_ler_tecla_rover		; se não é para movimentar o objeto, sai da rotina
+	JMP     move_rover              ; Caso contrário, movimentar rover
 
-move_boneco:
+; ****************************
+; * move_rover
+; * Argumentos:
+; *    - R7-> a -1 ou 1; mover o boneco ou para a esquerda ou direita.
+; ****************************
+move_rover:
+	PUSH R1
+	MOV R1, DEF_ROVER           ; Argumento do apaga_boneco
 	CALL	apaga_boneco		; apaga o boneco na sua posição corrente
+	POP R1
+	JMP     coluna_seguinte
 
 coluna_seguinte:
+	PUSH R1             ; Guarda R1
+	MOV R1, DEF_ROVER   ; Endereço do desenho do rover
+	ADD R1, 2           ; Endereço da coluna atual do rover
+	MOV R2, [R1]        ; Coluna atual do rover
+	ADD R2, R7          ; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
+	MOV [R1], R2        ; Escreve a nova coluna na memória do rover
 	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda)
-	JMP	mostra_boneco		; vai desenhar o boneco de novo
+	POP R1              ; Restaura R1
+	JMP	desenha_rover		; vai desenhar o boneco de novo
 
 
 ; **********************************************************************
@@ -156,7 +181,7 @@ desenha_boneco:
 	PUSH	R5
 	PUSH    R6
 	PUSH    R11
-	MOV R11, R1             ; Guardar endereço inicial da tabela TODO: ver se isto é válido
+	MOV R11, R1             ; Guardar endereço inicial da tabela
 	MOV R2, [R1]            ; Obtém a linha do boneco
 
 	ADD R1, 2               ; Endereço da coluna
@@ -222,11 +247,6 @@ sai_desenha_boneco:
 ;
 ; **********************************************************************
 
-	; WORD        LINHA_INICIAL_ROVER
-	; WORD        COLUNA_INICIAL_ROVER
-	; WORD		LARGURA
-	; WORD        ALTURA
-
 apaga_boneco:
 	PUSH    R1
 	PUSH    R2
@@ -235,6 +255,7 @@ apaga_boneco:
 	PUSH    R5
 	PUSH    R6
 	PUSH    R11
+	MOV R11, R1             ; Guardar endereço inicial da tabela
 	MOV R2, [R1] ; Obtém a linha de referência do boneco
 
 	ADD R1, 2    ; Endereço da coluna de referência do boneco
@@ -268,7 +289,6 @@ apaga_linha:       		; desenha os pixels do boneco a partir da tabela
         SUB  R4, 1			; menos uma coluna para tratar
         JNZ  apaga_linha      ; continua até percorrer toda a largura do objeto
 	JMP apaga_muda_linha  ; Linha atual acabou - passar à seguinte
-	; JMP sai_apaga_boneco
 
 
 sai_apaga_boneco:
@@ -303,6 +323,7 @@ escreve_pixel:
 ; **********************************************************************
 atraso:
 	PUSH	R1
+	MOV R1, ATRASO
 ciclo_atraso:
 	SUB	R1, 1
 	JNZ	ciclo_atraso
@@ -310,18 +331,28 @@ ciclo_atraso:
 	RET
 
 ; **********************************************************************
-; TESTA_LIMITES - Testa se o boneco chegou aos limites do ecrã e nesse caso
+; TESTA_LIMITES - Testa se o Rover chegou aos limites do ecrã e nesse caso
 ;			   impede o movimento (força R7 a 0)
-; Argumentos:	R2 - coluna em que o objeto está
-;			R6 - largura do boneco
-;			R7 - sentido de movimento do boneco (valor a somar à coluna
+; Registos Usados:	
+;			R1 - Endereço da definição do Rover
+;			R2 - coluna em que o objeto está
+;			R6 - largura do Rover
+;			R7 - sentido de movimento do Rover (valor a somar à coluna
 ;				em cada movimento: +1 para a direita, -1 para a esquerda)
 ;
 ; Retorna: 	R7 - 0 se já tiver chegado ao limite, inalterado caso contrário
 ; **********************************************************************
 testa_limites:
+	PUSH    R1
+	PUSH    R2
 	PUSH	R5
 	PUSH	R6
+	MOV     R1, DEF_ROVER ; Endereço da definição do Rover
+	ADD     R1, 2         ; Endereço da coluna em que o Rover está
+	MOV     R2, [R1]      ; Obtém coluna
+	ADD     R1, 2         ; Endereço da largura do Rover
+	MOV     R6, [R1]      ; Obtém largura do Rover
+	JMP     testa_limite_esquerdo
 testa_limite_esquerdo:		; vê se o boneco chegou ao limite esquerdo
 	MOV	R5, MIN_COLUNA
 	CMP	R2, R5
@@ -335,13 +366,18 @@ testa_limite_direito:		; vê se o boneco chegou ao limite direito
 	CMP	R6, R5
 	JLE	sai_testa_limites	; entre limites. Mantém o valor do R7
 	CMP	R7, 0			; passa a deslocar-se para a direita
-	JGT	impede_movimento
+	JGT	impede_movimento ; Impedir movimento se este for p/ a direita
 	JMP	sai_testa_limites
+
 impede_movimento:
 	MOV	R7, 0			; impede o movimento, forçando R7 a 0
+	JMP sai_testa_limites ; Sair
+
 sai_testa_limites:
 	POP	R6
 	POP	R5
+	POP R2
+	POP R1
 	RET
 
 ; **********************************************************************
