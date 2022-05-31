@@ -30,15 +30,15 @@ LINHA        	EQU  31        ; linha do boneco (a fim do ecrã))
 COLUNA			EQU  30        ; coluna do boneco (a meio do ecrã)
 
 ;--------------------------------
-LINHA_INICIAL               WORD 1
-LINHA_METEORO_NEUTRO_2      WORD 4
+LINHA_INICIAL               EQU 1
+LINHA_METEORO_NEUTRO_2      EQU 4
 
-LINHA_INICIAL_METEOROS      WORD 7
-LINHA_METEOROS_2            WORD 10
-LINHA_METEOROS_3            WORD 13
+LINHA_INICIAL_METEOROS      EQU 7
+LINHA_METEOROS_2            EQU 10
+LINHA_METEOROS_3            EQU 13
 
-LINHA_EXPLOSAO              WORD 1
-LINHA_DISPARO               WORD 1
+LINHA_EXPLOSAO             	EQU 1
+LINHA_DISPARO               EQU 1
 ;--------------------------------
 
 MIN_COLUNA		EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
