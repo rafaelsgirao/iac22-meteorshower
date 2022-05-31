@@ -1512,7 +1512,7 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 51063,
-    "image paths" : [ "Fundos/start.jpg", "background.jpg", "Fundos/game_over.jpg", "assets/fundo.jpg" ],
+    "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/game_over.jpg" ],
     "addressable data" : {
       "className" : "ModuleExtensionMemoryMediaCenter",
       "elementID" : 83,
