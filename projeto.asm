@@ -62,7 +62,7 @@ CINZENTO		EQU	0C777H	; Cor neutra - Meteoros de longe
 ; *********************************************************************************
 ; * Dados
 ; *********************************************************************************
-	PLACE       1000H
+PLACE       1000H
 pilha:
 	STACK 100H			; espaço reservado para a pilha
 						; (200H bytes, pois são 100H words)
@@ -72,7 +72,7 @@ SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
 
 
 ;---------------------------------------------------------------------------------;
-;----------------------TABELAS DE DEFINICAO DAS FIGURAS---------------------------;		
+;----------------------TABELAS DE DEFINIÇÃO DAS FIGURAS---------------------------;		
 ;---------------------------------------------------------------------------------;
   
 DEF_ROVER:			    ; tabela que define o rover.
@@ -165,16 +165,14 @@ DISPARO:                    ; Definicao dos disparos da nave
 ; * Código
 ; *********************************************************************************
 PLACE   0                     ; o código tem de começar em 0000H
-init:
-	      MOV  SP, SP_inicial		; inicializa SP para a palavra a seguir
-						; à última da pilha
-
-        MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-        MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-            MOV	R1, 0			; cenário de fundo número 0
-        MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+inicio:
+	MOV  SP, SP_inicial		; inicializa SP para a palavra a seguir
+    MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+    MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+    MOV	R1, 0			; cenário de fundo número 0
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
-        JMP ecra_inicial ; Ecrã de início de jogo
+    JMP ecra_inicial ; Ecrã de início de jogo
 
 ecra_inicial:
 	MOV R11, ATRASO
@@ -184,8 +182,9 @@ ecra_inicial:
 	JNZ ecra_inicial
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 1			; cenário de fundo número 0
-  MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-  JMP ciclo_jogo                      ; Iniciar o jogo
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	CALLF desenha_rover                  ; 
+    JMP ciclo_jogo                      ; Iniciar o jogo
 
 
 ciclo_jogo:                    ; O ciclo principal do jogo.
