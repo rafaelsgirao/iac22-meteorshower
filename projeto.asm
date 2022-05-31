@@ -85,7 +85,7 @@ inicio:
 ;	CALL desenha_rover_inicial ; Inicializa o desenho do rover
 
 ciclo:
-	CALL desenha_rover
+	CALLF desenha_rover
 
 ; *********************************************************************************
 ; * Desenha o rover no ecrã.
@@ -95,7 +95,7 @@ desenha_rover:
 	MOV R1, DEF_ROVER   ; Endereço da tabela que define o Rover (argumento de desenha_boneco)
 	CALL desenha_boneco
 	POP R1              ; Resgatar registo alterado
-	RET
+	RETF
 
 
 mostra_boneco:
