@@ -159,7 +159,6 @@ DISPARO:                    ; Definicao dos disparos da nave
     WORD LINHA_DISPARO
 
     WORD AZUL
->>>>>>> main
 
 
 ; *********************************************************************************
