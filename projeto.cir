@@ -1513,6 +1513,13 @@
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 51063,
     "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/game_over.jpg" ],
+    "sounds/videos settings" : [ {
+      "filePathName" : "assets/disparo.m4a",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    } ],
     "addressable data" : {
       "className" : "ModuleExtensionMemoryMediaCenter",
       "elementID" : 83,

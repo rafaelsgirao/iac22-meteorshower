@@ -18,7 +18,6 @@ LINHA_START 		EQU 8       ; linha a testar para começar o jogo(4ª linha)
 MASCARA				EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 TECLA_ESQUERDA			EQU 1		; tecla na primeira coluna do teclado (tecla 0)
 TECLA_DIREITA			EQU 4		; tecla na terceira coluna do teclado (tecla 2)
-
 DEFINE_LINHA    		EQU 600AH      ; endereço do comando para definir a linha
 DEFINE_COLUNA   		EQU 600CH      ; endereço do comando para definir a coluna
 DEFINE_PIXEL    		EQU 6012H      ; endereço do comando para escrever um pixel
@@ -182,9 +181,9 @@ ecra_inicial:
 	JNZ ecra_inicial
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 1			; cenário de fundo número 0
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	CALLF desenha_rover                  ; 
-    JMP ciclo_jogo                      ; Iniciar o jogo
+        MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+    	CALLF desenha_rover                  ; 
+        JMP ciclo_jogo                      ; Iniciar o jogo
 
 
 ciclo_jogo:                    ; O ciclo principal do jogo.
@@ -235,7 +234,8 @@ ve_limites_rover:
 	CALL	testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
 	CMP	R7, 0
 	JZ	sai_ler_tecla_rover		; se não é para movimentar o objeto, sai da rotina
-	JMP     move_rover              ; Caso contrário, movimentar rover
+	CALL     move_rover              ; Caso contrário, movimentar rover
+	JMP sai_ler_tecla_rover          ; Terminar rotina
 
 ; ****************************
 ; * move_rover
@@ -256,10 +256,13 @@ coluna_seguinte:
 	MOV R2, [R1]        ; Coluna atual do rover
 	ADD R2, R7          ; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
 	MOV [R1], R2        ; Escreve a nova coluna na memória do rover
-	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda)
+;	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda) fixme: ver se é inútil
 	POP R1              ; Restaura R1
-	JMP	desenha_rover		; vai desenhar o boneco de novo
-
+	PUSH R11
+	CALLF	desenha_rover		; vai desenhar o boneco de novo
+	POP R11
+	RET ; Acaba rotina de move_rover
+	
 
 ; **********************************************************************
 ; DESENHA_BONECO - Desenha um boneco a partir da linha e coluna indicadas
@@ -288,7 +291,7 @@ desenha_boneco:
 	MOV R2, [R1]            ; Obtém a linha do boneco
 
 	ADD R1, 2               ; Endereço da coluna
-	MOV R3, [R1]			; Obtém a coluna do boneco
+	MOV R3, [R1]		; Obtém a coluna do boneco
 
 	ADD R1, 2               ; Endereço da largura do boneco
 	MOV R4, [R1]            ; Obtém a largura do boneco
