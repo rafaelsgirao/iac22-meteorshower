@@ -206,6 +206,7 @@ le_tecla_rover:				; Verificar se uma tecla para mover o rover está pressionada
 	PUSH R6
 	PUSH R7
 	PUSH R11 ; FIXME: ver se é alterado mais a fundo
+	CALL testa_fim ; verifica se a tecla premida é a tecla E
 	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, 0
@@ -229,6 +230,21 @@ testa_direita:
 	MOV	R7, +1	; vai deslocar para a direita
 	CALL atraso
 	JMP    ve_limites_rover
+
+testa_fim:
+	MOV  R6, LINHA_START	; linha a testar no teclado
+	CALL	teclado			; leitura às teclas
+	CMP	R0, TECLA_DIREITA
+	JZ termina_jogo
+	RET
+
+termina_jogo: 
+	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 2			; cenário de fundo número 0
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+    JMP fim       ; termina o jogo
+
+fim: JMP fim ; termina o jogo
 
 ve_limites_rover:
 	CALL	testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
