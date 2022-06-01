@@ -10,14 +10,14 @@
   "primary screen width" : 1920,
   "primary screen height" : 1080,
   "window" : {
-    "X absolute" : 48,
-    "Y absolute" : 0,
-    "X relative" : 48,
-    "Y relative" : 0,
-    "width" : 1872,
-    "height" : 1080,
+    "X absolute" : 74,
+    "Y absolute" : 27,
+    "X relative" : 74,
+    "Y relative" : 27,
+    "width" : 1846,
+    "height" : 1053,
     "leftRightDividerLocation" : 296,
-    "topBottomDividerLocation" : 897
+    "topBottomDividerLocation" : 868
   },
   "connections" : [ {
     "className" : "Connection",
@@ -28,7 +28,7 @@
       "sourcePinID" : 29,
       "targetPinID" : 39,
       "points" : [ {
-        "X" : 395,
+        "X" : 405,
         "Y" : 439
       }, {
         "X" : 420,
@@ -50,7 +50,7 @@
       "sourcePinID" : 30,
       "targetPinID" : 40,
       "points" : [ {
-        "X" : 395,
+        "X" : 405,
         "Y" : 459
       }, {
         "X" : 436,
@@ -97,7 +97,7 @@
         "X" : 805,
         "Y" : 207
       }, {
-        "X" : 406,
+        "X" : 407,
         "Y" : 207
       } ]
     }, {
@@ -113,7 +113,7 @@
         "X" : 720,
         "Y" : 207
       }, {
-        "X" : 406,
+        "X" : 407,
         "Y" : 207
       } ]
     }, {
@@ -129,7 +129,7 @@
         "X" : 720,
         "Y" : 207
       }, {
-        "X" : 406,
+        "X" : 407,
         "Y" : 207
       } ]
     } ]
@@ -145,7 +145,7 @@
         "X" : 805,
         "Y" : 227
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 227
       } ]
     }, {
@@ -161,14 +161,14 @@
         "X" : 672,
         "Y" : 227
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 227
       } ]
     }, {
       "sourcePinID" : 10,
       "targetPinID" : 106,
       "points" : [ {
-        "X" : 405,
+        "X" : 406,
         "Y" : 227
       }, {
         "X" : 672,
@@ -199,7 +199,7 @@
         "X" : 805,
         "Y" : 247
       }, {
-        "X" : 406,
+        "X" : 407,
         "Y" : 247
       } ]
     }, {
@@ -215,7 +215,7 @@
         "X" : 752,
         "Y" : 247
       }, {
-        "X" : 406,
+        "X" : 407,
         "Y" : 247
       } ]
     }, {
@@ -231,7 +231,7 @@
         "X" : 752,
         "Y" : 247
       }, {
-        "X" : 406,
+        "X" : 407,
         "Y" : 247
       } ]
     }, {
@@ -247,7 +247,7 @@
         "X" : 752,
         "Y" : 247
       }, {
-        "X" : 406,
+        "X" : 407,
         "Y" : 247
       } ]
     } ]
@@ -275,7 +275,7 @@
         "X" : 488,
         "Y" : 127
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 127
       } ]
     }, {
@@ -297,7 +297,7 @@
         "X" : 488,
         "Y" : 127
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 127
       } ]
     }, {
@@ -319,7 +319,7 @@
         "X" : 488,
         "Y" : 127
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 127
       } ]
     }, {
@@ -335,7 +335,7 @@
         "X" : 756,
         "Y" : 127
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 127
       } ]
     }, {
@@ -357,7 +357,7 @@
         "X" : 488,
         "Y" : 127
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 127
       } ]
     }, {
@@ -379,7 +379,7 @@
         "X" : 488,
         "Y" : 127
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 127
       } ]
     } ]
@@ -392,7 +392,7 @@
       "sourcePinID" : 50,
       "targetPinID" : 74,
       "points" : [ {
-        "X" : 949,
+        "X" : 947,
         "Y" : 479
       }, {
         "X" : 1021,
@@ -408,7 +408,7 @@
       "sourcePinID" : 57,
       "targetPinID" : 71,
       "points" : [ {
-        "X" : 944,
+        "X" : 939,
         "Y" : 623
       }, {
         "X" : 973,
@@ -424,7 +424,7 @@
       "sourcePinID" : 64,
       "targetPinID" : 72,
       "points" : [ {
-        "X" : 944,
+        "X" : 939,
         "Y" : 727
       }, {
         "X" : 1096,
@@ -455,7 +455,7 @@
         "X" : 664,
         "Y" : 539
       }, {
-        "X" : 395,
+        "X" : 405,
         "Y" : 539
       } ]
     } ]
@@ -477,7 +477,7 @@
         "X" : 664,
         "Y" : 559
       }, {
-        "X" : 395,
+        "X" : 405,
         "Y" : 559
       } ]
     } ]
@@ -499,7 +499,7 @@
         "X" : 608,
         "Y" : 579
       }, {
-        "X" : 395,
+        "X" : 405,
         "Y" : 579
       } ]
     } ]
@@ -512,7 +512,7 @@
       "sourcePinID" : 19,
       "targetPinID" : 8,
       "points" : [ {
-        "X" : 922,
+        "X" : 924,
         "Y" : 167
       }, {
         "X" : 948,
@@ -527,7 +527,7 @@
         "X" : 696,
         "Y" : 167
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 167
       } ]
     }, {
@@ -546,7 +546,7 @@
         "X" : 692,
         "Y" : 167
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 167
       } ]
     }, {
@@ -562,14 +562,14 @@
         "X" : 696,
         "Y" : 167
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 167
       } ]
     }, {
       "sourcePinID" : 86,
       "targetPinID" : 8,
       "points" : [ {
-        "X" : 922,
+        "X" : 924,
         "Y" : 311
       }, {
         "X" : 948,
@@ -584,7 +584,7 @@
         "X" : 696,
         "Y" : 167
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 167
       } ]
     }, {
@@ -600,7 +600,7 @@
         "X" : 696,
         "Y" : 167
       }, {
-        "X" : 405,
+        "X" : 406,
         "Y" : 167
       } ]
     } ]
@@ -622,7 +622,7 @@
         "X" : 616,
         "Y" : 519
       }, {
-        "X" : 395,
+        "X" : 405,
         "Y" : 519
       } ]
     } ]
@@ -644,7 +644,7 @@
         "X" : 592,
         "Y" : 499
       }, {
-        "X" : 395,
+        "X" : 405,
         "Y" : 499
       } ]
     } ]
@@ -657,7 +657,7 @@
       "sourcePinID" : 96,
       "targetPinID" : 2,
       "points" : [ {
-        "X" : 154,
+        "X" : 165,
         "Y" : 119
       }, {
         "X" : 192,
@@ -679,7 +679,7 @@
       "sourcePinID" : 99,
       "targetPinID" : 3,
       "points" : [ {
-        "X" : 135,
+        "X" : 139,
         "Y" : 183
       }, {
         "X" : 253,
@@ -695,7 +695,7 @@
       "sourcePinID" : 102,
       "targetPinID" : 4,
       "points" : [ {
-        "X" : 143,
+        "X" : 153,
         "Y" : 247
       }, {
         "X" : 192,
@@ -718,10 +718,10 @@
     "positionX" : 258,
     "positionY" : 112,
     "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 48,
-    "simGuiYRelative" : 41,
-    "simGuiWidth" : 782,
-    "simGuiHeight" : 845,
+    "simGuiXRelative" : 74,
+    "simGuiYRelative" : 30,
+    "simGuiWidth" : 880,
+    "simGuiHeight" : 865,
     "clockPeriod" : 200,
     "startAutomatically" : false,
     "simulationMaster" : true,
@@ -1435,7 +1435,7 @@
     "simGuiXRelative" : 1480,
     "simGuiYRelative" : 573,
     "simGuiWidth" : 150,
-    "simGuiHeight" : 184,
+    "simGuiHeight" : 185,
     "columns" : 4,
     "key numbers radix" : "Hexadecimal",
     "key color" : "Default",
@@ -1478,7 +1478,7 @@
     "simGuiXRelative" : 1192,
     "simGuiYRelative" : 548,
     "simGuiWidth" : 249,
-    "simGuiHeight" : 207,
+    "simGuiHeight" : 209,
     "nHexaDigits" : 3,
     "onColor" : "Red",
     "zColor" : "Black_White",
@@ -1512,14 +1512,7 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 51063,
-    "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/game_over.jpg" ],
-    "sounds/videos settings" : [ {
-      "filePathName" : "assets/disparo.m4a",
-      "relative sound volume" : 1.0,
-      "relative start time" : 0.0,
-      "relative stop time" : 1.0,
-      "playAsClip" : false
-    } ],
+    "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/fim(1).jpg", "Fundos/game_over.jpg" ],
     "addressable data" : {
       "className" : "ModuleExtensionMemoryMediaCenter",
       "elementID" : 83,
@@ -1640,8 +1633,8 @@
     "simGuiVisibleInSimulation" : true,
     "simGuiXRelative" : 775,
     "simGuiYRelative" : 756,
-    "simGuiWidth" : 330,
-    "simGuiHeight" : 225,
+    "simGuiWidth" : 374,
+    "simGuiHeight" : 230,
     "clockPeriod" : 400,
     "startAutomatically" : true,
     "simulationMaster" : false,
@@ -1667,8 +1660,8 @@
     "simGuiVisibleInSimulation" : true,
     "simGuiXRelative" : 1130,
     "simGuiYRelative" : 757,
-    "simGuiWidth" : 330,
-    "simGuiHeight" : 225,
+    "simGuiWidth" : 374,
+    "simGuiHeight" : 230,
     "clockPeriod" : 200,
     "startAutomatically" : true,
     "simulationMaster" : false,
@@ -1694,8 +1687,8 @@
     "simGuiVisibleInSimulation" : true,
     "simGuiXRelative" : 1493,
     "simGuiYRelative" : 757,
-    "simGuiWidth" : 330,
-    "simGuiHeight" : 225,
+    "simGuiWidth" : 374,
+    "simGuiHeight" : 230,
     "clockPeriod" : 3000,
     "startAutomatically" : true,
     "simulationMaster" : false,
