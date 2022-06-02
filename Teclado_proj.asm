@@ -78,10 +78,6 @@ espera_tecla:          ; neste ciclo espera-se at� uma tecla ser premida
 
 ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar premida
 
-    MOV R9, 0          ; Reinicializa contadores auxiliares
-    MOV R10, 0
-
-    MOV  R1, R11       ; R1 tinha sido alterado (altera_display)
     MOVB [R2], R1      ; escrever no perif�rico de sa�da (linhas)
     MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
     AND  R0, R5        ; elimina bits para al�m dos bits 0-3
