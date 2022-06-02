@@ -13,7 +13,7 @@
 ; *********************************************************************************
 TEC_LIN				EQU 0C000H	; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL				EQU 0E000H	; endereço das colunas do teclado (periférico PIN)
-DISPLAYS   EQU 0A000H  ; endere�o dos displays de 7 segmentos (perif�rico POUT-1)
+DISPLAYS   EQU 0A000H  			; endere�o dos displays de 7 segmentos (perif�rico POUT-1)
 
 LINHA_TECLADO			EQU 1		; linha a testar (1ª linha, 1000b)
 LINHA_START 		EQU 8       ; linha a testar para começar o jogo(4ª linha)
@@ -272,13 +272,13 @@ le_tecla_energia:
 aumenta_display:
     MOV R9, 064H
 
-    CMP R9, R8
+    CMP R9, R8			  ; limite superior atingido (100) - salta a adicao
     JZ pop_e_espera
     
     MOV R9, 01H
-    ADD R8, R9
+    ADD R8, 			  ; R8 <- R8 + 1
 
-    MOV [R4], R8
+    MOV [R4], R8		  ; escreve nos displays
 
 
     JMP pop_e_espera
@@ -287,13 +287,13 @@ aumenta_display:
 diminui_display:
     MOV R9, 00H
 
-    CMP R9, R8
+    CMP R9, R8			; limite inferior atingido (0) - salta a subtracao
     JZ pop_e_espera
 
     MOV R9, 01H
-    SUB R8, R9
+    SUB R8, R9			; R8 <- R8 - 1
 
-    MOV [R4], R8
+    MOV [R4], R8		; escreve nos displays
     JMP pop_e_espera
 
 sai_ler_tecla_rover:
