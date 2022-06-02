@@ -261,7 +261,10 @@ sai_desce_meteoro:
 	POP R2
 	POP R1
 	POP R0
-	RETF
+	MOV R10, 1
+	MOV R6, 4
+	CALL ha_tecla
+
 
 ; *********************************************************************************
 ; * Desenha o rover no ecrã.
@@ -389,8 +392,9 @@ recomeca:		; volta ao ecra do jogo
 	CALL ha_tecla	   ; espera que se largue D, caso contrario voltaria ao ciclo de novo
 					   ; (ficando preso no menu)
 
-	CALL desenha_rover ; desenha-se o rover novamente
-	JMP le_tecla_rover ; volta-se para a rotina le_tecla_rover
+	CALLF desenha_rover ; desenha-se o rover novamente
+	CALLF desenha_um_meteoro
+	JMP ciclo_jogo ; volta-se para a rotina le_tecla_rover
 
 testa_fim:
 	MOV  R6, LINHA_START	; linha a testar no teclado
