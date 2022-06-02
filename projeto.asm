@@ -14,24 +14,29 @@
 TEC_LIN				EQU 0C000H	; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL				EQU 0E000H	; endereço das colunas do teclado (periférico PIN)
 LINHA_TECLADO			EQU 1		; linha a testar (1ª linha, 1000b)
-LINHA_START 		EQU 8       ; linha a testar para começar o jogo(4ª linha)
+LINHA_START       		EQU 8           ; linha a testar para começar o jogo(4ª linha)
 MASCARA				EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 TECLA_ESQUERDA			EQU 1		; tecla na primeira coluna do teclado (tecla 0)
 TECLA_DIREITA			EQU 4		; tecla na terceira coluna do teclado (tecla 2)
-DEFINE_LINHA    		EQU 600AH      ; endereço do comando para definir a linha
-DEFINE_COLUNA   		EQU 600CH      ; endereço do comando para definir a coluna
-DEFINE_PIXEL    		EQU 6012H      ; endereço do comando para escrever um pixel
-APAGA_AVISO     		EQU 6040H      ; endereço do comando para apagar o aviso de nenhum cenário selecionado
-APAGA_ECRÃ	 		EQU 6002H      ; endereço do comando para apagar todos os pixels já desenhados
-SELECIONA_CENARIO_FUNDO  EQU 6042H      ; endereço do comando para selecionar uma imagem de fundo
+TECLADO_1                       EQU 1           ; 1ª linha/coluna do teclado
+TECLADO_2                       EQU 2           ; 2ª linha/coluna do teclado
+TECLADO_3                       EQU 4           ; 3ª linha/coluna do teclado
+TECLADO_4                       EQU 8           ; 4ª linha/coluna do teclado
+BONECO_ATIVO                    EQU 1           ; Boneco está visível (a ser generalizado na entrega final)
+BONECO_INATIVO                  EQU 0           ; Boneco está invisível (a ser generalizado na entrega final)
+DEFINE_LINHA    		EQU 600AH       ; endereço do comando para definir a linha
+DEFINE_COLUNA   		EQU 600CH       ; endereço do comando para definir a coluna
+DEFINE_PIXEL    		EQU 6012H       ; endereço do comando para escrever um pixel
+APAGA_AVISO     		EQU 6040H       ; endereço do comando para apagar o aviso de nenhum cenário selecionado
+APAGA_ECRÃ	 		EQU 6002H       ; endereço do comando para apagar todos os pixels já desenhados
+SELECIONA_CENARIO_FUNDO         EQU 6042H       ; endereço do comando para selecionar uma imagem de fundo
 
 
 ; Constantes do Rover
-LINHA_INICIAL_ROVER        		EQU  31        ; linha do boneco (a meio do ecrã)
-COLUNA_INICIAL_ROVER			EQU  30        ; coluna do boneco (a meio do ecrã)
-LARGURA_ROVER			EQU	05H		; largura do boneco
-ALTURA_ROVER          EQU 04H
-
+LINHA_FUNDO_ECRA        		EQU  31        ; linha do Rover (no fundo do ecrã)
+COLUNA_MEIO_ECRA			EQU  30        ; coluna inicial do Rover (a meio do ecrã)
+LARGURA_ROVER			        EQU  05H
+ALTURA_ROVER                            EQU  04H
 
 ;--------------------------------
 LINHA_INICIAL               EQU 1
@@ -39,7 +44,7 @@ LINHA_METEORO_NEUTRO_2      EQU 4
 
 LINHA_INICIAL_METEOROS      EQU 7
 LINHA_METEOROS_2            EQU 10
-LINHA_METEOROS_3           	EQU 13
+LINHA_METEOROS_3            EQU 13
 
 LINHA_EXPLOSAO              EQU 1
 LINHA_DISPARO               EQU 1
@@ -63,9 +68,9 @@ CINZENTO		EQU	0C777H	; Cor neutra - Meteoros de longe
 ; *********************************************************************************
 PLACE       1000H
 pilha:
-	STACK 100H			; espaço reservado para a pilha
+	STACK 100H		        	; espaço reservado para a pilha
 						; (200H bytes, pois são 100H words)
-SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
+SP_inicial:			        	; este é o endereço (1200H) com que o SP deve ser
 						; inicializado. O 1.º end. de retorno será
 						; armazenado em 11FEH (1200H-2)
 
@@ -165,13 +170,13 @@ DISPARO:                    ; Definicao dos disparos da nave
 ; *********************************************************************************
 PLACE   0                     ; o código tem de começar em 0000H
 inicio:
-	MOV  SP, SP_inicial		; inicializa SP para a palavra a seguir
-    MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-    MOV	R1, 0			; cenário de fundo número 0
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
-    JMP ecra_inicial ; Ecrã de início de jogo
+        MOV  SP, SP_inicial		; inicializa SP para a palavra a seguir
+        MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+        MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+        MOV	R1, 0			; cenário de fundo número 0
+        MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+            MOV	R7, 1			; valor a somar à coluna do boneco, para o movimentar
+        JMP ecra_inicial ; Ecrã de início de jogo
 
 ecra_inicial:
 	MOV R11, ATRASO
@@ -318,7 +323,7 @@ desenha_boneco:
 	ADD	R1, 2			; Endereço da cor do 1º pixel (2 porque a largura é uma word)
 	JMP desenha_linha   ; Começar a desenhar a linha
 
-desenha_muda_linha:
+desenha_muda_linha:  ; Passa a desenhar a linha seguinte.
 	PUSH R11               ; Salvaguardar endereço inicial da tabela
 	ADD R11, 2             ; Endereço da coluna inicial do boneco
 	MOV R3, [R11]          ; Voltar à coluna inicial
@@ -333,7 +338,7 @@ desenha_muda_linha:
 
 
 desenha_linha:             ; Desenha uma linha de pixels do boneco a partir da tabela
-    MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
+        MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
 	CALL escreve_pixel     ; Escreve o pixel atual
 	ADD R1, 2              ; Endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
 	ADD R3, 1              ; Próxima coluna
