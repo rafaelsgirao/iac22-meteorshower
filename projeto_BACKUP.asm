@@ -194,12 +194,12 @@ ecra_inicial:
 	MOV R11, ATRASO
 	MOV  R6, LINHA_START	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
-	CMP	R0, TECLA_ESQUERDA
-	JNZ ecra_inicial
+	CMP	R0, TECLA_ESQUERDA  ; compara para ver se a tecla C foi premida
+	JNZ ecra_inicial		; se não foi premida, espera-se que seja premida para começar o jogo
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 1			; cenário de fundo número 0
+	MOV	R1, 1			; cenário de fundo número 1
         MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-    	CALLF desenha_rover                  ; 
+    	CALLF desenha_rover                 ; desenha o rover 
         JMP ciclo_jogo                      ; Iniciar o jogo
 
 
@@ -304,18 +304,18 @@ sai_ler_tecla_rover:
 	RETF
 
 testa_direita:
-	CMP	R0, TECLA_DIREITA
+	CMP	R0, TECLA_DIREITA ; verifica se a tecla para mover o rover para a direita foi premida
 	JNZ	sai_ler_tecla_rover	; tecla que não interessa -> sair
 	MOV	R7, +1	; vai deslocar para a direita
-	CALL atraso
-	JMP    ve_limites_rover
+	CALL atraso ; se mover, chama a rotina atraso para não mover demasiado rápido
+	JMP    ve_limites_rover ; verifica se ao mover o rover os limites do ecrã não são ultrapassados
 
 testa_pausa:
-	MOV R6, LINHA_START
-	CALL teclado
-	CMP R0, COLUNA_2
-	JZ pausa 
-	RET
+	MOV R6, LINHA_START ; guarda no registo R6 a 4ª linha
+	CALL teclado ; chama a rotina teclado
+	CMP R0, COLUNA_2 ; verifica se  a tecla D é premida
+	JZ pausa ; se for vai para pausa
+	RET ; se não for premida a tecla D, fa-ze return
 
 pausa:
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
@@ -323,29 +323,29 @@ pausa:
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	MOV R10, 2
     CALL ha_tecla
-	JMP recomeca
+	JMP recomeca ; vai para a rotina recomeça
 
 recomeca:
-	MOV R6, LINHA_START
-	CALL nao_ha_tecla
-	MOV	R1, 1
+	MOV R6, LINHA_START ; guarda no registo R6 
+	CALL nao_ha_tecla ; fica à espera que uma tecla seja pressionada
+	MOV	R1, 1 ; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
 	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	
 	CALL ha_tecla
-	CALL desenha_rover
-	JMP le_tecla_rover
+	CALL desenha_rover ; desenha-se o rover novamente
+	JMP le_tecla_rover ; volta-se para a rotina le_tecla_rover
 
 testa_fim:
 	MOV  R6, LINHA_START	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
-	CMP	R0, TECLA_DIREITA
-	JZ termina_jogo
-	RET
+	CMP	R0, TECLA_DIREITA	; verifica se a tecla E foi premida
+	JZ termina_jogo ; se foi premida, termina-se o jogo
+	RET ; se não foi premida faz-se return
 
 termina_jogo: 
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 2			; cenário de fundo número 0
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	MOV	R1, 2			; cenário de fundo número 2
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
     JMP fim       ; termina o jogo
 
 fim: JMP fim ; termina o jogo
