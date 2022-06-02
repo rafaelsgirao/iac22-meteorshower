@@ -254,40 +254,47 @@ le_tecla_energia:
     CMP R0, R11
     JZ diminui_display
 
+	JMP pop_energia
+
+	pop_e_espera:
+
+	MOV R10, 8
     CALL ha_tecla
-    
+
     pop_energia:
     POP R11
     POP R9
     POP R4
 
+	
     RET
 
 aumenta_display:
     MOV R9, 064H
 
     CMP R9, R8
-    JZ pop_energia
+    JZ pop_e_espera
     
     MOV R9, 01H
     ADD R8, R9
 
     MOV [R4], R8
 
-    JMP pop_energia
+
+    JMP pop_e_espera
 
 
 diminui_display:
     MOV R9, 00H
 
     CMP R9, R8
-    JZ pop_energia
+    JZ pop_e_espera
 
     MOV R9, 01H
     SUB R8, R9
 
     MOV [R4], R8
-    JMP pop_energia
+    JMP pop_e_espera
 
 sai_ler_tecla_rover:
 	POP R11
@@ -314,6 +321,7 @@ pausa:
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 4			; cenário de fundo número 4
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	MOV R10, 2
     CALL ha_tecla
 	JMP recomeca
 
@@ -322,6 +330,8 @@ recomeca:
 	CALL nao_ha_tecla
 	MOV	R1, 1
 	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	
+	CALL ha_tecla
 	CALL desenha_rover
 	JMP le_tecla_rover
 
@@ -632,8 +642,8 @@ ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar premida
     MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
     AND  R0, R5        ; elimina bits para al�m dos bits 0-3
 
-    CMP  R0, 0         ; h� tecla premida?
-    JNZ  ht  
+    CMP  R0, R10         ; h� tecla premida?
+    JZ  ht  
         ; se ainda houver uma tecla premida, espera at� n�o haver
     POP	R5
 	POP	R3
@@ -656,8 +666,8 @@ nao_ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar pre
     MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
     AND  R0, R5        ; elimina bits para al�m dos bits 0-3
 
-    CMP  R0, 0         ; h� tecla premida?
-    JZ  nht      ; se ainda houver uma tecla premida, espera at� n�o haver
+    CMP  R0, R10         ; h� tecla premida?
+    JNZ  nht      ; se ainda houver uma tecla premida, espera at� n�o haver
 
     POP	R5
 	POP	R3
