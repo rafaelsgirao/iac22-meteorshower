@@ -27,7 +27,7 @@ DEFINE_PIXEL    		EQU 6012H      ; endereço do comando para escrever um pixel
 APAGA_AVISO     		EQU 6040H      ; endereço do comando para apagar o aviso de nenhum cenário selecionado
 APAGA_ECRÃ	 		EQU 6002H      ; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO  EQU 6042H      ; endereço do comando para selecionar uma imagem de fundo
-
+COLUNA_2 			EQU 2
 
 ; Constantes do Rover
 LINHA_INICIAL_ROVER        		EQU  31        ; linha do boneco (a meio do ecrã)
@@ -225,6 +225,7 @@ le_tecla_rover:				; Verificar se uma tecla para mover o rover está pressionada
 	PUSH R7
 	PUSH R11 ; FIXME: ver se é alterado mais a fundo
 	CALL testa_fim ; verifica se a tecla premida é a tecla E
+	CALL testa_pausa
 	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, 0
@@ -304,6 +305,29 @@ testa_direita:
 	MOV	R7, +1	; vai deslocar para a direita
 	CALL atraso
 	JMP    ve_limites_rover
+
+testa_pausa:
+	MOV R6, LINHA_START
+	CALL teclado
+	CMP R0, COLUNA_2
+	JZ pausa 
+	RET
+
+pausa:
+	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 4			; cenário de fundo número 4
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	JMP recomeca
+
+recomeca:
+	MOV R6, LINHA_START
+	CALL teclado
+	CMP R0, COLUNA_2
+	JNZ recomeca
+	MOV	R1, 1
+	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	CALL desenha_rover
+	JMP le_tecla_rover
 
 testa_fim:
 	MOV  R6, LINHA_START	; linha a testar no teclado
