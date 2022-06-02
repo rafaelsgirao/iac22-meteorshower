@@ -21,6 +21,10 @@ MASCARA				EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do 
 TECLA_ESQUERDA		EQU 1		; tecla na primeira coluna do teclado (tecla 0)
 TECLA_DIREITA		EQU 4		; tecla na terceira coluna do teclado (tecla 2)
 TECLA_ENERGIA       EQU 8
+TECLADO_1                       EQU 1           ; 1ª linha/coluna do teclado
+TECLADO_2                       EQU 2           ; 2ª linha/coluna do teclado
+TECLADO_3                       EQU 4           ; 3ª linha/coluna do teclado
+TECLADO_4                       EQU 8           ; 4ª linha/coluna do teclado
 DEFINE_LINHA   		EQU 600AH   	; endereço do comando para definir a linha
 DEFINE_COLUNA  		EQU 600CH   	; endereço do comando para definir a coluna
 DEFINE_PIXEL   		EQU 6012H   	; endereço do comando para escrever um pixel
@@ -30,11 +34,10 @@ SELECIONA_CENARIO_FUNDO  EQU 6042H	; endereço do comando para selecionar uma im
 COLUNA_2 			EQU 2
 
 ; Constantes do Rover
-LINHA_INICIAL_ROVER     EQU  31        ; linha do boneco (a meio do ecrã)
-COLUNA_INICIAL_ROVER	EQU  30        ; coluna do boneco (a meio do ecrã)
-LARGURA_ROVER			EQU	05H	       ; largura do boneco
-ALTURA_ROVER          	EQU 04H
-
+LINHA_FUNDO_ECRA        		EQU  31        ; linha do Rover (no fundo do ecrã)
+COLUNA_MEIO_ECRA			EQU  30        ; coluna inicial do Rover (a meio do ecrã)
+LARGURA_ROVER			        EQU  05H
+ALTURA_ROVER                            EQU  04H
 
 ;--------------------------------
 LINHA_INICIAL               EQU 1
@@ -77,17 +80,17 @@ SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
 ;----------------------TABELAS DE DEFINIÇÃO DAS FIGURAS---------------------------;		
 ;---------------------------------------------------------------------------------;
   
-DEF_ROVER:	; tabela que define o rover.
-			; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
-			; A linha e coluna são alteradas quando o Rover é movimentado
-	WORD        LINHA_INICIAL_ROVER
-	WORD        COLUNA_INICIAL_ROVER
-	WORD        LARGURA_ROVER
-	WORD        ALTURA_ROVER
-	WORD		0,			CASTANHO,		0,			CASTANHO,	0
-	WORD		CASTANHO, 	AZUL, 			CASTANHO, 	AZUL,		CASTANHO
-	WORD		CASTANHO, 	0, 				AZUL, 		0, 			CASTANHO
-	WORD		0, 			0, 				CASTANHO, 	0, 			0
+DEF_ROVER:			    ; tabela que define o rover.
+	; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
+	; A linha e coluna são alteradas quando o Rover é movimentado
+	WORD          LINHA_FUNDO_ECRA
+	WORD            COLUNA_MEIO_ECRA
+	WORD	        LARGURA_ROVER
+	WORD            ALTURA_ROVER
+	WORD		0, CASTANHO, 0, CASTANHO, 0
+	WORD		CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
+	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
+	WORD		0, 0, CASTANHO, 0, 0
      
 METEORO_NEUTRO_1:           ; Definicao do primeiro meteoro neutro
     WORD LINHA_INICIAL
@@ -140,12 +143,15 @@ METEORO_MAU_2:              ; Definicao do segundo meteoro mau
     WORD VERMELHO,  0,          0,          VERMELHO
 
 METEORO_MAU_3:              ; Definicao do terceiro meteoro mau
-    WORD LINHA_METEOROS_3
+    WORD 4                  ; Linha ecrã do meteoro
+    WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
+    WORD 5                  ; Largura do Meteoro
+    WORD 5                  ; Altura do Meteoro
 
     WORD VERMELHO,  0,          0,          0,          VERMELHO
-    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
-    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
     WORD VERMELHO,  0,          VERMELHO,   0,          VERMELHO
+    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
+    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
     WORD VERMELHO,  0,          0,          0,          VERMELHO
 
 EXPLOSAO:                   ; Definicao das explosoes
@@ -199,13 +205,63 @@ ecra_inicial:
 	MOV	R1, 1								; cenário de fundo número 1
         MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
     	CALLF desenha_rover                 ; desenha o rover 
+	CALLF desenha_um_meteoro        ; Desenha o meteoro inicial no topo do ecrã
         JMP ciclo_jogo                      ; Iniciar o jogo
 
 
 ciclo_jogo:                    ; O ciclo principal do jogo.
+	CALLF testa_tecla_descer_meteoro ; Verifica se a tecla para descer o meteoro foi premida (e age de acordo)
 	CALLF le_tecla_rover  	   ; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
     CALL le_tecla_energia
 	JMP ciclo_jogo
+
+; *********************************************************************************
+; * Desenha um meteoro neutro no tamanho máximo, no meio do ecrã.
+; *********************************************************************************
+
+desenha_um_meteoro:
+	PUSH R1
+	MOV R1, METEORO_MAU_3
+	CALL desenha_boneco
+	POP R1
+	RETF
+
+testa_tecla_descer_meteoro:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R6
+	PUSH R11
+	MOV  R6, TECLADO_3 ; Argumento de 'teclado' (testa 3ª linha)
+	CALL teclado           ; Output em R0
+	MOV R2, TECLADO_1        ; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
+	CMP R0, R2             ; Verificar se a tecla de descer o meteoro foi premida
+	JZ  desce_meteoro
+	JMP sai_desce_meteoro
+
+
+desce_meteoro: ;Rotina a ser generalizada na entrega final.
+	MOV R1, METEORO_MAU_3 ; Tabela que define o meteoro
+	MOV R2, [R1]           ; Obtém a linha atual do meteoro
+	MOV R3, LINHA_FUNDO_ECRA ;
+	CALL apaga_boneco     ; Apagar o meteoro na posição atual
+	CMP R2, R3             ; Testa se o meteoro está na última linha do ecrã
+	JZ sai_desce_meteoro  ; Se estiver, então não atualizar a linha
+	ADD R2, 1             ; Desce o meteoro uma linha (incrementa a linha atual)
+	MOV [R1], R2           ; Atualiza a linha do meteoro
+	CALLF desenha_um_meteoro
+	JMP sai_desce_meteoro
+
+
+sai_desce_meteoro:
+	POP R11
+	POP R6
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RETF
 
 ; *********************************************************************************
 ; * Desenha o rover no ecrã.
@@ -634,7 +690,7 @@ ha_tecla:          	   ; neste ciclo espera-se ate a tecla desejada nao estar pr
 	PUSH	R3
 	PUSH	R5
 
-    ht:				   ; ciclo interior do ha_tecla, sem os push'es
+ht:				   ; ciclo interior do ha_tecla, sem os push'es
     MOV  R2, TEC_LIN   ; endereço do periférico das linhas
 	MOV  R3, TEC_COL   ; endereço do periférico das colunas
 	MOV  R5, MASCARA
