@@ -241,27 +241,27 @@ le_tecla_energia:
     PUSH R9
     PUSH R11
 
-    MOV R11, 08H
-    MOV R4, DISPLAYS
+    MOV R11, 08H		  ; constante 08 fora dos limites - tem que ser guardada no registo
+    MOV R4, DISPLAYS	  ; R4 tem o endereco dos displays
     MOV R6, TECLA_DIREITA ; linha 3 (aumenta display)
 
     CALL teclado
-    CMP R0, R11 ; coluna 4 
+    CMP R0, R11 		  ; coluna 4 (linha 3 e coluna 4 - tecla B)
     JZ aumenta_display
 
-    MOV R6, R11
+    MOV R6, R11			  ; linha 4 (linha 4, coluna 4 - letra F)	
     CALL teclado
-    CMP R0, R11
+    CMP R0, R11				
     JZ diminui_display
 
-	JMP pop_energia
+	JMP pop_energia		
 
-	pop_e_espera:
+	pop_e_espera:		  ; no caso de alguma das teclas estar premida, espera ate largar
 
-	MOV R10, 8
+	MOV R10, 			  ; procura na coluna 4
     CALL ha_tecla
 
-    pop_energia:
+    pop_energia:		  ; nenhuma das 2 teclas premidas - nao precisa de esperar
     POP R11
     POP R9
     POP R4
@@ -325,13 +325,15 @@ pausa:
     CALL ha_tecla
 	JMP recomeca ; vai para a rotina recomeça
 
-recomeca:
+recomeca:				; volta ao ecra do jogo
 	MOV R6, LINHA_START ; guarda no registo R6 
 	CALL nao_ha_tecla ; fica à espera que uma tecla seja pressionada
 	MOV	R1, 1 ; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
 	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	
-	CALL ha_tecla
+	CALL ha_tecla	   ; espera que se largue D, caso contrario voltaria ao ciclo de novo
+					   ; (ficando preso no menu)
+
 	CALL desenha_rover ; desenha-se o rover novamente
 	JMP le_tecla_rover ; volta-se para a rotina le_tecla_rover
 
@@ -627,13 +629,13 @@ teclado:
 	POP	R2
 	RET
 
-ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar premida
+ha_tecla:          	   ; neste ciclo espera-se ate a tecla desejada nao estar premida
     PUSH R0
     PUSH	R2
 	PUSH	R3
 	PUSH	R5
 
-    ht:
+    ht:				   ; ciclo interior do ha_tecla, sem os push'es
     MOV  R2, TEC_LIN   ; endereço do periférico das linhas
 	MOV  R3, TEC_COL   ; endereço do periférico das colunas
 	MOV  R5, MASCARA
@@ -642,32 +644,33 @@ ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar premida
     MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
     AND  R0, R5        ; elimina bits para al�m dos bits 0-3
 
-    CMP  R0, R10         ; h� tecla premida?
-    JZ  ht  
-        ; se ainda houver uma tecla premida, espera at� n�o haver
+    CMP  R0, R10       ; h� tecla premida? (R10 guarda o valor da coluna pretendida)
+    JZ  ht  		   ; se a tecla desejada estiver premida, espera at� n�o haver  
+        
     POP	R5
 	POP	R3
 	POP	R2
     POP R0
 	RET
 
-nao_ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar premida
+nao_ha_tecla:          ; neste ciclo espera-se ate que se prima a tecla desejada 
+					   ; (oposto de ha_tecla)
     PUSH R0
     PUSH	R2
 	PUSH	R3
 	PUSH	R5
     
-    nht:
-    MOV  R2, TEC_LIN   ; endereço do periférico das linhas
-	MOV  R3, TEC_COL   ; endereço do periférico das colunas
+    nht:			   ; ciclo interior do nao_ha_tecla, sem os push'es
+    MOV  R2, TEC_LIN   
+	MOV  R3, TEC_COL   
 	MOV  R5, MASCARA
 
     MOVB [R2], R6      ; escrever no perif�rico de sa�da (linhas)
     MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
     AND  R0, R5        ; elimina bits para al�m dos bits 0-3
 
-    CMP  R0, R10         ; h� tecla premida?
-    JNZ  nht      ; se ainda houver uma tecla premida, espera at� n�o haver
+    CMP  R0, R10       ; h� tecla premida? (R10 tem o valor da coluna, tal como em ha_tecla)
+    JNZ  nht      	   ; se a tecla desejada nao estiver premida, repete o ciclo
 
     POP	R5
 	POP	R3
