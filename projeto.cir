@@ -750,7 +750,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "projeto.asm",
+    "programFilePathName" : "projeto_BACKUP.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1513,6 +1513,13 @@
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 51063,
     "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/fim(1).jpg", "Fundos/game_over.jpg", "../../pausa.jpg" ],
+    "sounds/videos settings" : [ {
+      "filePathName" : "../../Transferências/mixkit-space-void-ambiance-2006.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    } ],
     "addressable data" : {
       "className" : "ModuleExtensionMemoryMediaCenter",
       "elementID" : 83,
@@ -1634,7 +1641,7 @@
     "simGuiXRelative" : 775,
     "simGuiYRelative" : 756,
     "simGuiWidth" : 374,
-    "simGuiHeight" : 275,
+    "simGuiHeight" : 230,
     "clockPeriod" : 400,
     "startAutomatically" : true,
     "simulationMaster" : false,
@@ -1661,7 +1668,7 @@
     "simGuiXRelative" : 1130,
     "simGuiYRelative" : 757,
     "simGuiWidth" : 374,
-    "simGuiHeight" : 275,
+    "simGuiHeight" : 230,
     "clockPeriod" : 200,
     "startAutomatically" : true,
     "simulationMaster" : false,
@@ -1688,7 +1695,7 @@
     "simGuiXRelative" : 1493,
     "simGuiYRelative" : 757,
     "simGuiWidth" : 374,
-    "simGuiHeight" : 275,
+    "simGuiHeight" : 230,
     "clockPeriod" : 3000,
     "startAutomatically" : true,
     "simulationMaster" : false,
