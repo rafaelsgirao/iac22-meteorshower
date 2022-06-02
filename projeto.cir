@@ -750,7 +750,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "projeto.asm",
+    "programFilePathName" : "projeto_BACKUP.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1503,8 +1503,8 @@
     "positionX" : 810,
     "positionY" : 296,
     "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 833,
-    "simGuiYRelative" : 60,
+    "simGuiXRelative" : 860,
+    "simGuiYRelative" : 27,
     "simGuiWidth" : 1024,
     "simGuiHeight" : 512,
     "columnAddressNBits" : 6,
@@ -1512,7 +1512,14 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 51063,
-    "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/fim(1).jpg", "Fundos/game_over.jpg" ],
+    "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/fim(1).jpg", "Fundos/game_over.jpg", "Fundos/pausa.jpg", "Fundos/fim.jpeg", "Fundos/space1.jpeg", "Fundos/space3.jpeg" ],
+    "sounds/videos settings" : [ {
+      "filePathName" : "../../Transferências/mixkit-space-void-ambiance-2006.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    } ],
     "addressable data" : {
       "className" : "ModuleExtensionMemoryMediaCenter",
       "elementID" : 83,
