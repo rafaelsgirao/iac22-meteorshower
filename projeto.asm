@@ -230,9 +230,9 @@ desce_meteoro: ;Rotina a ser generalizada na entrega final.
 	MOV R1, METEORO_MAU_3 ; Tabela que define o meteoro
 	MOV R2, [R1]           ; Obtém a linha atual do meteoro
 	MOV R3, LINHA_FUNDO_ECRA ;
+	CALL apaga_boneco     ; Apagar o meteoro na posição atual
 	CMP R2, R3             ; Testa se o meteoro está na última linha do ecrã
 	JZ sai_desce_meteoro  ; Se estiver, então não atualizar a linha
-	CALL apaga_boneco     ; Apagar o meteoro na posição atual
 	ADD R2, 1             ; Desce o meteoro uma linha (incrementa a linha atual)
 	MOV [R1], R2           ; Atualiza a linha do meteoro
 	CALLF desenha_um_meteoro
