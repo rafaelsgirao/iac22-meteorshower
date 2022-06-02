@@ -256,7 +256,6 @@ le_tecla_energia:
     POP R11
     POP R6
     POP R4
-    CALL ha_tecla
     RET
 
 aumenta_display:
@@ -594,24 +593,6 @@ teclado:
 	MOVB R0, [R3]      ; ler do periférico de entrada (colunas)
 	AND  R0, R5        ; elimina bits para além dos bits 0-3
 	POP	R5
-	POP	R3
-	POP	R2
-	RET
-
-ha_tecla:              ; neste ciclo espera-se at� NENHUMA tecla estar premida
-    PUSH	R2
-	PUSH	R3
-	PUSH	R5
-	MOV  R2, TEC_LIN   ; endereço do periférico das linhas
-	MOV  R3, TEC_COL   ; endereço do periférico das colunas
-	MOV  R5, MASCARA   
-
-    MOVB [R2], R1      ; escrever no perif�rico de sa�da (linhas)
-    MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
-    AND  R0, R5        ; elimina bits para al�m dos bits 0-3
-    CMP  R0, 0         ; h� tecla premida?
-    JNZ  ha_tecla      ; se ainda houver uma tecla premida, espera at� n�o haver
-    POP	R5
 	POP	R3
 	POP	R2
 	RET
