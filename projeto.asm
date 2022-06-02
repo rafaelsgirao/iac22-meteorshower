@@ -257,7 +257,7 @@ le_tecla_energia:
 
 	pop_e_espera:		  ; no caso de alguma das teclas estar premida, espera ate largar
 
-	MOV R10, 			  ; procura na coluna 4
+	MOV R10, 8			  ; procura na coluna 4
     CALL ha_tecla
 
     pop_energia:		  ; nenhuma das 2 teclas premidas - nao precisa de esperar
@@ -275,7 +275,7 @@ aumenta_display:
     JZ pop_e_espera
     
     MOV R9, 01H
-    ADD R8, 			  ; R8 <- R8 + 1
+    ADD R8, 1			  ; R8 <- R8 + 1
 
     MOV [R4], R8		  ; escreve nos displays
 
