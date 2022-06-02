@@ -13,56 +13,56 @@
 ; *********************************************************************************
 TEC_LIN				EQU 0C000H	; endereço das linhas do teclado (periférico POUT-2)
 TEC_COL				EQU 0E000H	; endereço das colunas do teclado (periférico PIN)
-DISPLAYS   			EQU 0A000H  ; endere�o dos displays de 7 segmentos (perif�rico POUT-1)
+DISPLAYS   			EQU 0A000H  ; endereço dos displays de 7 segmentos (periférico POUT-1)
 
-LINHA_TECLADO		EQU 1		; linha a testar (1ª linha, 1000b)
-LINHA_START 		EQU 8       ; linha a testar para começar o jogo(4ª linha)
-MASCARA				EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
-TECLA_ESQUERDA		EQU 1		; tecla na primeira coluna do teclado (tecla 0)
-TECLA_DIREITA		EQU 4		; tecla na terceira coluna do teclado (tecla 2)
-TECLA_ENERGIA       EQU 8
+LINHA_TECLADO	         	EQU 1		; linha a testar (1ª linha, 1000b)
+LINHA_START 	         	EQU 8       ; linha a testar para começar o jogo(4ª linha)
+MASCARA		        	EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
+TECLA_ESQUERDA	         	EQU 1		; tecla na primeira coluna do teclado (tecla 0)
+TECLA_DIREITA	         	EQU 4		; tecla na terceira coluna do teclado (tecla 2)
+TECLA_ENERGIA                   EQU 8
 TECLADO_1                       EQU 1           ; 1ª linha/coluna do teclado
 TECLADO_2                       EQU 2           ; 2ª linha/coluna do teclado
 TECLADO_3                       EQU 4           ; 3ª linha/coluna do teclado
 TECLADO_4                       EQU 8           ; 4ª linha/coluna do teclado
-DEFINE_LINHA   		EQU 600AH   	; endereço do comando para definir a linha
-DEFINE_COLUNA  		EQU 600CH   	; endereço do comando para definir a coluna
-DEFINE_PIXEL   		EQU 6012H   	; endereço do comando para escrever um pixel
-APAGA_AVISO     	EQU 6040H   	; endereço do comando para apagar o aviso de nenhum cenário selecionado
+DEFINE_LINHA   	        	EQU 600AH   	; endereço do comando para definir a linha
+DEFINE_COLUNA  	        	EQU 600CH   	; endereço do comando para definir a coluna
+DEFINE_PIXEL   	        	EQU 6012H   	; endereço do comando para escrever um pixel
+APAGA_AVISO             	EQU 6040H   	; endereço do comando para apagar o aviso de nenhum cenário selecionado
 APAGA_ECRÃ	 		EQU 6002H  		; endereço do comando para apagar todos os pixels já desenhados
-SELECIONA_CENARIO_FUNDO  EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
+SELECIONA_CENARIO_FUNDO         EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
 COLUNA_2 			EQU 2
 
 ; Constantes do Rover
-LINHA_FUNDO_ECRA        		EQU  31        ; linha do Rover (no fundo do ecrã)
-COLUNA_MEIO_ECRA			EQU  30        ; coluna inicial do Rover (a meio do ecrã)
-LARGURA_ROVER			        EQU  05H
-ALTURA_ROVER                            EQU  04H
+LINHA_FUNDO_ECRA        	EQU  31        ; linha do Rover (no fundo do ecrã)
+COLUNA_MEIO_ECRA		EQU  30        ; coluna inicial do Rover (a meio do ecrã)
+LARGURA_ROVER		        EQU  05H
+ALTURA_ROVER                    EQU  04H
 
 ;--------------------------------
-LINHA_INICIAL               EQU 1
-LINHA_METEORO_NEUTRO_2      EQU 4
+LINHA_INICIAL                   EQU 1
+LINHA_METEORO_NEUTRO_2          EQU 4
 
-LINHA_INICIAL_METEOROS      EQU 7
-LINHA_METEOROS_2            EQU 10
+LINHA_INICIAL_METEOROS          EQU 7
+LINHA_METEOROS_2                EQU 10
 LINHA_METEOROS_3           	EQU 13
 
-LINHA_EXPLOSAO              EQU 1
-LINHA_DISPARO               EQU 1
+LINHA_EXPLOSAO                  EQU 1
+LINHA_DISPARO                   EQU 1
 ;--------------------------------
 
-MIN_COLUNA		EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
-MAX_COLUNA		EQU  63     ; número da coluna mais à direita que o objeto pode ocupar
-ATRASO			EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
+MIN_COLUNA	        	EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
+MAX_COLUNA	        	EQU  63         ; número da coluna mais à direita que o objeto pode ocupar
+ATRASO		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
 
 ; Cores
-CASTANHO		EQU	0FA52H		
-AZUL			EQU	0F00FH	
-ROSA_EXP		EQU	04F0EH  ; Cor rosa da explosão dos meteoros
-VERDE_FORA		EQU	0F0F0H	; Meteoros bons
-VERDE_DENTRO	EQU	060F0H	; Meteoros bons
-VERMELHO		EQU	0FF00H	; Meteoros maus
-CINZENTO		EQU	0C777H	; Cor neutra - Meteoros de longe
+CASTANHO	        	EQU	0FA52H		
+AZUL		        	EQU	0F00FH	
+ROSA_EXP	        	EQU	04F0EH  ; Cor rosa da explosão dos meteoros
+VERDE_FORA	        	EQU	0F0F0H	; Meteoros bons
+VERDE_DENTRO	                EQU	060F0H	; Meteoros bons
+VERMELHO	         	EQU	0FF00H	; Meteoros maus
+CINZENTO	         	EQU	0C777H	; Cor neutra - Meteoros de longe
 
 ; *********************************************************************************
 ; * Dados
@@ -70,10 +70,10 @@ CINZENTO		EQU	0C777H	; Cor neutra - Meteoros de longe
 PLACE       1000H
 pilha:
 	STACK 100H			; espaço reservado para a pilha
-						; (200H bytes, pois são 100H words)
+					; (200H bytes, pois são 100H words)
 SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
-						; inicializado. O 1.º end. de retorno será
-						; armazenado em 11FEH (1200H-2)
+					; inicializado. O 1.º end. de retorno será
+					; armazenado em 11FEH (1200H-2)
 
 
 ;---------------------------------------------------------------------------------;
@@ -93,104 +93,103 @@ DEF_ROVER:			    ; tabela que define o rover.
 	WORD		0, 0, CASTANHO, 0, 0
      
 METEORO_NEUTRO_1:           ; Definicao do primeiro meteoro neutro
-    WORD LINHA_INICIAL
+        WORD LINHA_INICIAL
 
-    WORD CINZENTO 
+        WORD CINZENTO 
 
 METEORO_NEUTRO_2:           ; Definicao do segundo meteoro neutro
-    WORD LINHA_METEORO_NEUTRO_2
+        WORD LINHA_METEORO_NEUTRO_2
 
-    WORD CINZENTO,      CINZENTO
-    WORD CINZENTO,      CINZENTO
+        WORD CINZENTO,      CINZENTO
+        WORD CINZENTO,      CINZENTO
 
 METEORO_BOM_1:              ; Definicao do primeiro meteoro bom
-    WORD LINHA_INICIAL_METEOROS
+        WORD LINHA_INICIAL_METEOROS
 
-    WORD 0,             VERDE_FORA,     0
-    WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
-    WORD 0, VERDE_FORA, 0
+        WORD 0,             VERDE_FORA,     0
+        WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
+        WORD 0, VERDE_FORA, 0
 
 METEORO_BOM_2:              ; Definicao do segundo meteoro bom
-    WORD LINHA_METEOROS_2
+        WORD LINHA_METEOROS_2
 
-    WORD 0,             VERDE_FORA,     VERDE_FORA,     0
-    WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA
-    WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
-    WORD 0,             VERDE_FORA,     VERDE_FORA,     0
+        WORD 0,             VERDE_FORA,     VERDE_FORA,     0
+        WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA
+        WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
+        WORD 0,             VERDE_FORA,     VERDE_FORA,     0
 
 METEORO_BOM_3:              ; Definicao do terceiro meteoro bom
-    WORD LINHA_METEOROS_3
+        WORD LINHA_METEOROS_3
 
-    WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
-    WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
-    WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_DENTRO,   VERDE_DENTRO,   VERDE_FORA
-    WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
-    WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
+        WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
+        WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
+        WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_DENTRO,   VERDE_DENTRO,   VERDE_FORA
+        WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
+        WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
 
 METEORO_MAU_1:              ; Definicao do primeiro meteoro mau
-    WORD LINHA_INICIAL_METEOROS
+        WORD LINHA_INICIAL_METEOROS
 
-    WORD VERMELHO,  VERMELHO,   VERMELHO
-    WORD 0,         VERMELHO,   0
-    WORD VERMELHO,  0,          VERMELHO
+        WORD VERMELHO,  VERMELHO,   VERMELHO
+        WORD 0,         VERMELHO,   0
+        WORD VERMELHO,  0,          VERMELHO
 
 METEORO_MAU_2:              ; Definicao do segundo meteoro mau
-    WORD LINHA_METEOROS_2
+        WORD LINHA_METEOROS_2
 
-    WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
-    WORD 0,         VERMELHO,   VERMELHO,   0
-    WORD VERMELHO,  0,          0,          VERMELHO
-    WORD VERMELHO,  0,          0,          VERMELHO
+        WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
+        WORD 0,         VERMELHO,   VERMELHO,   0
+        WORD VERMELHO,  0,          0,          VERMELHO
+        WORD VERMELHO,  0,          0,          VERMELHO
 
 METEORO_MAU_3:              ; Definicao do terceiro meteoro mau
-    WORD 4                  ; Linha ecrã do meteoro
-    WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
-    WORD 5                  ; Largura do Meteoro
-    WORD 5                  ; Altura do Meteoro
+        WORD 4                  ; Linha ecrã do meteoro
+        WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
+        WORD 5                  ; Largura do Meteoro
+        WORD 5                  ; Altura do Meteoro
 
-    WORD VERMELHO,  0,          0,          0,          VERMELHO
-    WORD VERMELHO,  0,          VERMELHO,   0,          VERMELHO
-    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
-    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
-    WORD VERMELHO,  0,          0,          0,          VERMELHO
+        WORD VERMELHO,  0,          0,          0,          VERMELHO
+        WORD VERMELHO,  0,          VERMELHO,   0,          VERMELHO
+        WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
+        WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
+        WORD VERMELHO,  0,          0,          0,          VERMELHO
 
 EXPLOSAO:                   ; Definicao das explosoes
-    WORD LINHA_EXPLOSAO
+        WORD LINHA_EXPLOSAO
 
-    WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
-    WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
-    WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
-    WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
-    WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
+        WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
+        WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
+        WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
+        WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
+        WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
 
 DISPARO:                    ; Definicao dos disparos da nave
-    WORD LINHA_DISPARO
-
-    WORD AZUL
+        WORD LINHA_DISPARO
+        WORD AZUL
 
 
 ; *********************************************************************************
 ; * Código
 ; *********************************************************************************
-PLACE   0                     ; o código tem de começar em 0000H
+PLACE   0                                  ; o código tem de começar em 0000H
 inicio:
-	MOV  SP, SP_inicial					; inicializa SP para a palavra a seguir
-    MOV  [APAGA_AVISO], R1				; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-    MOV	R1, 0							; cenário de fundo número 0
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	MOV	R7, 1							; valor a somar à coluna do boneco, para o movimentar
+    MOV  SP, SP_inicial			   ; inicializa SP para a palavra a seguir
+    MOV  [APAGA_AVISO], R1		   ; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+    MOV  [APAGA_ECRÃ], R1		   ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+    MOV	 R1, 0				   ; cenário de fundo número 0
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	   ; seleciona o cenário de fundo
+    MOV  R7, 1				   ; valor a somar à coluna do boneco, para o movimentar
 
-    CALL inicializa_energia ; Inicialização do display de energia
-    JMP ecra_inicial 		; Ecrã de início de jogo
+    CALL inicializa_energia                ; Inicialização do display de energia
+    JMP  ecra_inicial 		           ; Ecrã de início de jogo
 
 
 inicializa_energia:
     PUSH R4
-    MOV R4, DISPLAYS
+    MOV  R4, DISPLAYS
 
-    MOV R8, 064H	; 100 em hexadecimal
-    MOV [R4], R8	; escreve 64 nos displays
+    MOV  R8, 064H                      	   ; 100 em hexadecimal
+    MOV  [R4], R8              	           ; escreve 64 nos displays
 
     POP R4
     RET
