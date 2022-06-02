@@ -82,8 +82,8 @@ SP_inicial:			        	; este é o endereço (1200H) com que o SP deve ser
 DEF_ROVER:			    ; tabela que define o rover.
 	; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
 	; A linha e coluna são alteradas quando o Rover é movimentado
-	WORD            LINHA_INICIAL_ROVER
-	WORD            COLUNA_INICIAL_ROVER
+	WORD            LINHA_FUNDO_ECRA
+	WORD            COLUNA_MEIO_ECRA
 	WORD	        LARGURA_ROVER
 	WORD            ALTURA_ROVER
 	WORD		0, CASTANHO, 0, CASTANHO, 0
@@ -93,7 +93,7 @@ DEF_ROVER:			    ; tabela que define o rover.
      
 METEORO_NEUTRO_1:           ; Definicao do primeiro meteoro neutro
     WORD LINHA_INICIAL
-
+    WORD COLUNA_MEIO_ECRA
     WORD CINZENTO 
 
 METEORO_NEUTRO_2:           ; Definicao do segundo meteoro neutro
@@ -126,9 +126,8 @@ METEORO_BOM_3:              ; Definicao do terceiro meteoro bom
     WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
 
-METEORO_MAU_1:              ; Definicao do primeiro meteoro mau
-    WORD LINHA_INICIAL_METEOROS
-
+METEORO_MAU_1:              ; Definicao do primeiro meteoro mau WORD LINHA_INICIAL_METEOROS
+	WORD LINHA_METEOROS_2
     WORD VERMELHO,  VERMELHO,   VERMELHO
     WORD 0,         VERMELHO,   0
     WORD VERMELHO,  0,          VERMELHO
@@ -136,18 +135,21 @@ METEORO_MAU_1:              ; Definicao do primeiro meteoro mau
 METEORO_MAU_2:              ; Definicao do segundo meteoro mau
     WORD LINHA_METEOROS_2
 
-    WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
+    WORD VERMELHO,  0,          0,          VERMELHO
+    WORD VERMELHO,  0,          0,          VERMELHO
     WORD 0,         VERMELHO,   VERMELHO,   0
-    WORD VERMELHO,  0,          0,          VERMELHO
-    WORD VERMELHO,  0,          0,          VERMELHO
+    WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
 
 METEORO_MAU_3:              ; Definicao do terceiro meteoro mau
-    WORD LINHA_METEOROS_3
+    WORD 4                  ; Linha ecrã do meteoro
+    WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
+    WORD 5                  ; Largura do Meteoro
+    WORD 5                  ; Altura do Meteoro
 
     WORD VERMELHO,  0,          0,          0,          VERMELHO
-    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
-    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
     WORD VERMELHO,  0,          VERMELHO,   0,          VERMELHO
+    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
+    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
     WORD VERMELHO,  0,          0,          0,          VERMELHO
 
 EXPLOSAO:                   ; Definicao das explosoes
@@ -188,12 +190,63 @@ ecra_inicial:
 	MOV	R1, 1			; cenário de fundo número 0
         MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
     	CALLF desenha_rover                  ; 
+	CALLF desenha_um_meteoro        ; Desenha o meteoro inicial no topo do ecrã
         JMP ciclo_jogo                      ; Iniciar o jogo
 
 
 ciclo_jogo:                    ; O ciclo principal do jogo.
+	CALLF testa_tecla_descer_meteoro ; Verifica se a tecla para descer o meteoro foi premida (e age de acordo)
 	CALLF le_tecla_rover  ; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
+	CALLF testa_fim       ; Verifica se a tecla de acabar o jogo foi premida
 	JMP ciclo_jogo
+	
+; *********************************************************************************
+; * Desenha um meteoro neutro no tamanho máximo, no meio do ecrã.
+; *********************************************************************************
+
+desenha_um_meteoro:
+	PUSH R1
+	MOV R1, METEORO_MAU_3
+	CALL desenha_boneco
+	POP R1
+	RETF
+
+testa_tecla_descer_meteoro:
+	PUSH R0
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R6
+	PUSH R11
+	MOV  R6, TECLADO_3 ; Argumento de 'teclado' (testa 3ª linha)
+	CALL teclado           ; Output em R0
+	MOV R2, TECLADO_1        ; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
+	CMP R0, R2             ; Verificar se a tecla de descer o meteoro foi premida
+	JZ  desce_meteoro
+	JMP sai_desce_meteoro
+
+
+desce_meteoro: ;Rotina a ser generalizada na entrega final.
+	MOV R1, METEORO_MAU_3 ; Tabela que define o meteoro
+	MOV R2, [R1]           ; Obtém a linha atual do meteoro
+	MOV R3, LINHA_FUNDO_ECRA ;
+	CMP R2, R3             ; Testa se o meteoro está na última linha do ecrã
+	JZ sai_desce_meteoro  ; Se estiver, então não atualizar a linha
+	CALL apaga_boneco     ; Apagar o meteoro na posição atual
+	ADD R2, 1             ; Desce o meteoro uma linha (incrementa a linha atual)
+	MOV [R1], R2           ; Atualiza a linha do meteoro
+	CALLF desenha_um_meteoro
+	JMP sai_desce_meteoro
+
+
+sai_desce_meteoro:
+	POP R11
+	POP R6
+	POP R3
+	POP R2
+	POP R1
+	POP R0
+	RETF
 
 ; *********************************************************************************
 ; * Desenha o rover no ecrã.
@@ -207,19 +260,18 @@ desenha_rover:
 
 
 le_tecla_rover:				; Verificar se uma tecla para mover o rover está pressionada
-	PUSH R0
-	PUSH R6
-	PUSH R7
-	PUSH R11 ; FIXME: ver se é alterado mais a fundo
-	CALL testa_fim ; verifica se a tecla premida é a tecla E
-	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
+	PUSH    R0
+	PUSH    R6
+	PUSH    R7
+	PUSH    R11 
+	MOV     R6, LINHA_TECLADO	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, 0
-	JZ	sai_ler_tecla_rover		; se não há tecla pressionada, sair da rotina
+	JZ	sai_ler_tecla_rover	; se não há tecla pressionada, sair da rotina
 	CMP	R0, TECLA_ESQUERDA
 	JNZ	testa_direita
 	MOV	R7, -1			; vai deslocar para a esquerda
-	CALL atraso
+	CALL    atraso
 	JMP	ve_limites_rover
 
 sai_ler_tecla_rover:
@@ -237,17 +289,21 @@ testa_direita:
 	JMP    ve_limites_rover
 
 testa_fim:
-	MOV  R6, LINHA_START	; linha a testar no teclado
+	PUSH R0                         ; Argumento de retorno de 'teclado'
+	PUSH R6                 
+	MOV  R6, LINHA_START	        ; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, TECLA_DIREITA
 	JZ termina_jogo
-	RET
+	POP R6
+	POP R0
+	RETF
 
 termina_jogo: 
 	MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 2			; cenário de fundo número 0
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-    JMP fim       ; termina o jogo
+        MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+        JMP fim       ; termina o jogo
 
 fim: JMP fim ; termina o jogo
 
@@ -277,7 +333,6 @@ coluna_seguinte:
 	MOV R2, [R1]        ; Coluna atual do rover
 	ADD R2, R7          ; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
 	MOV [R1], R2        ; Escreve a nova coluna na memória do rover
-;	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda) fixme: ver se é inútil
 	POP R1              ; Restaura R1
 	PUSH R11
 	CALLF	desenha_rover		; vai desenhar o boneco de novo
@@ -308,6 +363,12 @@ desenha_boneco:
 	PUSH	R5
 	PUSH    R6
 	PUSH    R11
+
+;	MOV R7, [R1]           ; Obter valor de ativo/inativo do boneco
+;	CMP R7, 0
+;	JZ sai_desenha_boneco   ; Caso o boneco esteja inativo, não fazer nada
+;	ADD R1, 2               ; Endereço da linha do boneco
+
 	MOV R11, R1             ; Guardar endereço inicial da tabela
 	MOV R2, [R1]            ; Obtém a linha do boneco
 
@@ -338,7 +399,7 @@ desenha_muda_linha:  ; Passa a desenhar a linha seguinte.
 
 
 desenha_linha:             ; Desenha uma linha de pixels do boneco a partir da tabela
-        MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
+    MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
 	CALL escreve_pixel     ; Escreve o pixel atual
 	ADD R1, 2              ; Endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
 	ADD R3, 1              ; Próxima coluna
@@ -382,6 +443,12 @@ apaga_boneco:
 	PUSH    R5
 	PUSH    R6
 	PUSH    R11
+
+;	MOV R7, [R1]           ; Obter valor de ativo/inativo do boneco
+;	CMP R7, 0               ; Verifica se o boneco está inativo (com o valor a 0)
+;	JZ sai_apaga_boneco   ; Caso o boneco esteja inativo, não fazer nada
+;	ADD R1, 2               ; Endereço da linha do boneco
+
 	MOV R11, R1             ; Guardar endereço inicial da tabela
 	MOV R2, [R1] ; Obtém a linha de referência do boneco
 
@@ -480,6 +547,7 @@ testa_limites:
 	ADD     R1, 2         ; Endereço da largura do Rover
 	MOV     R6, [R1]      ; Obtém largura do Rover
 	JMP     testa_limite_esquerdo
+
 testa_limite_esquerdo:		; vê se o boneco chegou ao limite esquerdo
 	MOV	R5, MIN_COLUNA
 	CMP	R2, R5
