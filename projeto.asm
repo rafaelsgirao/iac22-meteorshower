@@ -23,6 +23,7 @@ DEFINE_PIXEL   	        EQU 6012H   ; endereço do comando para escrever um pixe
 APAGA_AVISO             EQU 6040H   ; endereço do comando para apagar o aviso de nenhum cenário selecionado
 APAGA_ECRÃ	 		    EQU 6002H  	; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
+TOCA_SOM				EQU 605AH      ; endereço do comando para tocar um som
 
 LINHA_TECLADO	        EQU 1		; linha a testar (1ª linha, 1000b)
 LINHA_START 	        EQU 8       ; linha a testar para começar o jogo(4ª linha)
@@ -256,9 +257,20 @@ desce_meteoro: 							; Rotina a ser generalizada na entrega final.
 	CMP R2, R3             				; Testa se o meteoro está na última linha do ecrã
 	JZ sai_desce_meteoro  				; Se estiver, então não atualizar a linha
 	ADD R2, 1             				; Desce o meteoro uma linha (incrementa a linha atual)
+	CALL muda_fundo_meteoro
 	MOV [R1], R2           				; Atualiza a linha do meteoro
 	CALLF desenha_um_meteoro
 	JMP sai_desce_meteoro
+
+muda_fundo_meteoro:
+	PUSH R1
+	PUSH R2
+	MOV	R1, 5							; cenário de fundo número 1
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	MOV [TOCA_SOM], R2
+	POP R2
+	POP R1
+	RET
 
 
 sai_desce_meteoro:
