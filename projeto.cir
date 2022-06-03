@@ -1512,9 +1512,15 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 51063,
-    "image paths" : [ "Fundos/start.jpg", "assets/fundo.jpg", "Fundos/fim(1).jpg", "Fundos/game_over.jpg", "Fundos/pausa.jpg", "Fundos/fim.jpeg", "Fundos/space1.jpeg", "Fundos/space3.jpeg" ],
+    "image paths" : [ "Imagens/inicio.jpg", "Imagens/jogo_1.jpg", "Imagens/fim.jpg", "Imagens/perdeu.jpg", "Imagens/pausa.jpg", "Imagens/jogo_2.jpeg", "Imagens/jogo_3.jpeg" ],
     "sounds/videos settings" : [ {
-      "filePathName" : "mixkit-space-void-ambiance-2006.wav",
+      "filePathName" : "Sons/disparo.mp3",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "Sons/nave_descer.mp3",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
