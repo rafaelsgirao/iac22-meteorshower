@@ -24,7 +24,7 @@ DEFINE_PIXEL   	        EQU 6012H   ; endereço do comando para escrever um pixe
 APAGA_AVISO             EQU 6040H   ; endereço do comando para apagar o aviso de nenhum cenário selecionado
 APAGA_ECRÃ	 		    EQU 6002H  	; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
-TOCA_SOM				EQU 605AH      ; endereço do comando para tocar um som
+TOCA_SOM				EQU 605AH   ; endereço do comando para tocar um som
 
 LINHA_TECLADO	        EQU 1		; linha a testar (1ª linha, 1000b)
 LINHA_START 	        EQU 8       ; linha a testar para começar o jogo(4ª linha)
@@ -40,15 +40,15 @@ COLUNA_2 			    EQU 2
 ; **********************************
 LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
 COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
-LARGURA_ROVER		    EQU  05H
-ALTURA_ROVER            EQU  04H
+LARGURA_ROVER		    EQU  05H	; lagura do rover
+ALTURA_ROVER            EQU  04H	; altura do rover
 
-LINHA_INICIAL           EQU 1
-LINHA_METEORO_NEUTRO_2  EQU 4
+LINHA_INICIAL           EQU 1		; linha inicial do meteoro neutro
+LINHA_METEORO_NEUTRO_2  EQU 4		; linha após se aumentar o tamanho do meteoro neutro
 
-LINHA_INICIAL_METEOROS  EQU 7
-LINHA_METEOROS_2        EQU 10
-LINHA_METEOROS_3        EQU 13
+LINHA_INICIAL_METEOROS  EQU 7		; linha inicial em que os meteoros se diferenciam
+LINHA_METEOROS_2        EQU 10		; linha em que os meteoros aumentam de tamanho
+LINHA_METEOROS_3        EQU 13		; linha em que os meteoros aumentam de tamanho pela segunda vez
 
 LINHA_EXPLOSAO          EQU 1
 LINHA_DISPARO           EQU 1
@@ -67,8 +67,8 @@ MIN_ENERGIA             EQU 0H      ; Energia mínima do Rover
 ; **********************
 ; * Constantes de cores
 ; **********************
-CASTANHO	        	EQU	0FA52H		
-AZUL		        	EQU	0F00FH	
+CASTANHO	        	EQU	0FA52H	; cor castanho do rover	
+AZUL		        	EQU	0F00FH	; cor azul do rover e disparos
 ROSA_EXP	        	EQU	04F0EH  ; Cor rosa da explosão dos meteoros
 VERDE_FORA	        	EQU	0F0F0H	; Meteoros bons
 VERDE_DENTRO	        EQU	060F0H	; Meteoros bons
@@ -98,6 +98,7 @@ DEF_ROVER:			    	; Tabela que define o rover.
 	WORD COLUNA_MEIO_ECRA
 	WORD LARGURA_ROVER
 	WORD ALTURA_ROVER
+
 	WORD 0, CASTANHO, 0, CASTANHO, 0
 	WORD CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
 	WORD CASTANHO, 0, AZUL, 0, CASTANHO
@@ -194,12 +195,12 @@ inicio:
     JMP  ecra_inicial 		           ; Ecrã de início de jogo
 
 
-inicializa_energia:
+inicializa_energia:						
     PUSH R4
     MOV  R4, DISPLAYS
 
     MOV  R8, MAX_ENERGIA                ; Energia inicial
-    MOV  [R4], R8              	        ; escreve 64 nos displays
+    MOV  [R4], R8              	        ; escreve 100 nos displays (em hexadecimal)
 
     POP R4
     RET
@@ -221,7 +222,7 @@ ecra_inicial:
 ciclo_jogo:                    			; O ciclo principal do jogo.
 	CALLF testa_tecla_descer_meteoro	; Verifica se a tecla para descer o meteoro foi premida (e age de acordo)
 	CALLF le_tecla_rover  	   			; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
-    CALL le_tecla_energia
+    CALL le_tecla_energia				; Verifica se uma tecla para aumentar ou diminuir a energia foi premida
 	JMP ciclo_jogo
 
 ; *********************************************************************************
@@ -326,12 +327,12 @@ le_tecla_energia:
 
     CALL teclado
     CMP R0, R11 		  				; coluna 4 (linha 3 e coluna 4 - tecla B)
-    JZ aumenta_display
+    JZ aumenta_display					; se for zero aumenta o valor do display de energia
 
     MOV R6, R11			  				; linha 4 (linha 4, coluna 4 - letra F)	
     CALL teclado
     CMP R0, R11				
-    JZ diminui_display
+    JZ diminui_display					; se for zero diminui o valor do display de energia
 
 	JMP pop_energia		
 
@@ -458,7 +459,7 @@ coluna_seguinte:
 	ADD  R2, R7          			; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
 	MOV  [R1], R2        			; Escreve a nova coluna na memória do rover
 	PUSH R11
-	CALLF desenha_rover					; vai desenhar o boneco de novo
+	CALLF desenha_rover				; vai desenhar o boneco de novo
 	POP  R11
 	POP R2
 	POP R1
