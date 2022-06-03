@@ -456,10 +456,11 @@ coluna_seguinte:
 	MOV  R2, [R1]        			; Coluna atual do rover
 	ADD  R2, R7          			; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
 	MOV  [R1], R2        			; Escreve a nova coluna na memória do rover
-	POP  R1              			; Restaura R1
 	PUSH R11
-	CALLF desenha_rover				; vai desenhar o boneco de novo
+	CALLF desenha_rover					; vai desenhar o boneco de novo
 	POP  R11
+	POP R2
+	POP R1
 	RET 				 			; Acaba rotina de move_rover
 	
 
