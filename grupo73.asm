@@ -3,6 +3,7 @@
 ; * Projeto de Introdução à Arquitetura de Computadores 2021/2022
 ; * Chuva de Meteoros
 ; *
+; * Grupo 73
 ; * ist1103860 Henrique Caroço
 ; * ist1103883 Luís Calado
 ; * ist199309  Rafael Girão
