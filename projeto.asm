@@ -36,13 +36,11 @@ COLUNA_2 			    EQU 2
 ; **********************************
 ; * Constantes de bonecos e do ecrã
 ; **********************************
-; Constantes do Rover
 LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
 COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
 LARGURA_ROVER		    EQU  05H
 ALTURA_ROVER            EQU  04H
 
-;--------------------------------
 LINHA_INICIAL           EQU 1
 LINHA_METEORO_NEUTRO_2  EQU 4
 
@@ -52,13 +50,21 @@ LINHA_METEOROS_3        EQU 13
 
 LINHA_EXPLOSAO          EQU 1
 LINHA_DISPARO           EQU 1
-;--------------------------------
 
-MIN_COLUNA	        	EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
-MAX_COLUNA	        	EQU  63     ; número da coluna mais à direita que o objeto pode ocupar
+
+MIN_COLUNA	        	EQU 0		; número da coluna mais à esquerda que o objeto pode ocupar
+MAX_COLUNA	        	EQU 63      ; número da coluna mais à direita que o objeto pode ocupar
 ATRASO		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
 
-; Cores
+; ********************
+; * Outras constantes
+; ********************
+MAX_ENERGIA		        EQU 64H     ; Energia do Rover ao começar o jogo (100 em hexadecimal)
+MIN_ENERGIA             EQU 0H      ; Energia mínima do Rover
+
+; **********************
+; * Constantes de cores
+; **********************
 CASTANHO	        	EQU	0FA52H		
 AZUL		        	EQU	0F00FH	
 ROSA_EXP	        	EQU	04F0EH  ; Cor rosa da explosão dos meteoros
@@ -72,7 +78,7 @@ CINZENTO	         	EQU	0C777H	; Cor neutra - Meteoros de longe
 ; *********************************************************************************
 PLACE   1000H
 pilha:
-	STACK 100H			; espaço reservado para a pilha
+	    STACK 100H		 	;espaço reservado para a pilha
 							; (200H bytes, pois são 100H words)
 SP_inicial:					; este é o endereço (1200H) com que o SP deve ser
 							; inicializado. O 1.º end. de retorno será
@@ -83,36 +89,36 @@ SP_inicial:					; este é o endereço (1200H) com que o SP deve ser
 ;----------------------TABELAS DE DEFINIÇÃO DAS FIGURAS---------------------------;		
 ;---------------------------------------------------------------------------------;
   
-DEF_ROVER:			    ; tabela que define o rover.
-	; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
-	; A linha e coluna são alteradas quando o Rover é movimentado
-	WORD        LINHA_FUNDO_ECRA
-	WORD		COLUNA_MEIO_ECRA
-	WORD	    LARGURA_ROVER
-	WORD        ALTURA_ROVER
-	WORD		0, CASTANHO, 0, CASTANHO, 0
-	WORD		CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
-	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
-	WORD		0, 0, CASTANHO, 0, 0
+DEF_ROVER:			    	; Tabela que define o rover.
+							; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
+							; A linha e coluna são alteradas quando o Rover é movimentado
+	WORD LINHA_FUNDO_ECRA
+	WORD COLUNA_MEIO_ECRA
+	WORD LARGURA_ROVER
+	WORD ALTURA_ROVER
+	WORD 0, CASTANHO, 0, CASTANHO, 0
+	WORD CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
+	WORD CASTANHO, 0, AZUL, 0, CASTANHO
+	WORD 0, 0, CASTANHO, 0, 0
      
-METEORO_NEUTRO_1:           ; Definicao do primeiro meteoro neutro
+METEORO_NEUTRO_1:           ; Definição do primeiro meteoro neutro
     WORD LINHA_INICIAL
     WORD CINZENTO 
 
-METEORO_NEUTRO_2:           ; Definicao do segundo meteoro neutro
+METEORO_NEUTRO_2:           ; Definição do segundo meteoro neutro
     WORD LINHA_METEORO_NEUTRO_2
 
 	WORD CINZENTO,      CINZENTO
     WORD CINZENTO,      CINZENTO
 
-METEORO_BOM_1:              ; Definicao do primeiro meteoro bom
+METEORO_BOM_1:              ; Definição do primeiro meteoro bom
     WORD LINHA_INICIAL_METEOROS
 
     WORD 0,             VERDE_FORA,     0
     WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
     WORD 0, VERDE_FORA, 0
 
-METEORO_BOM_2:              ; Definicao do segundo meteoro bom
+METEORO_BOM_2:              ; Definição do segundo meteoro bom
     WORD LINHA_METEOROS_2
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
@@ -120,7 +126,7 @@ METEORO_BOM_2:              ; Definicao do segundo meteoro bom
     WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
 
-METEORO_BOM_3:              ; Definicao do terceiro meteoro bom
+METEORO_BOM_3:              ; Definição do terceiro meteoro bom
     WORD LINHA_METEOROS_3
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
@@ -129,14 +135,14 @@ METEORO_BOM_3:              ; Definicao do terceiro meteoro bom
     WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
 
-METEORO_MAU_1:              ; Definicao do primeiro meteoro mau
+METEORO_MAU_1:              ; Definição do primeiro meteoro mau
     WORD LINHA_INICIAL_METEOROS
 
     WORD VERMELHO,  VERMELHO,   VERMELHO
     WORD 0,         VERMELHO,   0
     WORD VERMELHO,  0,          VERMELHO
 
-METEORO_MAU_2:              ; Definicao do segundo meteoro mau
+METEORO_MAU_2:              ; Definição do segundo meteoro mau
     WORD LINHA_METEOROS_2
 
     WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
@@ -144,7 +150,7 @@ METEORO_MAU_2:              ; Definicao do segundo meteoro mau
     WORD VERMELHO,  0,          0,          VERMELHO
     WORD VERMELHO,  0,          0,          VERMELHO
 
-METEORO_MAU_3:              ; Definicao do terceiro meteoro mau
+METEORO_MAU_3:              ; Definição do terceiro meteoro mau
     WORD 4                  ; Linha ecrã do meteoro
     WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
     WORD 5                  ; Largura do Meteoro
@@ -156,7 +162,7 @@ METEORO_MAU_3:              ; Definicao do terceiro meteoro mau
     WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
     WORD VERMELHO,  0,          0,          0,          VERMELHO
 
-EXPLOSAO:                   ; Definicao das explosoes
+EXPLOSAO:                   ; Definição das explosoes
     WORD LINHA_EXPLOSAO
 
     WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
@@ -165,7 +171,7 @@ EXPLOSAO:                   ; Definicao das explosoes
     WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
     WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
 
-DISPARO:                    ; Definicao dos disparos da nave
+DISPARO:                    ; Definição dos disparos da nave
     WORD LINHA_DISPARO
     WORD AZUL
 
@@ -173,16 +179,16 @@ DISPARO:                    ; Definicao dos disparos da nave
 ; *********************************************************************************
 ; * Código
 ; *********************************************************************************
-PLACE   0                                  ; o código tem de começar em 0000H
+PLACE   0                              ; o código tem de começar em 0000H
 inicio:
-    MOV  SP, SP_inicial			   ; inicializa SP para a palavra a seguir
-    MOV  [APAGA_AVISO], R1		   ; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
-    MOV  [APAGA_ECRÃ], R1		   ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-    MOV	 R1, 0				   ; cenário de fundo número 0
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	   ; seleciona o cenário de fundo
-    MOV  R7, 1				   ; valor a somar à coluna do boneco, para o movimentar
+    MOV  SP, SP_inicial			       ; inicializa SP para a palavra a seguir
+    MOV  [APAGA_AVISO], R1		   	   ; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+    MOV  [APAGA_ECRÃ], R1		   	   ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+    MOV	 R1, 0				   		   ; cenário de fundo número 0
+    MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
+    MOV  R7, 1				   		   ; valor a somar à coluna do boneco, para o movimentar
 
-    CALL inicializa_energia                ; Inicialização do display de energia
+    CALL inicializa_energia            ; Inicialização do display de energia
     JMP  ecra_inicial 		           ; Ecrã de início de jogo
 
 
@@ -190,29 +196,29 @@ inicializa_energia:
     PUSH R4
     MOV  R4, DISPLAYS
 
-    MOV  R8, 064H                      	   ; 100 em hexadecimal
-    MOV  [R4], R8              	           ; escreve 64 nos displays
+    MOV  R8, MAX_ENERGIA                ; Energia inicial
+    MOV  [R4], R8              	        ; escreve 64 nos displays
 
     POP R4
     RET
 
 ecra_inicial:
 	MOV R11, ATRASO
-	MOV  R6, LINHA_START					; linha a testar no teclado
-	CALL	teclado							; leitura às teclas
-	CMP	R0, TECLADO_1  				; compara para ver se a tecla C foi premida
-	JNZ ecra_inicial						; se não foi premida, espera-se que seja premida para começar o jogo
-	MOV  [APAGA_ECRÃ], R1					; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 1								; cenário de fundo número 1
+	MOV  R6, LINHA_START				; linha a testar no teclado
+	CALL	teclado						; leitura às teclas
+	CMP	R0, TECLADO_1  					; compara para ver se a tecla C foi premida
+	JNZ ecra_inicial					; se não foi premida, espera-se que seja premida para começar o jogo
+	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 1							; cenário de fundo número 1
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
     CALLF desenha_rover                 ; desenha o rover 
-	CALLF desenha_um_meteoro        ; Desenha o meteoro inicial no topo do ecrã
+	CALLF desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecrã
     JMP ciclo_jogo                      ; Iniciar o jogo
 
 
-ciclo_jogo:                    ; O ciclo principal do jogo.
-	CALLF testa_tecla_descer_meteoro ; Verifica se a tecla para descer o meteoro foi premida (e age de acordo)
-	CALLF le_tecla_rover  	   ; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
+ciclo_jogo:                    			; O ciclo principal do jogo.
+	CALLF testa_tecla_descer_meteoro	; Verifica se a tecla para descer o meteoro foi premida (e age de acordo)
+	CALLF le_tecla_rover  	   			; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
     CALL le_tecla_energia
 	JMP ciclo_jogo
 
@@ -234,23 +240,23 @@ testa_tecla_descer_meteoro:
 	PUSH R3
 	PUSH R6
 	PUSH R11
-	MOV  R6, TECLADO_3 ; Argumento de 'teclado' (testa 3ª linha)
-	CALL teclado           ; Output em R0
-	MOV R2, TECLADO_1        ; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
-	CMP R0, R2             ; Verificar se a tecla de descer o meteoro foi premida
+	MOV  R6, TECLADO_3 					; Argumento de 'teclado' (testa 3ª linha)
+	CALL teclado           				; Output em R0
+	MOV R2, TECLADO_1        			; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
+	CMP R0, R2             				; Verificar se a tecla de descer o meteoro foi premida
 	JZ  desce_meteoro
 	JMP sai_desce_meteoro
 
 
-desce_meteoro: ;Rotina a ser generalizada na entrega final.
-	MOV R1, METEORO_MAU_3 ; Tabela que define o meteoro
-	MOV R2, [R1]           ; Obtém a linha atual do meteoro
-	MOV R3, LINHA_FUNDO_ECRA ;
-	CALL apaga_boneco     ; Apagar o meteoro na posição atual
-	CMP R2, R3             ; Testa se o meteoro está na última linha do ecrã
-	JZ sai_desce_meteoro  ; Se estiver, então não atualizar a linha
-	ADD R2, 1             ; Desce o meteoro uma linha (incrementa a linha atual)
-	MOV [R1], R2           ; Atualiza a linha do meteoro
+desce_meteoro: 							; Rotina a ser generalizada na entrega final.
+	MOV R1, METEORO_MAU_3 				; Tabela que define o meteoro
+	MOV R2, [R1]           				; Obtém a linha atual do meteoro
+	MOV R3, LINHA_FUNDO_ECRA
+	CALL apaga_boneco     				; Apagar o meteoro na posição atual
+	CMP R2, R3             				; Testa se o meteoro está na última linha do ecrã
+	JZ sai_desce_meteoro  				; Se estiver, então não atualizar a linha
+	ADD R2, 1             				; Desce o meteoro uma linha (incrementa a linha atual)
+	MOV [R1], R2           				; Atualiza a linha do meteoro
 	CALLF desenha_um_meteoro
 	JMP sai_desce_meteoro
 
@@ -271,27 +277,27 @@ sai_desce_meteoro:
 ; * Desenha o rover no ecrã.
 ; *********************************************************************************
 desenha_rover:
-	PUSH R1             ; Resguardar registo a ser alterado
-	MOV R1, DEF_ROVER   ; Endereço da tabela que define o Rover (argumento de desenha_boneco)
+	PUSH R1             				; Resguardar registo a ser alterado
+	MOV R1, DEF_ROVER   				; Endereço da tabela que define o Rover (argumento de desenha_boneco)
 	CALL desenha_boneco
-	POP R1              ; Resgatar registo alterado
+	POP R1              				; Resgatar registo alterado
 	RETF
 
 
-le_tecla_rover:				; Verificar se uma tecla para mover o rover está pressionada
+le_tecla_rover:							; Verificar se uma tecla para mover o rover está pressionada
 	PUSH R0
 	PUSH R6
 	PUSH R7
 	PUSH R11 				
-	CALL testa_fim 			; verifica se a tecla premida é a tecla E
+	CALL testa_fim 						; verifica se a tecla premida é a tecla E
 	CALL testa_pausa
-	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
-	CALL	teclado			; leitura às teclas
+	MOV  R6, LINHA_TECLADO				; linha a testar no teclado
+	CALL	teclado						; leitura às teclas
 	CMP	R0, 0
-	JZ	sai_ler_tecla_rover	; se não há tecla pressionada, sair da rotina
+	JZ	sai_ler_tecla_rover				; se não há tecla pressionada, sair da rotina
 	CMP	R0, TECLADO_1
 	JNZ	testa_direita
-	MOV	R7, -1				; vai deslocar para a esquerda
+	MOV	R7, -1							; vai deslocar para a esquerda
 	CALL atraso
 	JMP	ve_limites_rover
 
@@ -300,54 +306,54 @@ le_tecla_energia:
     PUSH R9
     PUSH R11
 
-    MOV R11, 08H		  ; constante 08 fora dos limites - tem que ser guardada no registo
-    MOV R4, DISPLAYS	  ; R4 tem o endereco dos displays
-    MOV R6, TECLADO_3 ; linha 3 (aumenta display)
+    MOV R11, TECLADO_4	  				; constante 08 fora dos limites - tem que ser guardada no registo
+    MOV R4,  DISPLAYS	  				; R4 tem o endereco dos displays
+    MOV R6,  TECLADO_3 					; linha 3 (aumenta display)
 
     CALL teclado
-    CMP R0, R11 		  ; coluna 4 (linha 3 e coluna 4 - tecla B)
+    CMP R0, R11 		  				; coluna 4 (linha 3 e coluna 4 - tecla B)
     JZ aumenta_display
 
-    MOV R6, R11			  ; linha 4 (linha 4, coluna 4 - letra F)	
+    MOV R6, R11			  				; linha 4 (linha 4, coluna 4 - letra F)	
     CALL teclado
     CMP R0, R11				
     JZ diminui_display
 
 	JMP pop_energia		
 
-pop_e_espera:		  ; no caso de alguma das teclas estar premida, espera ate largar
-	MOV R10, 8			  ; procura na coluna 4
+pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
+	MOV R10, 8			  				; procura na coluna 4
     CALL ha_tecla
 
-pop_energia:		  ; nenhuma das 2 teclas premidas - nao precisa de esperar
+pop_energia:		  					; nenhuma das 2 teclas premidas - não precisa de esperar
     POP R11
     POP R9
     POP R4
     RET
 
 aumenta_display:
-    MOV R9, 064H
+    MOV R9, MAX_ENERGIA   
 
-    CMP R9, R8			  ; limite superior atingido (100) - salta a adicao
+    CMP R9, R8			  				; limite superior atingido (100) - salta a adição
     JZ pop_e_espera
     
-    MOV R9, 01H
-    ADD R8, 1			  ; R8 <- R8 + 1
+    MOV R9, 01H         
+    ADD R8, 1			  				; R8 <- R8 + 1
 
-    MOV [R4], R8		  ; escreve nos displays
+    MOV [R4], R8		  				; escreve nos displays
     JMP pop_e_espera
 
 
 diminui_display:
-    MOV R9, 00H
+    MOV R9, 0
 
-    CMP R9, R8			; limite inferior atingido (0) - salta a subtracao
+    CMP R9, R8							; limite inferior atingido (0) - salta a subtracao
     JZ pop_e_espera
 
     MOV R9, 01H
-    SUB R8, R9			; R8 <- R8 - 1
+    SUB R8, R9							; R8 <- R8 - 1
 
-    MOV [R4], R8		; escreve nos displays
+    MOV [R4], R8						; escreve nos displays
     JMP pop_e_espera
 
 sai_ler_tecla_rover:
@@ -358,18 +364,18 @@ sai_ler_tecla_rover:
 	RETF
 
 testa_direita:
-	CMP	R0, TECLADO_3 	; verifica se a tecla para mover o rover para a direita foi premida
-	JNZ	sai_ler_tecla_rover	; tecla que não interessa -> sair
-	MOV	R7, +1				; vai deslocar para a direita
-	CALL atraso 			; se mover, chama a rotina atraso para não mover demasiado rápido
-	JMP    ve_limites_rover ; verifica se ao mover o rover os limites do ecrã não são ultrapassados
+	CMP	R0, TECLADO_3 					; verifica se a tecla para mover o rover para a direita foi premida
+	JNZ	sai_ler_tecla_rover				; tecla que não interessa -> sair
+	MOV	R7, +1							; vai deslocar para a direita
+	CALL atraso 						; se mover, chama a rotina atraso para não mover demasiado rápido
+	JMP    ve_limites_rover 			; verifica se ao mover o rover os limites do ecrã não são ultrapassados
 
 testa_pausa:
-	MOV R6, LINHA_START 	; guarda no registo R6 a 4ª linha
-	CALL teclado 			; chama a rotina teclado
-	CMP R0, COLUNA_2 		; verifica se  a tecla D é premida
-	JZ pausa 				; se for vai para pausa
-	RET 					; se não for premida a tecla D, fa-ze return
+	MOV R6, LINHA_START 				; guarda no registo R6 a 4ª linha
+	CALL teclado 						; chama a rotina teclado
+	CMP R0, COLUNA_2 					; verifica se  a tecla D é premida
+	JZ pausa 							; se for vai para pausa
+	RET 								; se não for premida a tecla D, fa-ze return
 
 pausa:
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
@@ -379,25 +385,25 @@ pausa:
     CALL ha_tecla
 	JMP recomeca 						; vai para a rotina recomeça
 
-recomeca:		; volta ao ecra do jogo
+recomeca:								; volta ao ecrã do jogo
 	MOV R6, LINHA_START 				; guarda no registo R6 
 	CALL nao_ha_tecla 					; fica à espera que uma tecla seja pressionada
 	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
 	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	
-	CALL ha_tecla	   ; espera que se largue D, caso contrario voltaria ao ciclo de novo
-					   ; (ficando preso no menu)
+	CALL ha_tecla	   					; espera que se largue D, caso contrario voltaria ao ciclo de novo
+					   					; (ficando preso no menu)
 
-	CALLF desenha_rover ; desenha-se o rover novamente
+	CALLF desenha_rover 				; desenha-se o rover novamente
 	CALLF desenha_um_meteoro
-	JMP ciclo_jogo ; volta-se para a rotina le_tecla_rover
+	JMP ciclo_jogo 						; volta-se para a rotina le_tecla_rover
 
 testa_fim:
-	MOV  R6, LINHA_START	; linha a testar no teclado
-	CALL	teclado			; leitura às teclas
-	CMP	R0, TECLADO_3	; verifica se a tecla E foi premida
-	JZ termina_jogo 		; se foi premida, termina-se o jogo
-	RET 					; se não foi premida faz-se return
+	MOV  R6, LINHA_START				; linha a testar no teclado
+	CALL	teclado						; leitura às teclas
+	CMP	R0, TECLADO_3					; verifica se a tecla E foi premida
+	JZ termina_jogo 					; se foi premida, termina-se o jogo
+	RET 								; se não foi premida faz-se return
 
 termina_jogo: 
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
@@ -405,45 +411,49 @@ termina_jogo:
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
     JMP fim       						; termina o jogo
 
-fim: JMP fim ; termina o jogo
+fim: JMP fim 							; termina o jogo
 
 ve_limites_rover:
-	CALL	testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
+	CALL	testa_limites				; vê se chegou aos limites do ecrã e se sim força R7 a 0
 	CMP	R7, 0
-	JZ	sai_ler_tecla_rover		; se não é para movimentar o objeto, sai da rotina
-	CALL     move_rover         ; Caso contrário, movimentar rover
-	JMP sai_ler_tecla_rover     ; Terminar rotina
+	JZ	sai_ler_tecla_rover				; se não é para movimentar o objeto, sai da rotina
+	CALL     move_rover         		; Caso contrário, movimentar rover
+	JMP sai_ler_tecla_rover     		; Terminar rotina
 
-; ****************************
-; * move_rover
+; *********************************************************************
+; * MOVE_ROVER (move_rover, coluna_seguinte)
 ; * Argumentos:
 ; *    - R7-> a -1 ou 1; mover o boneco ou para a esquerda ou direita.
-; ****************************
+; * Outros registos usados:
+; *    - R1-> Definição do Rover
+; *    - R2-> Endereço
+; *********************************************************************
 move_rover:
 	PUSH R1
-	MOV R1, DEF_ROVER           ; Argumento do apaga_boneco
-	CALL	apaga_boneco		; apaga o boneco na sua posição corrente
-	POP R1
-	JMP     coluna_seguinte
+	MOV  R1, DEF_ROVER           ; Argumento do apaga_boneco
+	CALL apaga_boneco		; apaga o boneco na sua posição corrente
+	POP  R1
+	JMP  coluna_seguinte
 
 coluna_seguinte:
-	PUSH R1             ; Guarda R1
-	MOV R1, DEF_ROVER   ; Endereço do desenho do rover
-	ADD R1, 2           ; Endereço da coluna atual do rover
-	MOV R2, [R1]        ; Coluna atual do rover
-	ADD R2, R7          ; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
-	MOV [R1], R2        ; Escreve a nova coluna na memória do rover
-	POP R1              ; Restaura R1
+	PUSH R1             			; Guarda R1
+	PUSH R2             			; Guarda R2
+	MOV  R1, DEF_ROVER   			; Endereço do desenho do rover
+	ADD  R1, 2           			; Endereço da coluna atual do rover
+	MOV  R2, [R1]        			; Coluna atual do rover
+	ADD  R2, R7          			; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
+	MOV  [R1], R2        			; Escreve a nova coluna na memória do rover
+	POP  R1              			; Restaura R1
 	PUSH R11
-	CALLF	desenha_rover		; vai desenhar o boneco de novo
-	POP R11
-	RET ; Acaba rotina de move_rover
+	CALLF desenha_rover				; vai desenhar o boneco de novo
+	POP  R11
+	RET 				 			; Acaba rotina de move_rover
 	
 
 ; **********************************************************************
 ; DESENHA_BONECO - Desenha um boneco a partir da linha e coluna indicadas
 ;			    com a forma e cor definidas na tabela indicada.
-; Argumentos:   R1 - Tabela que define o boneco
+; Argumentos:    R1 - Tabela que define o boneco
 ;
 ; Outros registos usados:
 ;                R2 - Linha de referência do boneco
@@ -515,7 +525,7 @@ sai_desenha_boneco:
 ; **********************************************************************
 ; APAGA_BONECO - Apaga um boneco na linha e coluna indicadas
 ;			  com a forma definida na tabela indicada.
-; Argumentos:   R1 - tabela que define o boneco
+; Argumentos:    R1 - tabela que define o boneco
 
 
 ; Outros registos usados:
