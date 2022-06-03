@@ -11,48 +11,51 @@
 ; *********************************************************************************
 ; * Constantes
 ; *********************************************************************************
-TEC_LIN				EQU 0C000H	; endereço das linhas do teclado (periférico POUT-2)
-TEC_COL				EQU 0E000H	; endereço das colunas do teclado (periférico PIN)
-DISPLAYS   			EQU 0A000H  ; endereço dos displays de 7 segmentos (periférico POUT-1)
+; *************
+; * Periféricos
+; *************
+TEC_LIN					EQU 0C000H	; endereço das linhas do teclado (periférico POUT-2)
+TEC_COL					EQU 0E000H	; endereço das colunas do teclado (periférico PIN)
+DISPLAYS   				EQU 0A000H  ; endereço dos displays de 7 segmentos (periférico POUT-1)
+DEFINE_LINHA   	        EQU 600AH   ; endereço do comando para definir a linha
+DEFINE_COLUNA  	        EQU 600CH   ; endereço do comando para definir a coluna
+DEFINE_PIXEL   	        EQU 6012H   ; endereço do comando para escrever um pixel
+APAGA_AVISO             EQU 6040H   ; endereço do comando para apagar o aviso de nenhum cenário selecionado
+APAGA_ECRÃ	 		    EQU 6002H  	; endereço do comando para apagar todos os pixels já desenhados
+SELECIONA_CENARIO_FUNDO EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
 
-LINHA_TECLADO	         	EQU 1		; linha a testar (1ª linha, 1000b)
-LINHA_START 	         	EQU 8       ; linha a testar para começar o jogo(4ª linha)
+LINHA_TECLADO	        EQU 1		; linha a testar (1ª linha, 1000b)
+LINHA_START 	        EQU 8       ; linha a testar para começar o jogo(4ª linha)
 MASCARA		        	EQU 0FH		; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
-TECLA_ESQUERDA	         	EQU 1		; tecla na primeira coluna do teclado (tecla 0)
-TECLA_DIREITA	         	EQU 4		; tecla na terceira coluna do teclado (tecla 2)
-TECLA_ENERGIA                   EQU 8
-TECLADO_1                       EQU 1           ; 1ª linha/coluna do teclado
-TECLADO_2                       EQU 2           ; 2ª linha/coluna do teclado
-TECLADO_3                       EQU 4           ; 3ª linha/coluna do teclado
-TECLADO_4                       EQU 8           ; 4ª linha/coluna do teclado
-DEFINE_LINHA   	        	EQU 600AH   	; endereço do comando para definir a linha
-DEFINE_COLUNA  	        	EQU 600CH   	; endereço do comando para definir a coluna
-DEFINE_PIXEL   	        	EQU 6012H   	; endereço do comando para escrever um pixel
-APAGA_AVISO             	EQU 6040H   	; endereço do comando para apagar o aviso de nenhum cenário selecionado
-APAGA_ECRÃ	 		EQU 6002H  		; endereço do comando para apagar todos os pixels já desenhados
-SELECIONA_CENARIO_FUNDO         EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
-COLUNA_2 			EQU 2
+TECLADO_1               EQU 1       ; 1ª linha/coluna do teclado
+TECLADO_2               EQU 2       ; 2ª linha/coluna do teclado
+TECLADO_3               EQU 4       ; 3ª linha/coluna do teclado
+TECLADO_4               EQU 8       ; 4ª linha/coluna do teclado
+COLUNA_2 			    EQU 2
 
+; **********************************
+; * Constantes de bonecos e do ecrã
+; **********************************
 ; Constantes do Rover
-LINHA_FUNDO_ECRA        	EQU  31        ; linha do Rover (no fundo do ecrã)
-COLUNA_MEIO_ECRA		EQU  30        ; coluna inicial do Rover (a meio do ecrã)
-LARGURA_ROVER		        EQU  05H
-ALTURA_ROVER                    EQU  04H
+LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
+COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
+LARGURA_ROVER		    EQU  05H
+ALTURA_ROVER            EQU  04H
 
 ;--------------------------------
-LINHA_INICIAL                   EQU 1
-LINHA_METEORO_NEUTRO_2          EQU 4
+LINHA_INICIAL           EQU 1
+LINHA_METEORO_NEUTRO_2  EQU 4
 
-LINHA_INICIAL_METEOROS          EQU 7
-LINHA_METEOROS_2                EQU 10
-LINHA_METEOROS_3           	EQU 13
+LINHA_INICIAL_METEOROS  EQU 7
+LINHA_METEOROS_2        EQU 10
+LINHA_METEOROS_3        EQU 13
 
-LINHA_EXPLOSAO                  EQU 1
-LINHA_DISPARO                   EQU 1
+LINHA_EXPLOSAO          EQU 1
+LINHA_DISPARO           EQU 1
 ;--------------------------------
 
 MIN_COLUNA	        	EQU  0		; número da coluna mais à esquerda que o objeto pode ocupar
-MAX_COLUNA	        	EQU  63         ; número da coluna mais à direita que o objeto pode ocupar
+MAX_COLUNA	        	EQU  63     ; número da coluna mais à direita que o objeto pode ocupar
 ATRASO		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
 
 ; Cores
@@ -60,20 +63,20 @@ CASTANHO	        	EQU	0FA52H
 AZUL		        	EQU	0F00FH	
 ROSA_EXP	        	EQU	04F0EH  ; Cor rosa da explosão dos meteoros
 VERDE_FORA	        	EQU	0F0F0H	; Meteoros bons
-VERDE_DENTRO	                EQU	060F0H	; Meteoros bons
+VERDE_DENTRO	        EQU	060F0H	; Meteoros bons
 VERMELHO	         	EQU	0FF00H	; Meteoros maus
 CINZENTO	         	EQU	0C777H	; Cor neutra - Meteoros de longe
 
 ; *********************************************************************************
 ; * Dados
 ; *********************************************************************************
-PLACE       1000H
+PLACE   1000H
 pilha:
 	STACK 100H			; espaço reservado para a pilha
-					; (200H bytes, pois são 100H words)
-SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
-					; inicializado. O 1.º end. de retorno será
-					; armazenado em 11FEH (1200H-2)
+							; (200H bytes, pois são 100H words)
+SP_inicial:					; este é o endereço (1200H) com que o SP deve ser
+							; inicializado. O 1.º end. de retorno será
+							; armazenado em 11FEH (1200H-2)
 
 
 ;---------------------------------------------------------------------------------;
@@ -83,89 +86,88 @@ SP_inicial:				; este é o endereço (1200H) com que o SP deve ser
 DEF_ROVER:			    ; tabela que define o rover.
 	; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
 	; A linha e coluna são alteradas quando o Rover é movimentado
-	WORD          LINHA_FUNDO_ECRA
-	WORD            COLUNA_MEIO_ECRA
-	WORD	        LARGURA_ROVER
-	WORD            ALTURA_ROVER
+	WORD        LINHA_FUNDO_ECRA
+	WORD		COLUNA_MEIO_ECRA
+	WORD	    LARGURA_ROVER
+	WORD        ALTURA_ROVER
 	WORD		0, CASTANHO, 0, CASTANHO, 0
 	WORD		CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
 	WORD		CASTANHO, 0, AZUL, 0, CASTANHO
 	WORD		0, 0, CASTANHO, 0, 0
      
 METEORO_NEUTRO_1:           ; Definicao do primeiro meteoro neutro
-        WORD LINHA_INICIAL
-
-        WORD CINZENTO 
+    WORD LINHA_INICIAL
+    WORD CINZENTO 
 
 METEORO_NEUTRO_2:           ; Definicao do segundo meteoro neutro
-        WORD LINHA_METEORO_NEUTRO_2
+    WORD LINHA_METEORO_NEUTRO_2
 
-        WORD CINZENTO,      CINZENTO
-        WORD CINZENTO,      CINZENTO
+	WORD CINZENTO,      CINZENTO
+    WORD CINZENTO,      CINZENTO
 
 METEORO_BOM_1:              ; Definicao do primeiro meteoro bom
-        WORD LINHA_INICIAL_METEOROS
+    WORD LINHA_INICIAL_METEOROS
 
-        WORD 0,             VERDE_FORA,     0
-        WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
-        WORD 0, VERDE_FORA, 0
+    WORD 0,             VERDE_FORA,     0
+    WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
+    WORD 0, VERDE_FORA, 0
 
 METEORO_BOM_2:              ; Definicao do segundo meteoro bom
-        WORD LINHA_METEOROS_2
+    WORD LINHA_METEOROS_2
 
-        WORD 0,             VERDE_FORA,     VERDE_FORA,     0
-        WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA
-        WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
-        WORD 0,             VERDE_FORA,     VERDE_FORA,     0
+    WORD 0,             VERDE_FORA,     VERDE_FORA,     0
+    WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA
+    WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
+    WORD 0,             VERDE_FORA,     VERDE_FORA,     0
 
 METEORO_BOM_3:              ; Definicao do terceiro meteoro bom
-        WORD LINHA_METEOROS_3
+    WORD LINHA_METEOROS_3
 
-        WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
-        WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
-        WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_DENTRO,   VERDE_DENTRO,   VERDE_FORA
-        WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
-        WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
+    WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
+    WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
+    WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_DENTRO,   VERDE_DENTRO,   VERDE_FORA
+    WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
+    WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
 
 METEORO_MAU_1:              ; Definicao do primeiro meteoro mau
-        WORD LINHA_INICIAL_METEOROS
+    WORD LINHA_INICIAL_METEOROS
 
-        WORD VERMELHO,  VERMELHO,   VERMELHO
-        WORD 0,         VERMELHO,   0
-        WORD VERMELHO,  0,          VERMELHO
+    WORD VERMELHO,  VERMELHO,   VERMELHO
+    WORD 0,         VERMELHO,   0
+    WORD VERMELHO,  0,          VERMELHO
 
 METEORO_MAU_2:              ; Definicao do segundo meteoro mau
-        WORD LINHA_METEOROS_2
+    WORD LINHA_METEOROS_2
 
-        WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
-        WORD 0,         VERMELHO,   VERMELHO,   0
-        WORD VERMELHO,  0,          0,          VERMELHO
-        WORD VERMELHO,  0,          0,          VERMELHO
+    WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
+    WORD 0,         VERMELHO,   VERMELHO,   0
+    WORD VERMELHO,  0,          0,          VERMELHO
+    WORD VERMELHO,  0,          0,          VERMELHO
 
 METEORO_MAU_3:              ; Definicao do terceiro meteoro mau
-        WORD 4                  ; Linha ecrã do meteoro
-        WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
-        WORD 5                  ; Largura do Meteoro
-        WORD 5                  ; Altura do Meteoro
+    WORD 4                  ; Linha ecrã do meteoro
+    WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
+    WORD 5                  ; Largura do Meteoro
+    WORD 5                  ; Altura do Meteoro
 
-        WORD VERMELHO,  0,          0,          0,          VERMELHO
-        WORD VERMELHO,  0,          VERMELHO,   0,          VERMELHO
-        WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
-        WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
-        WORD VERMELHO,  0,          0,          0,          VERMELHO
+    WORD VERMELHO,  0,          0,          0,          VERMELHO
+    WORD VERMELHO,  0,          VERMELHO,   0,          VERMELHO
+    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
+    WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
+    WORD VERMELHO,  0,          0,          0,          VERMELHO
 
 EXPLOSAO:                   ; Definicao das explosoes
-        WORD LINHA_EXPLOSAO
+    WORD LINHA_EXPLOSAO
 
-        WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
-        WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
-        WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
-        WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
-        WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
+    WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
+	WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
+    WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
+    WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
+    WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
 
 DISPARO:                    ; Definicao dos disparos da nave
-        WORD LINHA_DISPARO
-        WORD AZUL
+    WORD LINHA_DISPARO
+    WORD AZUL
 
 
 ; *********************************************************************************
@@ -198,14 +200,14 @@ ecra_inicial:
 	MOV R11, ATRASO
 	MOV  R6, LINHA_START					; linha a testar no teclado
 	CALL	teclado							; leitura às teclas
-	CMP	R0, TECLA_ESQUERDA  				; compara para ver se a tecla C foi premida
+	CMP	R0, TECLADO_1  				; compara para ver se a tecla C foi premida
 	JNZ ecra_inicial						; se não foi premida, espera-se que seja premida para começar o jogo
 	MOV  [APAGA_ECRÃ], R1					; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 1								; cenário de fundo número 1
-        MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-    	CALLF desenha_rover                 ; desenha o rover 
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+    CALLF desenha_rover                 ; desenha o rover 
 	CALLF desenha_um_meteoro        ; Desenha o meteoro inicial no topo do ecrã
-        JMP ciclo_jogo                      ; Iniciar o jogo
+    JMP ciclo_jogo                      ; Iniciar o jogo
 
 
 ciclo_jogo:                    ; O ciclo principal do jogo.
@@ -280,14 +282,14 @@ le_tecla_rover:				; Verificar se uma tecla para mover o rover está pressionada
 	PUSH R0
 	PUSH R6
 	PUSH R7
-	PUSH R11 				; FIXME: ver se é alterado mais a fundo
+	PUSH R11 				
 	CALL testa_fim 			; verifica se a tecla premida é a tecla E
 	CALL testa_pausa
 	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
 	CMP	R0, 0
 	JZ	sai_ler_tecla_rover	; se não há tecla pressionada, sair da rotina
-	CMP	R0, TECLA_ESQUERDA
+	CMP	R0, TECLADO_1
 	JNZ	testa_direita
 	MOV	R7, -1				; vai deslocar para a esquerda
 	CALL atraso
@@ -300,7 +302,7 @@ le_tecla_energia:
 
     MOV R11, 08H		  ; constante 08 fora dos limites - tem que ser guardada no registo
     MOV R4, DISPLAYS	  ; R4 tem o endereco dos displays
-    MOV R6, TECLA_DIREITA ; linha 3 (aumenta display)
+    MOV R6, TECLADO_3 ; linha 3 (aumenta display)
 
     CALL teclado
     CMP R0, R11 		  ; coluna 4 (linha 3 e coluna 4 - tecla B)
@@ -313,17 +315,14 @@ le_tecla_energia:
 
 	JMP pop_energia		
 
-	pop_e_espera:		  ; no caso de alguma das teclas estar premida, espera ate largar
-
+pop_e_espera:		  ; no caso de alguma das teclas estar premida, espera ate largar
 	MOV R10, 8			  ; procura na coluna 4
     CALL ha_tecla
 
-    pop_energia:		  ; nenhuma das 2 teclas premidas - nao precisa de esperar
+pop_energia:		  ; nenhuma das 2 teclas premidas - nao precisa de esperar
     POP R11
     POP R9
     POP R4
-
-	
     RET
 
 aumenta_display:
@@ -336,8 +335,6 @@ aumenta_display:
     ADD R8, 1			  ; R8 <- R8 + 1
 
     MOV [R4], R8		  ; escreve nos displays
-
-
     JMP pop_e_espera
 
 
@@ -361,7 +358,7 @@ sai_ler_tecla_rover:
 	RETF
 
 testa_direita:
-	CMP	R0, TECLA_DIREITA 	; verifica se a tecla para mover o rover para a direita foi premida
+	CMP	R0, TECLADO_3 	; verifica se a tecla para mover o rover para a direita foi premida
 	JNZ	sai_ler_tecla_rover	; tecla que não interessa -> sair
 	MOV	R7, +1				; vai deslocar para a direita
 	CALL atraso 			; se mover, chama a rotina atraso para não mover demasiado rápido
@@ -398,7 +395,7 @@ recomeca:		; volta ao ecra do jogo
 testa_fim:
 	MOV  R6, LINHA_START	; linha a testar no teclado
 	CALL	teclado			; leitura às teclas
-	CMP	R0, TECLA_DIREITA	; verifica se a tecla E foi premida
+	CMP	R0, TECLADO_3	; verifica se a tecla E foi premida
 	JZ termina_jogo 		; se foi premida, termina-se o jogo
 	RET 					; se não foi premida faz-se return
 
@@ -436,7 +433,6 @@ coluna_seguinte:
 	MOV R2, [R1]        ; Coluna atual do rover
 	ADD R2, R7          ; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
 	MOV [R1], R2        ; Escreve a nova coluna na memória do rover
-;	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda) fixme: ver se é inútil
 	POP R1              ; Restaura R1
 	PUSH R11
 	CALLF	desenha_rover		; vai desenhar o boneco de novo
@@ -693,17 +689,17 @@ ha_tecla:          	   ; neste ciclo espera-se ate a tecla desejada nao estar pr
 	PUSH	R3
 	PUSH	R5
 
-ht:				   ; ciclo interior do ha_tecla, sem os push'es
+ht:				       ; ciclo interior do ha_tecla, sem os pushes
     MOV  R2, TEC_LIN   ; endereço do periférico das linhas
 	MOV  R3, TEC_COL   ; endereço do periférico das colunas
 	MOV  R5, MASCARA
 
-    MOVB [R2], R6      ; escrever no perif�rico de sa�da (linhas)
-    MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
-    AND  R0, R5        ; elimina bits para al�m dos bits 0-3
+    MOVB [R2], R6      ; escrever no periférico de saída (linhas)
+    MOVB R0, [R3]      ; ler do periférico de entrada (colunas)
+    AND  R0, R5        ; elimina bits para além dos bits 0-3
 
-    CMP  R0, R10       ; h� tecla premida? (R10 guarda o valor da coluna pretendida)
-    JZ  ht  		   ; se a tecla desejada estiver premida, espera at� n�o haver  
+    CMP  R0, R10       ; hé tecla premida? (R10 guarda o valor da coluna pretendida)
+    JZ  ht  		   ; se a tecla desejada estiver premida, espera até não haver  
         
     POP	R5
 	POP	R3
@@ -723,11 +719,11 @@ nao_ha_tecla:          ; neste ciclo espera-se ate que se prima a tecla desejada
 	MOV  R3, TEC_COL   
 	MOV  R5, MASCARA
 
-    MOVB [R2], R6      ; escrever no perif�rico de sa�da (linhas)
-    MOVB R0, [R3]      ; ler do perif�rico de entrada (colunas)
-    AND  R0, R5        ; elimina bits para al�m dos bits 0-3
+    MOVB [R2], R6      ; escrever no periférico de saída (linhas)
+    MOVB R0, [R3]      ; ler do periférico de entrada (colunas)
+    AND  R0, R5        ; elimina bits para além dos bits 0-3
 
-    CMP  R0, R10       ; h� tecla premida? (R10 tem o valor da coluna, tal como em ha_tecla)
+    CMP  R0, R10       ; há tecla premida? (R10 tem o valor da coluna, tal como em ha_tecla)
     JNZ  nht      	   ; se a tecla desejada nao estiver premida, repete o ciclo
 
     POP	R5
