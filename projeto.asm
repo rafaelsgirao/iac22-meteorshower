@@ -263,15 +263,15 @@ desce_meteoro: 							; Rotina a ser generalizada na entrega final.
 	JMP sai_desce_meteoro
 
 muda_fundo_meteoro:
-	PUSH R1
-	PUSH R2
-	MOV	R1, 5							; cenário de fundo número 1
+	PUSH R1								; faz push do registo R1
+	PUSH R2								; faz push do registo R2
+	MOV	R1, 5							; cenário de fundo número 5
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	MOV R2, 1
-	MOV [TOCA_SOM], R2
-	POP R2
-	POP R1
-	RET
+	MOV R2, 1							; som número 1
+	MOV [TOCA_SOM], R2					; toca o som
+	POP R2								; pop do registo R2
+	POP R1								; pop do registo R1
+	RET									; retorna
 
 
 sai_desce_meteoro:
