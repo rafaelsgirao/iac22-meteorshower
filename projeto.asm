@@ -267,6 +267,7 @@ muda_fundo_meteoro:
 	PUSH R2
 	MOV	R1, 5							; cenário de fundo número 1
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	MOV R2, 1
 	MOV [TOCA_SOM], R2
 	POP R2
 	POP R1
