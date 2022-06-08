@@ -35,6 +35,13 @@ TECLADO_3               EQU 4       ; 3ª linha/coluna do teclado
 TECLADO_4               EQU 8       ; 4ª linha/coluna do teclado
 COLUNA_2 			    EQU 2
 
+
+; **********************************
+; * Posições (coluna) dos 8 meteoros 
+; **********************************
+
+POS_METEORO_1           EQU 
+
 ; **********************************
 ; * Constantes de bonecos e do ecrã
 ; **********************************
@@ -260,7 +267,9 @@ ecra_inicial:
 ciclo_jogo:                    			; O ciclo principal do jogo.
 	CALLF testa_tecla_descer_meteoro	; Verifica se a tecla para descer o meteoro foi premida (e age de acordo)
 	CALLF le_tecla_rover  	   			; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou não)
-    CALL le_tecla_energia				; Verifica se uma tecla para aumentar ou diminuir a energia foi premida
+    CALL le_tecla_energia
+	CALL testa_fim 						; verifica se a tecla premida é a tecla E
+	CALL testa_pausa
 	JMP ciclo_jogo
 
 ; *********************************************************************************
@@ -342,8 +351,6 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
 	PUSH R6
 	PUSH R7
 	PUSH R11 				
-	CALL testa_fim 						; verifica se a tecla premida é a tecla E
-	CALL testa_pausa
 	MOV  R6, LINHA_TECLADO				; linha a testar no teclado
 	CALL	teclado						; leitura às teclas
 	CMP	R0, 0
