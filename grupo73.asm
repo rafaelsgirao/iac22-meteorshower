@@ -199,11 +199,49 @@ inicializa_energia:
     PUSH R4
     MOV  R4, DISPLAYS
 
-    MOV  R8, MAX_ENERGIA                ; Energia inicial
-    MOV  [R4], R8              	        ; escreve 100 nos displays (em hexadecimal)
+    MOV  R8, MAX_ENERGIA            ; Energia inicial
+	CALL escreve_decimal 			; escreve 100 nos displays
 
     POP R4
     RET
+
+
+escreve_decimal:
+	PUSH R11	; num
+
+	PUSH R0		; fator
+	PUSH R1		; digito
+	PUSH R2		; resultado
+	PUSH R10
+
+	MOV R11, R8	
+
+	MOV R0, 1000
+	MOV R10, 10
+
+	ciclo_conversao:
+	MOD R11, R0
+	
+	DIV R0, R10
+
+	MOV R1, R11
+	DIV R1, R0
+
+	SHL R2, 4
+	OR R2, R1
+
+	CMP R0, R10
+	JGE ciclo_conversao
+
+	MOV [R4], R2
+
+	POP R10
+	POP R2
+	POP R1
+	POP R0
+
+	POP R11
+	RET
 
 ecra_inicial:
 	MOV R11, ATRASO
@@ -355,7 +393,7 @@ aumenta_display:
     MOV R9, 01H         
     ADD R8, 1			  				; R8 <- R8 + 1
 
-    MOV [R4], R8		  				; escreve nos displays
+	CALL escreve_decimal						; escreve nos displays
     JMP pop_e_espera
 
 
@@ -368,7 +406,7 @@ diminui_display:
     MOV R9, 01H
     SUB R8, R9							; R8 <- R8 - 1
 
-    MOV [R4], R8						; escreve nos displays
+    CALL escreve_decimal						; escreve nos displays
     JMP pop_e_espera
 
 sai_ler_tecla_rover:
