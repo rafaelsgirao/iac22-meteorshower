@@ -86,12 +86,11 @@ CINZENTO	         	EQU	0C777H	; Cor neutra - Meteoros de longe
 ; *********************************************************************************
 PLACE   1000H
 
-pilha:
-	    STACK 100H		 	;espa�o reservado para a pilha							
-	SP_inicial:				; (200H bytes, pois s�o 100H words)
-							; este � o endere�o (1200H) com que o SP deve ser
-							; inicializado. O 1.� end. de retorno ser�
-							; armazenado em 11FEH (1200H-2)
+pilhas_processos:		; Pilhas dos procesos do programa:
+
+processo_programa_geral:
+		STACK 100H
+	SP_programa:
 
 processo_descer_meteoro:
 		STACK 100H
@@ -113,9 +112,15 @@ processo_testa_fim:
 		STACK 100H
 	SP_testa_fim:
 
+tecla_continua:
+	LOCK 0
 
+tecla_carregada:
+	LOCK 0
 
-
+evento_int_0:
+	LOCK 0
+	
 ;---------------------------------------------------------------------------------;
 ;----------------------TABELAS DE DEFINI��O DAS FIGURAS---------------------------;		
 ;---------------------------------------------------------------------------------;
@@ -212,8 +217,9 @@ DISPARO:                    ; Defini��o dos disparos da nave
 ; * C�digo
 ; *********************************************************************************
 PLACE   0                              ; o c�digo tem de come�ar em 0000H
+
 inicio:
-    MOV  SP, SP_inicial			       ; inicializa SP para a palavra a seguir
+    MOV  SP, SP_programa			       ; inicializa SP para a palavra a seguir
     MOV  [APAGA_AVISO], R1		   	   ; apaga o aviso de nenhum cen�rio selecionado (o valor de R1 n�o � relevante)
     MOV  [APAGA_ECR�], R1		   	   ; apaga todos os pixels j� desenhados (o valor de R1 n�o � relevante)
     MOV	 R1, 0				   		   ; cen�rio de fundo n�mero 0
@@ -248,7 +254,7 @@ escreve_decimal:
 	MOV R0, 1000 ; fator inicial
 	MOV R10, 10	 ; R10 - registo com o valor 10 fixo
 
-	ciclo_conversao:
+ciclo_conversao:
 	MOD R11, R0	; resto do numero pelo fator
 	
 	DIV R0, R10	; divisao inteira do fator por 10
@@ -283,16 +289,16 @@ ecra_inicial:
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cen�rio de fundo
     CALLF desenha_rover                 ; desenha o rover 
 	CALLF desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecr�
-    JMP ciclo_jogo                      ; Iniciar o jogo
 
+	;-----------------------------------;
+	;---------INICIO DO JOGO------------;
+	;-----------------------------------;
 
-ciclo_jogo:                    			; O ciclo principal do jogo.
 	CALLF testa_tecla_descer_meteoro	; Verifica se a tecla para descer o meteoro foi premida (e age de acordo)
 	CALLF le_tecla_rover  	   			; Verifica se uma tecla para movimentar o rover foi premida e move-o (ou n�o)
     CALL le_tecla_energia
 	CALL testa_fim 						; verifica se a tecla premida � a tecla E
 	CALL testa_pausa
-	JMP ciclo_jogo
 
 ; *********************************************************************************
 ; * Desenha um meteoro neutro no tamanho m�ximo, no meio do ecr�.
@@ -307,12 +313,7 @@ desenha_um_meteoro:
 
 PROCESS SP_descer_meteoro
 testa_tecla_descer_meteoro:
-	PUSH R0
-	PUSH R1
-	PUSH R2
-	PUSH R3
-	PUSH R6
-	PUSH R11
+	
 	MOV  R6, TECLADO_3 					; Argumento de 'teclado' (testa 3� linha)
 	CALL teclado           				; Output em R0
 	MOV R2, TECLADO_1        			; Tecla de descer o meteoro (3� linha, 1� coluna = tecla 'B')
@@ -347,16 +348,11 @@ muda_fundo_meteoro:
 
 
 sai_desce_meteoro:
-	POP R11
-	POP R6
-	POP R3
-	POP R2
-	POP R1
-	POP R0
 	MOV R10, 1
 	MOV R6, 4
 	CALL ha_tecla
-
+	YIELD 
+	JMP testa_tecla_descer_meteoro
 
 ; *********************************************************************************
 ; * Desenha o rover no ecr�.
@@ -370,10 +366,7 @@ desenha_rover:
 
 PROCESS SP_rover
 le_tecla_rover:							; Verificar se uma tecla para mover o rover est� pressionada
-	PUSH R0
-	PUSH R6
-	PUSH R7
-	PUSH R11 				
+
 	MOV  R6, LINHA_TECLADO				; linha a testar no teclado
 	CALL	teclado						; leitura �s teclas
 	CMP	R0, 0
@@ -388,10 +381,7 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover est� pressio
 PROCESS SP_energia
 
 le_tecla_energia:
-    PUSH R4
-    PUSH R9
-    PUSH R11
-
+    
     MOV R11, TECLADO_4	  				; constante 08 fora dos limites - tem que ser guardada no registo
     MOV R4,  DISPLAYS	  				; R4 tem o endereco dos displays
     MOV R6,  TECLADO_3 					; linha 3 (aumenta display)
@@ -405,49 +395,45 @@ le_tecla_energia:
     CMP R0, R11				
     JZ diminui_display					; se for zero diminui o valor do display de energia
 
-	JMP pop_energia		
+	JMP fim_energia		
 
-pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
+fim_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
 	MOV R10, 8			  				; procura na coluna 4
     CALL ha_tecla
 
-pop_energia:		  					; nenhuma das 2 teclas premidas - n�o precisa de esperar
-    POP R11
-    POP R9
-    POP R4
-    RET
+fim_energia:		  					; nenhuma das 2 teclas premidas - n�o precisa de esperar
+	YIELD
+	JMP le_tecla_energia
+    ; SALTA PROXIMO PROCESO
 
 aumenta_display:
     MOV R9, MAX_ENERGIA   
 
     CMP R9, R8			  				; limite superior atingido (100) - salta a adi��o
-    JZ pop_e_espera
+    JZ fim_e_espera
     
     MOV R9, 01H         
     ADD R8, 1			  				; R8 <- R8 + 1
 
 	CALL escreve_decimal				; escreve nos displays, em decimal
-    JMP pop_e_espera
+    JMP fim_e_espera
 
 
 diminui_display:
     MOV R9, 0
 
     CMP R9, R8							; limite inferior atingido (0) - salta a subtracao
-    JZ pop_e_espera
+    JZ fim_e_espera
 
     MOV R9, 01H
     SUB R8, R9							; R8 <- R8 - 1
 
     CALL escreve_decimal						; escreve nos displays, em decimal
-    JMP pop_e_espera
+    JMP fim_e_espera
 
 sai_ler_tecla_rover:
-	POP R11
-	POP R7
-	POP R6
-	POP R0
-	RETF
+	YIELD
+	JMP le_tecla_rover
 
 testa_direita:
 	CMP	R0, TECLADO_3 					; verifica se a tecla para mover o rover para a direita foi premida
@@ -464,7 +450,8 @@ testa_pausa:
 	CALL teclado 						; chama a rotina teclado
 	CMP R0, COLUNA_2 					; verifica se  a tecla D � premida
 	JZ pausa 							; se for vai para pausa
-	RET 								; se n�o for premida a tecla D, fa-ze return
+	YIELD								; se n�o for premida a tecla D, fa-ze return
+	JMP testa_pausa
 
 pausa:
 	MOV  [APAGA_ECR�], R1				; apaga todos os pixels j� desenhados (o valor de R1 n�o � relevante)
@@ -485,7 +472,7 @@ recomeca:								; volta ao ecr� do jogo
 
 	CALLF desenha_rover 				; desenha-se o rover novamente
 	CALLF desenha_um_meteoro
-	JMP ciclo_jogo 						; volta-se para a rotina le_tecla_rover
+	RET									; volta-se para a rotina le_tecla_rover
 
 
 PROCESS SP_testa_fim
@@ -495,7 +482,8 @@ testa_fim:
 	CALL	teclado						; leitura �s teclas
 	CMP	R0, TECLADO_3					; verifica se a tecla E foi premida
 	JZ termina_jogo 					; se foi premida, termina-se o jogo
-	RET 								; se n�o foi premida faz-se return
+	YIELD
+	JMP testa_fim								; se n�o foi premida faz-se return
 
 termina_jogo: 
 	MOV  [APAGA_ECR�], R1				; apaga todos os pixels j� desenhados (o valor de R1 n�o � relevante)
@@ -775,6 +763,7 @@ teclado:
 	PUSH	R2
 	PUSH	R3
 	PUSH	R5
+	YIELD
 	MOV  R2, TEC_LIN   ; endere�o do perif�rico das linhas
 	MOV  R3, TEC_COL   ; endere�o do perif�rico das colunas
 	MOV  R5, MASCARA   ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
@@ -793,6 +782,8 @@ ha_tecla:          	   ; neste ciclo espera-se ate a tecla desejada nao estar pr
 	PUSH	R5
 
 ht:				       ; ciclo interior do ha_tecla, sem os pushes
+	YIELD
+
     MOV  R2, TEC_LIN   ; endere�o do perif�rico das linhas
 	MOV  R3, TEC_COL   ; endere�o do perif�rico das colunas
 	MOV  R5, MASCARA
@@ -817,7 +808,9 @@ nao_ha_tecla:          ; neste ciclo espera-se ate que se prima a tecla desejada
 	PUSH	R3
 	PUSH	R5
     
-    nht:			   ; ciclo interior do nao_ha_tecla, sem os push'es
+nht:			   ; ciclo interior do nao_ha_tecla, sem os push'es
+	YIELD
+
     MOV  R2, TEC_LIN   
 	MOV  R3, TEC_COL   
 	MOV  R5, MASCARA
