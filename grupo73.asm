@@ -216,24 +216,24 @@ escreve_decimal:
 
 	MOV R11, R8	
 
-	MOV R0, 1000
-	MOV R10, 10
+	MOV R0, 1000 ; fator inicial
+	MOV R10, 10	 ; R10 - registo com o valor 10 fixo
 
 	ciclo_conversao:
-	MOD R11, R0
+	MOD R11, R0	; resto do numero pelo fator
 	
-	DIV R0, R10
+	DIV R0, R10	; divisao inteira do fator por 10
 
-	MOV R1, R11
-	DIV R1, R0
+	MOV R1, R11	; digito = numero
+	DIV R1, R0	; divisao do digito pelo fator
 
-	SHL R2, 4
-	OR R2, R1
+	SHL R2, 4	; passa os digitos para a esquerda
+	OR R2, R1	; e escreve o proximo digito
 
-	CMP R0, R10
-	JGE ciclo_conversao
+	CMP R0, R10	 
+	JGE ciclo_conversao	; se o fator for inferior a 10, acaba o ciclo
 
-	MOV [R4], R2
+	MOV [R4], R2	; escreve o resultado nos displays e retorna, a seguir
 
 	POP R10
 	POP R2
@@ -393,7 +393,7 @@ aumenta_display:
     MOV R9, 01H         
     ADD R8, 1			  				; R8 <- R8 + 1
 
-	CALL escreve_decimal						; escreve nos displays
+	CALL escreve_decimal				; escreve nos displays, em decimal
     JMP pop_e_espera
 
 
@@ -406,7 +406,7 @@ diminui_display:
     MOV R9, 01H
     SUB R8, R9							; R8 <- R8 - 1
 
-    CALL escreve_decimal						; escreve nos displays
+    CALL escreve_decimal						; escreve nos displays, em decimal
     JMP pop_e_espera
 
 sai_ler_tecla_rover:
