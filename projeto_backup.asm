@@ -85,12 +85,35 @@ CINZENTO	         	EQU	0C777H	; Cor neutra - Meteoros de longe
 ; * Dados
 ; *********************************************************************************
 PLACE   1000H
+
 pilha:
-	    STACK 100H		 	;espa�o reservado para a pilha
-							; (200H bytes, pois s�o 100H words)
-SP_inicial:					; este � o endere�o (1200H) com que o SP deve ser
+	    STACK 100H		 	;espa�o reservado para a pilha							
+	SP_inicial:				; (200H bytes, pois s�o 100H words)
+							; este � o endere�o (1200H) com que o SP deve ser
 							; inicializado. O 1.� end. de retorno ser�
 							; armazenado em 11FEH (1200H-2)
+
+processo_descer_meteoro:
+		STACK 100H
+	SP_descer_meteoro:
+
+processo_move_rover:
+		STACK 100H
+	SP_rover:
+
+processo_altera_energia:
+		STACK 100H
+	SP_energia:
+
+processo_testa_pausa:
+		STACK 100H
+	SP_testa_pausa:
+
+processo_testa_fim:
+		STACK 100H
+	SP_testa_fim:
+
+
 
 
 ;---------------------------------------------------------------------------------;
@@ -282,9 +305,6 @@ desenha_um_meteoro:
 	POP R1
 	RETF
 
-STACK 100H
-SP_descer_meteoro:
-
 PROCESS SP_descer_meteoro
 testa_tecla_descer_meteoro:
 	PUSH R0
@@ -348,9 +368,6 @@ desenha_rover:
 	POP R1              				; Resgatar registo alterado
 	RETF
 
-STACK 100H
-SP_rover:
-
 PROCESS SP_rover
 le_tecla_rover:							; Verificar se uma tecla para mover o rover est� pressionada
 	PUSH R0
@@ -367,8 +384,6 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover est� pressio
 	CALL atraso
 	JMP	ve_limites_rover
 
-STACK 100H
-SP_energia:
 
 PROCESS SP_energia
 
@@ -441,8 +456,6 @@ testa_direita:
 	CALL atraso 						; se mover, chama a rotina atraso para n�o mover demasiado r�pido
 	JMP    ve_limites_rover 			; verifica se ao mover o rover os limites do ecr� n�o s�o ultrapassados
 
-STACK 100H
-SP_testa_pausa:
 
 PROCESS SP_testa_pausa
 
@@ -474,8 +487,6 @@ recomeca:								; volta ao ecr� do jogo
 	CALLF desenha_um_meteoro
 	JMP ciclo_jogo 						; volta-se para a rotina le_tecla_rover
 
-STACK 100H
-SP_testa_fim:
 
 PROCESS SP_testa_fim
 
