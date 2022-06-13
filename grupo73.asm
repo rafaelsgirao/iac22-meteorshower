@@ -270,8 +270,8 @@ ecra_inicial:
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 1							; cenário de fundo número 1
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-    CALLF desenha_rover                 ; desenha o rover 
-	CALLF desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecrã
+    CALL desenha_rover                 ; desenha o rover 
+	CALL desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecrã
 
 
     CALL le_tecla_rover
@@ -298,16 +298,15 @@ desce_meteoro: 							; Rotina a ser generalizada na entrega final.
 
     MOV [tecla_carregada], R2            ; informa quem estiver bloqueado neste LOCK que uma tecla foi carregada
 
-	MOV R1, METEORO_MAU_3 				; Tabela que define o meteoro
+	MOV R1, POS_METEORO_1				; Tabela que define o meteoro
 	MOV R2, [R1]           				; Obtém a linha atual do meteoro
 	MOV R3, LINHA_FUNDO_ECRA
 	CALL apaga_boneco     				; Apagar o meteoro na posição atual
 	CMP R2, R3             				; Testa se o meteoro está na última linha do ecrã
 	JZ sai_desce_meteoro  				; Se estiver, então não atualizar a linha
 	ADD R2, 1             				; Desce o meteoro uma linha (incrementa a linha atual)
-	CALL muda_fundo_meteoro
 	MOV [R1], R2           				; Atualiza a linha do meteoro
-	CALLF desenha_um_meteoro
+	CALL desenha_um_meteoro
     JMP sai_desce_meteoro
     
 sai_desce_meteoro:
@@ -382,8 +381,8 @@ recomeca:								; volta ao ecrã do jogo
 	CALL ha_tecla	   					; espera que se largue D, caso contrario voltaria ao ciclo de novo
 					   					; (ficando preso no menu)
 
-	CALLF desenha_rover 				; desenha-se o rover novamente
-	CALLF desenha_um_meteoro
+	CALL desenha_rover 				; desenha-se o rover novamente
+	CALL desenha_um_meteoro
     RET
 
 testa_fim:
@@ -410,30 +409,20 @@ testa_estado_jogo:
 ; *********************************************************************************
 ; * Escreve nos displays de energia.
 ; *********************************************************************************
-muda_fundo_meteoro:
-	PUSH R1								; faz push do registo R1
-	PUSH R2								; faz push do registo R2
-	MOV	R1, 5							; cenário de fundo número 5
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	MOV R2, 1							; som número 1
-	MOV [TOCA_SOM], R2					; toca o som
-	POP R2								; pop do registo R2
-	POP R1								; pop do registo R1
-	RET									; retorna
 
 desenha_um_meteoro:
     PUSH R1
-	MOV R1, METEORO_MAU_3
+	MOV R1, POS_METEORO_1
 	CALL desenha_boneco
     POP R1
-	RETF
+	RET
 
 desenha_rover:
     PUSH R1
-	MOV R1, DEF_ROVER   				; Endereço da tabela que define o Rover (argumento de desenha_boneco)
+	MOV R1, POS_ROVER   				; Endereço da tabela que define o Rover (argumento de desenha_boneco)
 	CALL desenha_boneco
     POP R1
-	RETF
+	RET
 
 escreve_decimal:
 	PUSH R11	; num
@@ -532,7 +521,7 @@ diminui_display:
 ; *********************************************************************
 move_rover:
 	PUSH R1
-	MOV  R1, DEF_ROVER           ; Argumento do apaga_boneco
+	MOV  R1, POS_ROVER           ; Argumento do apaga_boneco
 	CALL apaga_boneco		; apaga o boneco na sua posição corrente
 	POP  R1
 	JMP  coluna_seguinte
@@ -540,13 +529,13 @@ move_rover:
 coluna_seguinte:
 	PUSH R1             			; Guarda R1
 	PUSH R2             			; Guarda R2
-	MOV  R1, DEF_ROVER   			; Endereço do desenho do rover
+	MOV  R1, POS_ROVER   			; Endereço do desenho do rover
 	ADD  R1, 2           			; Endereço da coluna atual do rover
 	MOV  R2, [R1]        			; Coluna atual do rover
 	ADD  R2, R7          			; Altera coluna atual p/ desenhar o objeto na coluna seguinte (esq. ou dir)
 	MOV  [R1], R2        			; Escreve a nova coluna na memória do rover
 	PUSH R11
-	CALLF desenha_rover				; vai desenhar o boneco de novo
+	CALL desenha_rover				; vai desenhar o boneco de novo
 	POP  R11
 	POP R2
 	POP R1
@@ -556,7 +545,7 @@ coluna_seguinte:
 ; **********************************************************************
 ; DESENHA_BONECO - Desenha um boneco a partir da linha e coluna indicadas
 ;			    com a forma e cor definidas na tabela indicada.
-; Argumentos:    R1 - Tabela que define o boneco
+; Argumentos:    R1 - Tabela que contém posição e figura do boneco
 ;
 ; Outros registos usados:
 ;                R2 - Linha de referência do boneco
@@ -564,51 +553,59 @@ coluna_seguinte:
 ;                R4 - Largura do boneco
 ;                R5 - Altura do boneco
 ;                R6 - Cor do pixel a ser desenhado
-;
+;                R7 - Tabela da figura do boneco
+;                R11 - Cópia de endereço original de R7
 ; A posição e dimensões do boneco são lidas a partir da tabela.
 ;
 ; **********************************************************************
 desenha_boneco:
-	PUSH    R1
+	PUSH    R1              
 	PUSH	R2
 	PUSH	R3
 	PUSH	R4
 	PUSH	R5
 	PUSH    R6
+    PUSH    R7
 	PUSH    R11
-	MOV R11, R1             ; Guardar endereço inicial da tabela
-	MOV R2, [R1]            ; Obtém a linha do boneco
 
-	ADD R1, 2               ; Endereço da coluna
-	MOV R3, [R1]			; Obtém a coluna do boneco
+	MOV R2, [R1]            ; Obtém a linha de posição do boneco
 
-	ADD R1, 2               ; Endereço da largura do boneco
-	MOV R4, [R1]            ; Obtém a largura do boneco
+	ADD R1, 2               ; Endereço da coluna de posição
+	MOV R3, [R1]			; Obtém a coluna de posição do boneco
 
-	ADD R1, 2               ; Endereço da altura do boneco
-	MOV R5, [R1]            ; Obtém a altura do boneco
+    ADD R1, 2               ; Endereço que contém endereço da figura do boneco
+    MOV R7, [R1]            ; Figura do boneco
+	MOV R11, R7 			; Cópia do endereço da figura
+	SUB R1, 4 				; Volta ao endereço da linha de posição
 
-	ADD	R1, 2				; Endereço da cor do 1º pixel (2 porque a largura é uma word)
+	MOV R4, [R7]            ; Obtém a largura do boneco
+
+	ADD R7, 2               ; Endereço da altura do boneco
+	MOV R5, [R7]            ; Obtém a altura do boneco
+
+	ADD	R7, 2				; Endereço da cor do 1º pixel (2 porque a largura é uma word)
 	JMP desenha_linha   	; Começar a desenhar a linha
 
 desenha_muda_linha:
-	PUSH R11               ; Salvaguardar endereço inicial da tabela
-	ADD R11, 2             ; Endereço da coluna inicial do boneco
-	MOV R3, [R11]          ; Voltar à coluna inicial
-	ADD R11, 2             ; Endereço da largura do boneco
+;	PUSH R11           	   ; Salvaguardar endereço
+	ADD R1, 2      	       ; Endereço da coluna inicial do boneco
+	MOV R3, [R1]           ; Voltar à coluna inicial
+	SUB R1, 2			   ; Voltar ao endereço inicial (linha do boneco)
+;	ADD R11, 2             ; Endereço da largura do boneco
 	MOV R4, [R11]          ; Reinicializa a largura do boneco
+;	SUB R11, 2			   ; Volta ao endereço inicial da figura
 	SUB R2, 1              ; Passa a escrever na linha de cima do Mediacenter
 	SUB R5, 1              ; Decrementa a altura do boneco (menos uma linha a tratar)
 	
-	POP R11
+;	POP R11
 	JNZ desenha_linha      ; Desenhar a nova linha
 	JMP sai_desenha_boneco ; Caso não haja nova linha, sair
 
 
 desenha_linha:             ; Desenha uma linha de pixels do boneco a partir da tabela
-    MOV R6, [R1]           ; Obtém a cor do próxima pixel do boneco
+    MOV R6, [R7]           ; Obtém a cor do próxima pixel do boneco
 	CALL escreve_pixel     ; Escreve o pixel atual
-	ADD R1, 2              ; Endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
+	ADD R7, 2	           ; Endereço da cor do próximo pixel (2 porque cada cor de pixel é uma word)
 	ADD R3, 1              ; Próxima coluna
 	SUB R4, 1              ; Diminui largura do boneco (menos uma coluna a tratar)
 	JNZ desenha_linha      ; Desenhar  próxima coluna
@@ -617,6 +614,7 @@ desenha_linha:             ; Desenha uma linha de pixels do boneco a partir da t
 
 sai_desenha_boneco:
 	POP R11
+    POP R7
 	POP R6
 	POP R5
 	POP R4
@@ -637,7 +635,8 @@ sai_desenha_boneco:
 ;                R4 - Largura do boneco
 ;                R5 - Altura do boneco
 ;                R6 - Cor do pixel (sempre 0)
-;                R11 - Cópia do argumento da tabela
+;                R7 - Tabela de figura do boneco
+;                R11 - Cópia do endereço da figura
 ;
 ;
 ; **********************************************************************
@@ -649,45 +648,48 @@ apaga_boneco:
 	PUSH    R4
 	PUSH    R5
 	PUSH    R6
+	PUSH	R7
 	PUSH    R11
-	MOV R11, R1  ; Guardar endereço inicial da tabela
-	MOV R2, [R1] ; Obtém a linha de referência do boneco
+	MOV 	R2, [R1] ; Obtém a linha de referência do boneco
 
-	ADD R1, 2    ; Endereço da coluna de referência do boneco
-	MOV R3, [R1] ; Obtém a coluna de referência do boneco
+	ADD 	R1, 2    ; Endereço da coluna de referência do boneco
+	MOV 	R3, [R1] ; Obtém a coluna de referência do boneco
 
-	ADD R1, 2    ; Endereço da largura do boneco
-	MOV R4, [R1] ; Obtém a largura do boneco
+	ADD 	R1, 2    ; Endereço da figura do boneco
+	MOV 	R7, [R1] ; Obtém a figura do boneco
+	MOV 	R11, R7  ; Guarda cópia do endereço da figura
+	MOV 	R4, [R7] ; Obtém a largura do boneco
 
-	ADD R1, 2    ; Endereço da altura do boneco
-	MOV R5, [R1] ; Obtém a altura do boneco
-	JMP apaga_linha
+	ADD 	R7, 2    ; Endereço da altura do boneco
+	MOV 	R5, [R7] ; Obtém a altura do boneco
+	SUB     R1, 4    ; Volta ao endereço original da posição do boneco
+	JMP 	apaga_linha
 
 
 apaga_muda_linha:
-	PUSH R11               ; Salvaguardar endereço inicial da tabela
-	ADD R11, 2             ; Endereço da coluna inicial do boneco
-	MOV R3, [R11]          ; Voltar à coluna inicial
-	ADD R11, 2             ; Endereço da largura do boneco
-	MOV R4, [R11]          ; Reinicializa a largura do boneco
-	SUB R2, 1              ; Passa a escrever na linha de cima do Mediacenter
-	SUB R5, 1              ; Decrementa a altura do boneco (menos uma linha a tratar)
-	POP R11                ; Restaura o endereço inicial
-	JNZ apaga_linha        ; Apagar a próxima linha
-	JMP sai_apaga_boneco   ; Caso não haja próxima linha, sair
+	ADD		R1, 2              ; Endereço da coluna inicial do boneco
+	MOV 	R3, [R1]		   ; Voltar à coluna inicial
+	SUB  	R1, 2			   ; Volta ao endereço original de R1
+;	ADD 	R11, 2             ; Endereço da largura do boneco
+	MOV 	R4, [R11]          ; Reinicializa a largura do boneco
+	SUB 	R2, 1              ; Passa a escrever na linha de cima do Mediacenter
+	SUB 	R5, 1              ; Decrementa a altura do boneco (menos uma linha a tratar)
+	JNZ 	apaga_linha        ; Apagar a próxima linha
+	JMP 	sai_apaga_boneco   ; Caso não haja próxima linha, sair
 
 
 apaga_linha:       			; desenha os pixels do boneco a partir da tabela
 	MOV	R6, 0				; cor para apagar o próximo pixel do boneco
 	CALL	escreve_pixel	; escreve cada pixel do boneco
-        ADD  R3, 1          ; próxima coluna
-        SUB  R4, 1			; menos uma coluna para tratar
-        JNZ  apaga_linha    ; continua até percorrer toda a largura do objeto
+    ADD  R3, 1          ; próxima coluna
+    SUB  R4, 1			; menos uma coluna para tratar
+    JNZ  apaga_linha    ; continua até percorrer toda a largura do objeto
 	JMP apaga_muda_linha  	; Linha atual acabou - passar à seguinte
 
 
 sai_apaga_boneco:
 	POP R11
+	POP R7
 	POP R6
 	POP R5
 	POP R4
@@ -742,12 +744,16 @@ testa_limites:
 	PUSH    R2
 	PUSH	R5
 	PUSH	R6
-	MOV     R1, DEF_ROVER 			; Endereço da definição do Rover
+	MOV     R1, POS_ROVER 			; Endereço da definição do Rover
 	ADD     R1, 2         			; Endereço da coluna em que o Rover está
 	MOV     R2, [R1]      			; Obtém coluna
-	ADD     R1, 2         			; Endereço da largura do Rover
-	MOV     R6, [R1]      			; Obtém largura do Rover
+
+	ADD     R1, 2         			; Endereço da figura do Rover
+	MOV     R11, [R1]				; Figura do Rover
+
+	MOV     R6, [R11]      			; Obtém largura do Rover
 	JMP     testa_limite_esquerdo
+	
 testa_limite_esquerdo:				; vê se o boneco chegou ao limite esquerdo
 	MOV	R5, MIN_COLUNA
 	CMP	R2, R5
