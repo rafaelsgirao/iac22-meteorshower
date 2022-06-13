@@ -207,6 +207,33 @@ FIG_DISPARO:                    ; Definição dos disparos da nave
     WORD AZUL
 
 
+;---------------------------------------------------------------------------------;
+;-------------------------Posições dos vários Bonecos-----------------------------;
+;---------------------------------------------------------------------------------;
+POS_DISPARO:
+	WORD 0,0                            ; Valor inicial p/ o disparo. Caso não esteja inicializado
+										; será colocado em cima do Rover
+	WORD FIG_DISPARO
+
+POS_ROVER:
+	
+	WORD LINHA_FUNDO_ECRA, COLUNA_MEIO_ECRA
+	WORD FIG_ROVER
+
+
+NR_METEOROS             EQU 2       ; Nº de meteoros que existem no jogo.
+;FIXME: Quando tivermos a rotina de escolher um valor aleatório, alterar isto para ser só uma tabela
+
+POS_METEOROS:
+POS_METEORO_1:			WORD  LINHA_INICIAL_METEOROS, COLUNA_MEIO_ECRA, FIG_METEORO_MAU_3
+POS_METEORO_2: 			WORD  LINHA_INICIAL_METEOROS, COL_METEORO_4, FIG_METEORO_NEUTRO_2
+;POS_METEOROS:        	TABLE 6H    ; Tabela que guarda os N meteoros.
+                                    ; Cada meteoro ocupa 3 WORDs (A linha, coluna e a sua figura)
+                                    ; Quando o nº de meteoros se quer alterado,
+                                    ; multiplicar o  valor de NR_METEOROS por 3 e alterar aqui
+
+
+
 ; *********************************************************************************
 ; * Código
 ; *********************************************************************************
