@@ -37,8 +37,9 @@ COLUNA_2 			    EQU 2
 
 
 ; **********************************
-; * Posições (coluna) dos 8 meteoros 
+; * Posições (coluna) de importância dos 8 meteoros 
 ; **********************************
+
 
 
 ; **********************************
@@ -46,18 +47,24 @@ COLUNA_2 			    EQU 2
 ; **********************************
 LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
 COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
-LARGURA_ROVER		    EQU  05H	; lagura do rover
-ALTURA_ROVER            EQU  04H	; altura do rover
 
 LINHA_INICIAL           EQU 1		; linha inicial do meteoro neutro
 LINHA_METEORO_NEUTRO_2  EQU 4		; linha após se aumentar o tamanho do meteoro neutro
 
-LINHA_INICIAL_METEOROS  EQU 7		; linha inicial em que os meteoros se diferenciam
-LINHA_METEOROS_2        EQU 10		; linha em que os meteoros aumentam de tamanho
-LINHA_METEOROS_3        EQU 13		; linha em que os meteoros aumentam de tamanho pela segunda vez
-
-LINHA_EXPLOSAO          EQU 1
-LINHA_DISPARO           EQU 1
+LINHA_INICIAL_METEOROS  EQU 4     	; Linha onde os meteoros nascem
+LINHA_TRANSICAO_1       EQU 180H    ; Linha em que os meteoros mudam da 1ª para a 2ª fase
+LINHA_TRANSICAO_2       EQU 380H    ; Linha em que os meteoros mudam da 2ª para a 3ª fase
+LINHA_TRANSICAO_3       EQU 600H    ; Linha em que os meteoros mudam da 3ª para a 4ª fase
+LINHA_TRANSICAO_4       EQU 900H    ; Linha em que os meteoros mudam da 4ª para a 5ª fase
+                                    ; As 8 colunas onde um meteoro pode 'nascer'
+COL_METEORO_1           EQU 30H     ; 1ª coluna de início de um meteoro
+COL_METEORO_2           EQU 30H     ; 2ª coluna de início de um meteoro
+COL_METEORO_3           EQU 30H     ; 3ª coluna de início de um meteoro
+COL_METEORO_4           EQU 30H     ; 4ª coluna de início de um meteoro
+COL_METEORO_5           EQU 30H     ; 5ª coluna de início de um meteoro
+COL_METEORO_6           EQU 30H     ; 6ª coluna de início de um meteoro
+COL_METEORO_7           EQU 30H     ; 7ª coluna de início de um meteoro
+COL_METEORO_8           EQU 30H     ; 8ª coluna de início de um meteoro
 
 
 MIN_COLUNA	        	EQU 0		; número da coluna mais à esquerda que o objeto pode ocupar
@@ -114,41 +121,39 @@ modo_jogo:
            ; 2 - em pausa,  e 3 signfica que o jogo acabou
 
 ;---------------------------------------------------------------------------------;
-;----------------------TABELAS DE DEFINIÇÃO DAS FIGURAS---------------------------;		
+;--------------------Tabelas de Figuras dos vários Bonecos------------------------;
 ;---------------------------------------------------------------------------------;
   
-DEF_ROVER:			    	; Tabela que define o rover.
+FIG_ROVER:			    	; Tabela que define o rover.
 							; A primeira linha desta tabela contém a 1ª linha do Rover a contar de baixo.
 							; A linha e coluna são alteradas quando o Rover é movimentado
-	WORD LINHA_FUNDO_ECRA
-	WORD COLUNA_MEIO_ECRA
-	WORD LARGURA_ROVER
-	WORD ALTURA_ROVER
+	WORD 5, 4               ; Dimensões do rover (5 pixels de largura, 4 de altura)
 
 	WORD 0, CASTANHO, 0, CASTANHO, 0
 	WORD CASTANHO, AZUL, CASTANHO, AZUL, CASTANHO
 	WORD CASTANHO, 0, AZUL, 0, CASTANHO
 	WORD 0, 0, CASTANHO, 0, 0
      
-METEORO_NEUTRO_1:           ; Definição do primeiro meteoro neutro
-    WORD LINHA_INICIAL
+FIG_METEORO_NEUTRO_1:           ; Definição do primeiro meteoro neutro
+    WORD 1,1                ; Largura e altura do meteoro (1x1 pixels)
+
     WORD CINZENTO 
 
-METEORO_NEUTRO_2:           ; Definição do segundo meteoro neutro
-    WORD LINHA_METEORO_NEUTRO_2
+FIG_METEORO_NEUTRO_2:           ; Definição do segundo meteoro neutro
+    WORD 2,2                ; Largura e altura do meteoro (2x2 pixels)
 
 	WORD CINZENTO,      CINZENTO
     WORD CINZENTO,      CINZENTO
 
-METEORO_BOM_1:              ; Definição do primeiro meteoro bom
-    WORD LINHA_INICIAL_METEOROS
+FIG_METEORO_BOM_1:              ; Definição do primeiro meteoro bom
+    WORD 3,3                ; Largura e altura do meteoro (3x3 pixels)
 
     WORD 0,             VERDE_FORA,     0
     WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
     WORD 0, VERDE_FORA, 0
 
 METEORO_BOM_2:              ; Definição do segundo meteoro bom
-    WORD LINHA_METEOROS_2
+    WORD 4,4                ; Largura e altura do meteoro (4x4 pixels)
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
     WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA
@@ -156,7 +161,7 @@ METEORO_BOM_2:              ; Definição do segundo meteoro bom
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
 
 METEORO_BOM_3:              ; Definição do terceiro meteoro bom
-    WORD LINHA_METEOROS_3
+    WORD 5,5                ; Largura e altura do meteoro (5x5 pixels)
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
     WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
@@ -165,25 +170,22 @@ METEORO_BOM_3:              ; Definição do terceiro meteoro bom
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
 
 METEORO_MAU_1:              ; Definição do primeiro meteoro mau
-    WORD LINHA_INICIAL_METEOROS
+    WORD 3,3                ; Largura e altura do meteoro (3x3 pixels)
 
     WORD VERMELHO,  VERMELHO,   VERMELHO
     WORD 0,         VERMELHO,   0
     WORD VERMELHO,  0,          VERMELHO
 
 METEORO_MAU_2:              ; Definição do segundo meteoro mau
-    WORD LINHA_METEOROS_2
+    WORD 4,4                ; Largura e altura do meteoro (4x4 pixels)
 
     WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
     WORD 0,         VERMELHO,   VERMELHO,   0
     WORD VERMELHO,  0,          0,          VERMELHO
     WORD VERMELHO,  0,          0,          VERMELHO
 
-METEORO_MAU_3:              ; Definição do terceiro meteoro mau
-    WORD 4                  ; Linha ecrã do meteoro
-    WORD COLUNA_MEIO_ECRA   ; Coluna no ecrã do meteoro
-    WORD 5                  ; Largura do Meteoro
-    WORD 5                  ; Altura do Meteoro
+FIG_METEORO_MAU_3:              ; Definição do terceiro meteoro mau
+    WORD 5,5                ; Largura e altura do meteoro (5x5 pixels)
 
     WORD VERMELHO,  0,          0,          0,          VERMELHO
     WORD VERMELHO,  0,          VERMELHO,   0,          VERMELHO
@@ -191,8 +193,8 @@ METEORO_MAU_3:              ; Definição do terceiro meteoro mau
     WORD 0,         VERMELHO,   VERMELHO,   VERMELHO,   0
     WORD VERMELHO,  0,          0,          0,          VERMELHO
 
-EXPLOSAO:                   ; Definição das explosoes
-    WORD LINHA_EXPLOSAO
+FIG_EXPLOSAO:                   ; Definição das explosões
+    WORD 5, 5
 
     WORD 0,         ROSA_EXP,   0,          ROSA_EXP,   0
 	WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
@@ -200,8 +202,8 @@ EXPLOSAO:                   ; Definição das explosoes
     WORD ROSA_EXP,  0,          ROSA_EXP,   0,          ROSA_EXP
     WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
 
-DISPARO:                    ; Definição dos disparos da nave
-    WORD LINHA_DISPARO
+FIG_DISPARO:                    ; Definição dos disparos da nave
+    WORD 1, 1
     WORD AZUL
 
 
