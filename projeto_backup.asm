@@ -260,6 +260,7 @@ ecra_inicial:
     CALLF desenha_rover                 ; desenha o rover 
 	CALLF desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecrã
 
+	CALL reset_int_2
 
     CALL le_tecla_rover
     CALL testa_tecla_descer_meteoro
@@ -466,16 +467,16 @@ le_tecla_energia:
 
 	MOV R4, DISPLAYS
     MOV R5, evento_int
-    MOV R2, [R5+4]
-    CMP R2, 0
-    JZ mid_energia
+    MOV R2, [R5+4]			; Vai buscar o valor da interrupcao 2 na tabela evento_int
+    CMP R2, 0		
+    JZ mid_energia			; Valor 0 - sem interrupcao - salta (para ja) a escrita nos displays
 
 	MOV R2, 0
 	MOV [R5+4], R2
 
 	SUB R8, 3
 	CMP R8, 0
-    JGT call_esc_dec
+    JGT call_esc_dec		; Se o valor de energia for menor ou igual a 3, mete a 0 e escreve nos displays
 
 	MOV R8, 0
 
@@ -857,7 +858,7 @@ rot_int_2:
 	PUSH R1
 	MOV  R0, evento_int
 	MOV  R1, 1			; assinala que houve uma interrup��o 0
-	MOV  [R0+4], R1			; na componente 0 da vari�vel evento_int
+	MOV  [R0+4], R1			; na componente 2 da vari�vel evento_int
 	POP  R1
 	POP  R0
 	RFE
@@ -867,3 +868,14 @@ RFE
 
 rot_int_1:
 RFE
+
+reset_int_2:
+	PUSH R0
+	PUSH R1
+
+	MOV R0, evento_int
+	MOV R1, 0
+	MOV [R0+4], R1
+	POP R1
+	POP R0
+	RET
