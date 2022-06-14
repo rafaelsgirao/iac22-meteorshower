@@ -45,6 +45,10 @@ COLUNA_2 			    EQU 2
 ; **********************************
 ; * Constantes de bonecos e do ecrã
 ; **********************************
+LINHA_LIMITE_DISPARO 	EQU 5
+LINHA_DISPARO 			EQU 27
+LARGURA_ALTURA_DISPARO   EQU 1
+
 LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
 COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
 
@@ -105,13 +109,16 @@ SP_display_energia:
     STACK 100H
 SP_desce_meteoro:
 
+	STACK 100H
+SP_dispara_missil:
+
 tecla_continua:
 	LOCK 0
 
 tecla_carregada:
 	LOCK 0
 
-evento_int_0:
+missil:
 	LOCK 0
 
 ; --------------------- Tabelas de interrupcoes --------------------- ;
@@ -121,9 +128,9 @@ tab:
 	WORD rot_int_2			; rotina de atendimento da interrup��o 2
 
 evento_int:
-	WORD 0				; se 1, indica que a interrup��o 0 ocorreu
-	WORD 0				; se 1, indica que a interrup��o 1 ocorreu
-	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
+	LOCK 0				; se 1, indica que a interrup��o 0 ocorreu
+	LOCK 0				; se 1, indica que a interrup��o 1 ocorreu
+	LOCK 0				; se 1, indica que a interrup��o 2 ocorreu
 ; ------------------------------------------------------------------- ;
 
 modo_jogo:
@@ -215,7 +222,8 @@ FIG_EXPLOSAO:                   ; Definição das explosões
     WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
 
 FIG_DISPARO:                    ; Definição dos disparos da nave
-    WORD 1, 1
+	WORD LARGURA_ALTURA_DISPARO, LARGURA_ALTURA_DISPARO
+
     WORD AZUL
 
 
@@ -223,7 +231,7 @@ FIG_DISPARO:                    ; Definição dos disparos da nave
 ;-------------------------Posições dos vários Bonecos-----------------------------;
 ;---------------------------------------------------------------------------------;
 POS_DISPARO:
-	WORD 0,0                            ; Valor inicial p/ o disparo. Caso não esteja inicializado
+	WORD LINHA_DISPARO, COLUNA_MEIO_ECRA                           ; Valor inicial p/ o disparo. Caso não esteja inicializado
 										; será colocado em cima do Rover
 	WORD FIG_DISPARO
 
@@ -296,6 +304,7 @@ ecra_inicial:
     CALL le_tecla_rover
     CALL testa_tecla_descer_meteoro
     CALL le_tecla_energia
+	CALL le_tecla_missil
 
 ; *********************************************************************************
 ; * Desenha um meteoro neutro no tamanho máximo, no meio do ecrã.
@@ -903,9 +912,6 @@ rot_int_2:
 rot_int_0:
 	RFE
 
-rot_int_1:
-	RFE
-
 reset_int_2:
 	PUSH R0
 	PUSH R1
@@ -916,3 +922,83 @@ reset_int_2:
 	POP R1
 	POP R0
 	RET
+
+; **********************************************************************
+; ROT_INT_1 - 	Rotina de atendimento da interrupção 1, do missíl
+;			Faz simplesmente uma escrita no LOCK que o processo boneco lê.
+;			Como basta indicar que a interrupção ocorreu (não há mais
+;			informação a transmitir), basta a escrita em si, pelo que
+;			o registo usado, bem como o seu valor, é irrelevante
+; **********************************************************************
+rot_int_1:
+	PUSH R0
+	PUSH R1
+	MOV  R0, evento_int
+	MOV  R1, 1			; assinala que houve uma interrupção do missíl
+	MOV  [R0+2], R1			; na componente 0 da variável evento_int
+	POP  R1
+	POP  R0
+	RFE
+
+PROCESS SP_dispara_missil
+le_tecla_missil:
+ 	YIELD
+	
+	CALL testa_estado_jogo
+	MOV  R6, TECLADO_1 					; Argumento de 'teclado' (testa 1ª linha)
+	CALL teclado           				; Output em R0
+	MOV R2, TECLADO_2        			; Tecla de descer o meteoro (1ª linha, 2ª coluna = tecla '1')
+	CMP R0, R2             				; Verificar se a tecla de para disparar o missíl foi premida
+	JZ  disparo
+	JMP le_tecla_missil
+
+disparo:
+	MOV R1, POS_DISPARO 				; Tabela que define o disparo
+	MOV R2, [R1]           			; Obtém a linha atual do missíl
+	JMP dispara_missil
+
+
+dispara_missil:
+						
+	CALLF desenha_missil
+
+	MOV R4, [evento_int+2]	
+
+	CALL apaga_boneco     				; Apagar o missíl na posição atual
+
+	MOV R1, POS_DISPARO 				; Tabela que define o disparo
+	MOV R2, [R1]           			; Obtém a linha atual do missíl
+	MOV R3, LINHA_LIMITE_DISPARO
+	CMP R2, R3             				; Testa se o missíl chegou ao seu alcance máximo
+	JZ reinicia_disparo  				; Se estiver, então não atualizar a linha
+	SUB R2, 2             				; Sobe o missíl 2 linhas (decrementa 2 vezes a linha atual)
+	MOV [R1], R2           				; Atualiza a linha do disparo
+	CALLF desenha_missil
+    JMP dispara_missil
+
+reinicia_disparo:
+	MOV R0, POS_DISPARO
+	MOV R1, LINHA_DISPARO
+	MOV [R0], R1
+	JMP sai_disparo
+
+sai_disparo:  
+	MOV R10, 2
+	MOV R6, 1
+    CALL ha_tecla
+    JMP le_tecla_missil
+
+desenha_missil:
+    PUSH R1
+	PUSH R2
+	PUSH R3
+	MOV R2, POS_ROVER
+	MOV R3, [R2+2]
+	ADD R3, 2
+	MOV R1, POS_DISPARO
+	MOV [R1+2], R3
+	CALL desenha_boneco
+	POP R3
+	POP R2
+    POP R1
+	RETF
