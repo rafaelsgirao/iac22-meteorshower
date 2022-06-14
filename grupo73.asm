@@ -494,9 +494,9 @@ le_tecla_energia:
 	MOV R2, 0
 	MOV [R5+4], R2
 
-	SUB R8, 3
+	SUB R8, 5
 	CMP R8, 0
-    JGT call_esc_dec		; Se o valor de energia for menor ou igual a 3, mete a 0 e escreve nos displays
+    JGT call_esc_dec		; Se o valor de energia for menor ou igual a 5, mete a 0 e escreve nos displays
 
 	MOV R8, 0
 
