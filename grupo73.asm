@@ -114,6 +114,18 @@ tecla_carregada:
 evento_int_0:
 	LOCK 0
 
+; --------------------- Tabelas de interrupcoes --------------------- ;
+tab:
+	WORD rot_int_0			; rotina de atendimento da interrup��o 0
+	WORD rot_int_1			; rotina de atendimento da interrup��o 1
+	WORD rot_int_2			; rotina de atendimento da interrup��o 2
+
+evento_int:
+	WORD 0				; se 1, indica que a interrup��o 0 ocorreu
+	WORD 0				; se 1, indica que a interrup��o 1 ocorreu
+	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
+; ------------------------------------------------------------------- ;
+
 modo_jogo:
     WORD 0 ; o modo do jogo define o seu estado
            ; 0 - o jogo está para começar ou à para recomeçar
@@ -245,7 +257,13 @@ inicio:
     MOV	 R1, 0				   		   ; cenário de fundo número 0
     MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
     MOV  R7, 1				   		   ; valor a somar à coluna do boneco, para o movimentar
-    
+
+  	MOV  BTE, tab		; inicializa BTE (registo de Base da Tabela de Exce��es)
+    EI0					; permite interrup��es 0
+	EI1					; permite interrup��es 1
+	EI2					; permite interrup��es 2
+	EI					; permite interrup��es (geral) 
+
     CALL inicializa_energia            ; Inicialização do display de energia
     JMP  ecra_inicial 		           ; Ecrã de início de jogo
 
@@ -273,6 +291,7 @@ ecra_inicial:
     CALL desenha_rover                 ; desenha o rover 
 	CALL desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecrã
 
+	CALL reset_int_2
 
     CALL le_tecla_rover
     CALL testa_tecla_descer_meteoro
@@ -466,6 +485,25 @@ le_tecla_energia:
 
     YIELD
 
+	MOV R4, DISPLAYS
+    MOV R5, evento_int
+    MOV R2, [R5+4]			; Vai buscar o valor da interrupcao 2 na tabela evento_int
+    CMP R2, 0		
+    JZ mid_energia			; Valor 0 - sem interrupcao - salta (para ja) a escrita nos displays
+
+	MOV R2, 0
+	MOV [R5+4], R2
+
+	SUB R8, 3
+	CMP R8, 0
+    JGT call_esc_dec		; Se o valor de energia for menor ou igual a 3, mete a 0 e escreve nos displays
+
+	MOV R8, 0
+
+call_esc_dec:
+    CALL escreve_decimal 
+
+mid_energia:
     CALL testa_estado_jogo
     MOV R11, TECLADO_4	  				; constante 08 fora dos limites - tem que ser guardada no registo
     MOV R4,  DISPLAYS	  				; R4 tem o endereco dos displays
@@ -479,7 +517,6 @@ le_tecla_energia:
     CALL teclado
     CMP R0, R11				
     JZ diminui_display					; se for zero diminui o valor do display de energia
-
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
 	MOV R10, 8			  				; procura na coluna 4
@@ -850,4 +887,31 @@ nht:			   ; ciclo interior do nao_ha_tecla, sem os push'es
 	POP	R3
 	POP	R2
     POP R0
+	RET
+
+rot_int_2:
+    PUSH R0
+	PUSH R1
+	MOV  R0, evento_int
+	MOV  R1, 1			; assinala que houve uma interrup��o 0
+	MOV  [R0+4], R1			; na componente 2 da vari�vel evento_int
+	POP  R1
+	POP  R0
+	RFE
+
+rot_int_0:
+	RFE
+
+rot_int_1:
+	RFE
+
+reset_int_2:
+	PUSH R0
+	PUSH R1
+
+	MOV R0, evento_int
+	MOV R1, 0
+	MOV [R0+4], R1
+	POP R1
+	POP R0
 	RET
