@@ -955,6 +955,7 @@ le_tecla_missil:
 disparo:
 	MOV R1, POS_DISPARO 				; Tabela que define o disparo
 	MOV R2, [R1]           			; Obtém a linha atual do missíl
+	CALLF atualiza_coluna_missil
 	JMP dispara_missil
 
 
@@ -989,6 +990,14 @@ sai_disparo:
     JMP le_tecla_missil
 
 desenha_missil:
+	PUSH R1
+	MOV R1, POS_DISPARO
+	CALL desenha_boneco
+    POP R1
+	RETF
+
+
+atualiza_coluna_missil:
     PUSH R1
 	PUSH R2
 	PUSH R3
@@ -997,7 +1006,6 @@ desenha_missil:
 	ADD R3, 2
 	MOV R1, POS_DISPARO
 	MOV [R1+2], R3
-	CALL desenha_boneco
 	POP R3
 	POP R2
     POP R1
