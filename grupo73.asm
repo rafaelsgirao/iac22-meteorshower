@@ -130,7 +130,7 @@ tab:
 evento_int:
 	LOCK 0				; se 1, indica que a interrup��o 0 ocorreu
 	LOCK 0				; se 1, indica que a interrup��o 1 ocorreu
-	LOCK 0				; se 1, indica que a interrup��o 2 ocorreu
+	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
 ; ------------------------------------------------------------------- ;
 
 modo_jogo:
@@ -503,60 +503,101 @@ le_tecla_energia:
 	MOV R2, 0
 	MOV [R5+4], R2
 
-	SUB R8, 5
-	CMP R8, 0
-    JGT call_esc_dec		; Se o valor de energia for menor ou igual a 5, mete a 0 e escreve nos displays
-
-	MOV R8, 0
-	JMP termina_jogo
-
-call_esc_dec:
-    CALL escreve_decimal 
+	CALL diminui_cinco
+	JMP le_tecla_energia
 
 mid_energia:
     CALL testa_estado_jogo
-    MOV R11, TECLADO_4	  				; constante 08 fora dos limites - tem que ser guardada no registo
+    MOV R11, TECLADO_4	  				; constante 08
     MOV R4,  DISPLAYS	  				; R4 tem o endereco dos displays
     MOV R6,  TECLADO_3 					; linha 3 (aumenta display)
     
     CALL teclado
     CMP R0, R11 		  				; coluna 4 (linha 3 e coluna 4 - tecla B)
-    JZ aumenta_display					; se for zero aumenta o valor do display de energia
+    JZ call_aumenta_um					; se for zero aumenta o valor do display de energia
 
     MOV R6, R11			  				; linha 4 (linha 4, coluna 4 - letra F)	
     CALL teclado
     CMP R0, R11				
-    JZ diminui_display					; se for zero diminui o valor do display de energia
+    JZ call_diminui_um					; se for zero diminui o valor do display de energia
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
 	MOV R10, 8			  				; procura na coluna 4
     CALL ha_tecla
     JMP le_tecla_energia
 
-aumenta_display:
+call_aumenta_um:
+	CALL aumenta_um
+	JMP pop_e_espera
+
+call_diminui_um:
+	CALL diminui_um
+	JMP pop_e_espera
+
+
+aumenta_um:
+	PUSH R1
+	MOV R1, 1
+	CALL aumenta_display_generico
+	POP R1
+	RET
+
+diminui_um:
+	PUSH R1
+	MOV R1, 1
+	CALL diminui_display_generico
+	POP R1
+	RET
+
+diminui_cinco:
+	PUSH R1
+	MOV R1, 5
+	CALL diminui_display_generico
+	POP R1
+	RET
+
+aumenta_display_generico:
+	PUSH R9
+
     MOV  [tecla_carregada], R0
     MOV R9, MAX_ENERGIA   
-    CMP R9, R8			  				; limite superior atingido (100) - salta a adição
-    JZ pop_e_espera
+    SUB R9, R1
+	CMP R9, R8			  				; limite superior atingido (100) - salta a adição
+    JLE maxim_energia 
+         
+    ADD R8, R1			  				; R8 <- R8 + 1
 
-    MOV R9, 01H         
-    ADD R8, 1			  				; R8 <- R8 + 1
+	JMP  _escreve_decimal				; escreve nos displays, em decimal
+    
+maxim_energia:
+	MOV R8, 064H
 
-	CALL escreve_decimal				; escreve nos displays, em decimal
-    JMP pop_e_espera
+_escreve_decimal:
+	CALL escreve_decimal
+	POP R9
+	RET
 
 
-diminui_display:
+diminui_display_generico:
+	PUSH R9
     MOV [tecla_carregada], R0
     MOV R9, 0
-    CMP R9, R8							; limite inferior atingido (0) - Fim de jogo!
-    JZ termina_jogo
+    ADD R9, R1
+	CMP R9, R8							; limite inferior atingido (0) - Fim de jogo!
+    JGE termina_jogo_
 
-    MOV R9, 01H
-    SUB R8, R9							; R8 <- R8 - 1
+    SUB R8, R1							; R8 <- R8 - 1
+	JMP __escreve_decimal
 
+termina_jogo_:
+	MOV R8, 0
+	CALL escreve_decimal
+	JMP termina_jogo
+
+__escreve_decimal:
     CALL escreve_decimal						; escreve nos displays, em decimal
-    JMP pop_e_espera
+	POP R9
+    RET
 
 ; *********************************************************************
 ; * MOVE_ROVER (move_rover, coluna_seguinte)
