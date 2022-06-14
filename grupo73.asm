@@ -499,6 +499,7 @@ le_tecla_energia:
     JGT call_esc_dec		; Se o valor de energia for menor ou igual a 5, mete a 0 e escreve nos displays
 
 	MOV R8, 0
+	JMP termina_jogo
 
 call_esc_dec:
     CALL escreve_decimal 
@@ -539,8 +540,8 @@ aumenta_display:
 diminui_display:
     MOV [tecla_carregada], R0
     MOV R9, 0
-    CMP R9, R8							; limite inferior atingido (0) - salta a subtracao
-    JZ pop_e_espera
+    CMP R9, R8							; limite inferior atingido (0) - Fim de jogo!
+    JZ termina_jogo
 
     MOV R9, 01H
     SUB R8, R9							; R8 <- R8 - 1
