@@ -303,7 +303,7 @@ ecra_inicial:
 
     CALL le_tecla_rover
     CALL testa_tecla_descer_meteoro
-    CALL le_tecla_energia
+    CALL interrupcao_energia
 	CALL le_tecla_missil
 
 ; *********************************************************************************
@@ -490,7 +490,7 @@ escreve_decimal:
 	RET
 
 PROCESS SP_display_energia
-le_tecla_energia:
+interrupcao_energia:
 
     YIELD
 
@@ -504,7 +504,7 @@ le_tecla_energia:
 	MOV [R5+4], R2
 
 	CALL diminui_cinco
-	JMP le_tecla_energia
+	JMP interrupcao_energia
 
 mid_energia:
     CALL testa_estado_jogo
@@ -524,7 +524,7 @@ mid_energia:
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
 	MOV R10, 8			  				; procura na coluna 4
     CALL ha_tecla
-    JMP le_tecla_energia
+    JMP interrupcao_energia
 
 call_aumenta_um:
 	CALL aumenta_um
@@ -538,25 +538,25 @@ call_diminui_um:
 aumenta_um:
 	PUSH R1
 	MOV R1, 1
-	CALL aumenta_display_generico
+	CALL aumenta_display
 	POP R1
 	RET
 
 diminui_um:
 	PUSH R1
 	MOV R1, 1
-	CALL diminui_display_generico
+	CALL diminui_display
 	POP R1
 	RET
 
 diminui_cinco:
 	PUSH R1
 	MOV R1, 5
-	CALL diminui_display_generico
+	CALL diminui_display
 	POP R1
 	RET
 
-aumenta_display_generico:
+aumenta_display:
 	PUSH R9
 
     MOV  [tecla_carregada], R0
@@ -578,7 +578,7 @@ _escreve_decimal:
 	RET
 
 
-diminui_display_generico:
+diminui_display:
 	PUSH R9
     MOV [tecla_carregada], R0
     MOV R9, 0

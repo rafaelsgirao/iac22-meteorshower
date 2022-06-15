@@ -303,7 +303,7 @@ ecra_inicial:
 
     CALL le_tecla_rover
     CALL testa_tecla_descer_meteoro
-    CALL le_tecla_energia
+    CALL interrupcao_energia
 	CALL le_tecla_missil
 
 ; *********************************************************************************
@@ -405,7 +405,9 @@ recomeca:								; volta ao ecrã do jogo
 	CALL nao_ha_tecla 					; fica à espera que uma tecla seja pressionada
 	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
 	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	
+	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
+										; caso fique em pausa mais de 1 ciclo do relogio de energia
+
 	CALL ha_tecla	   					; espera que se largue D, caso contrario voltaria ao ciclo de novo
 					   					; (ficando preso no menu)
 
@@ -490,7 +492,7 @@ escreve_decimal:
 	RET
 
 PROCESS SP_display_energia
-le_tecla_energia:
+interrupcao_energia:
 
     YIELD
 
@@ -504,59 +506,33 @@ le_tecla_energia:
 	MOV [R5+4], R2
 
 	CALL diminui_cinco
-	JMP le_tecla_energia
+	JMP interrupcao_energia
 
 mid_energia:
     CALL testa_estado_jogo
-    MOV R11, TECLADO_4	  				; constante 08
-    MOV R4,  DISPLAYS	  				; R4 tem o endereco dos displays
-    MOV R6,  TECLADO_3 					; linha 3 (aumenta display)
-    
-    CALL teclado
-    CMP R0, R11 		  				; coluna 4 (linha 3 e coluna 4 - tecla B)
-    JZ call_aumenta_um					; se for zero aumenta o valor do display de energia
-
-    MOV R6, R11			  				; linha 4 (linha 4, coluna 4 - letra F)	
-    CALL teclado
-    CMP R0, R11				
-    JZ call_diminui_um					; se for zero diminui o valor do display de energia
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
 	MOV R10, 8			  				; procura na coluna 4
     CALL ha_tecla
-    JMP le_tecla_energia
-
-call_aumenta_um:
-	CALL aumenta_um
-	JMP pop_e_espera
-
-call_diminui_um:
-	CALL diminui_um
-	JMP pop_e_espera
+    JMP interrupcao_energia
 
 
-aumenta_um:
+aumenta_cinco:
 	PUSH R1
-	MOV R1, 1
-	CALL aumenta_display_generico
-	POP R1
-	RET
-
-diminui_um:
-	PUSH R1
-	MOV R1, 1
-	CALL diminui_display_generico
+	MOV R1, 5
+	CALL aumenta_display
 	POP R1
 	RET
 
 diminui_cinco:
 	PUSH R1
 	MOV R1, 5
-	CALL diminui_display_generico
+	CALL diminui_display
 	POP R1
 	RET
 
-aumenta_display_generico:
+aumenta_display:	; Funcao generica de alteracao da energia
+					; (Necessita de funcao auxiliar para determinar o valor do aumento)
 	PUSH R9
 
     MOV  [tecla_carregada], R0
@@ -569,7 +545,8 @@ aumenta_display_generico:
 
 	JMP  _escreve_decimal				; escreve nos displays, em decimal
     
-maxim_energia:
+maxim_energia:		; Caso o valor da energia seja igual ou superior ao limite, 
+					; coloca o display a 100
 	MOV R8, 064H
 
 _escreve_decimal:
@@ -578,7 +555,8 @@ _escreve_decimal:
 	RET
 
 
-diminui_display_generico:
+diminui_display:	; Funcao generica de alteracao da energia
+					; (Necessita de funcao auxiliar para determinar o valor da diminuicao)
 	PUSH R9
     MOV [tecla_carregada], R0
     MOV R9, 0
@@ -589,7 +567,7 @@ diminui_display_generico:
     SUB R8, R1							; R8 <- R8 - 1
 	JMP __escreve_decimal
 
-termina_jogo_:
+termina_jogo_:		; Coloca a energia a zero e termina o jogo
 	MOV R8, 0
 	CALL escreve_decimal
 	JMP termina_jogo
@@ -940,7 +918,7 @@ nht:			   ; ciclo interior do nao_ha_tecla, sem os push'es
     POP R0
 	RET
 
-rot_int_2:
+rot_int_2:				; rotina de interrupcao da energia
     PUSH R0
 	PUSH R1
 	MOV  R0, evento_int
@@ -953,13 +931,14 @@ rot_int_2:
 rot_int_0:
 	RFE
 
-reset_int_2:
+reset_int_2:		; funcao que evita diminuicoes da energia,
+					; logo apos de comecar (ou recomecar) o jogo a partir da pausa
 	PUSH R0
 	PUSH R1
 
 	MOV R0, evento_int
 	MOV R1, 0
-	MOV [R0+4], R1
+	MOV [R0+4], R1	; coloca o valor da interrupcao a 0
 	POP R1
 	POP R0
 	RET
