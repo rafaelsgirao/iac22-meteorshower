@@ -73,13 +73,15 @@ COL_METEORO_8           EQU 30H     ; 8ª coluna de início de um meteoro
 
 MIN_COLUNA	        	EQU 0		; número da coluna mais à esquerda que o objeto pode ocupar
 MAX_COLUNA	        	EQU 63      ; número da coluna mais à direita que o objeto pode ocupar
-ATRASO		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
+ATRASO_ROVER		    EQU	0400H	; atraso para limitar a velocidade de movimento do Rover
+ATRASO_EXPLOSAO		    EQU	0FFFFH	; atraso para "atrasar" fim do jogo após rover explodir
 
 ; ********************
 ; * Outras constantes
 ; ********************
 MAX_ENERGIA		        EQU 64H     ; Energia do Rover ao começar o jogo (100 em hexadecimal)
 MIN_ENERGIA             EQU 0H      ; Energia mínima do Rover
+ENERGIA_METEORO_BOM 	EQU 20H		; Energia que "consumir" um meteoro bom fornece
 
 ; **********************
 ; * Constantes de cores
@@ -112,6 +114,9 @@ SP_desce_meteoro:
 	STACK 100H
 SP_dispara_missil:
 
+	STACK 100H
+SP_testa_colisoes:
+
 tecla_continua:
 	LOCK 0
 
@@ -123,14 +128,14 @@ missil:
 
 ; --------------------- Tabelas de interrupcoes --------------------- ;
 tab:
-	WORD rot_int_0			; rotina de atendimento da interrup��o 0
-	WORD rot_int_1			; rotina de atendimento da interrup��o 1
-	WORD rot_int_2			; rotina de atendimento da interrup��o 2
+	WORD rot_int_0			; rotina de atendimento da interrupção 0
+	WORD rot_int_1			; rotina de atendimento da interrupção 1
+	WORD rot_int_2			; rotina de atendimento da interrupção 2
 
 evento_int:
-	LOCK 0				; se 1, indica que a interrup��o 0 ocorreu
-	LOCK 0				; se 1, indica que a interrup��o 1 ocorreu
-	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
+	LOCK 0				; se 1, indica que a interrupção 0 ocorreu
+	LOCK 0				; se 1, indica que a interrupção 1 ocorreu
+	WORD 0				; se 1, indica que a interrupção 2 ocorreu
 ; ------------------------------------------------------------------- ;
 
 modo_jogo:
@@ -231,8 +236,8 @@ FIG_DISPARO:                    ; Definição dos disparos da nave
 ;-------------------------Posições dos vários Bonecos-----------------------------;
 ;---------------------------------------------------------------------------------;
 POS_DISPARO:
-	WORD LINHA_DISPARO, COLUNA_MEIO_ECRA                           ; Valor inicial p/ o disparo. Caso não esteja inicializado
-										; será colocado em cima do Rover
+	WORD LINHA_DISPARO, COLUNA_MEIO_ECRA ; Valor inicial p/ o disparo. Caso não esteja inicializado,
+										 ; será colocado em cima do Rover
 	WORD FIG_DISPARO
 
 POS_ROVER:
@@ -266,11 +271,11 @@ inicio:
     MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
     MOV  R7, 1				   		   ; valor a somar à coluna do boneco, para o movimentar
 
-  	MOV  BTE, tab		; inicializa BTE (registo de Base da Tabela de Exce��es)
-    EI0					; permite interrup��es 0
-	EI1					; permite interrup��es 1
-	EI2					; permite interrup��es 2
-	EI					; permite interrup��es (geral) 
+  	MOV  BTE, tab		; inicializa BTE (registo de Base da Tabela de Exceõees)
+    EI0					; permite interrupções 0
+	EI1					; permite interrupções 1
+	EI2					; permite interrupções 2
+	EI					; permite interrupções (geral) 
 
     CALL inicializa_energia            ; Inicialização do display de energia
     JMP  ecra_inicial 		           ; Ecrã de início de jogo
@@ -288,7 +293,6 @@ inicializa_energia:
 
 
 ecra_inicial:
-	MOV R11, ATRASO
 	MOV  R6, LINHA_START				; linha a testar no teclado
 	CALL	teclado						; leitura às teclas
 	CMP	R0, TECLADO_1  					; compara para ver se a tecla C foi premida
@@ -296,8 +300,8 @@ ecra_inicial:
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 1							; cenário de fundo número 1
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-    CALL desenha_rover                 ; desenha o rover 
-	CALL desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecrã
+    CALL desenha_rover                  ; desenha o rover 
+	CALL desenha_um_meteoro       	 	; Desenha o meteoro inicial no topo do ecrã
 
 	CALL reset_int_2
 
@@ -305,10 +309,141 @@ ecra_inicial:
     CALL testa_tecla_descer_meteoro
     CALL le_tecla_energia
 	CALL le_tecla_missil
+	CALL testa_colisoes
 
-; *********************************************************************************
+; **********************************************************************
+; * Rotina que testa colisões entre todos os meteoros e o míssil/rover.
+; **********************************************************************
+PROCESS SP_testa_colisoes
+testa_colisoes:
+	YIELD
+	CALL testa_estado_jogo
+
+	MOV R3, POS_ROVER					; Testar colisões meteoro-rover.
+	CALL aux_testa_colisoes
+	MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
+	CALL aux_testa_colisoes
+	
+	JMP testa_colisoes					; Fim
+
+aux_testa_colisoes:						; Testa colisões meteoro-rover.
+	MOV R1, POS_METEOROS				; Inicializa R1 ao 1º meteoro
+	MOV R5, NR_METEOROS					; Testa colisão para cada um dos N meteoros
+loop_colisoes:
+	SUB R5, 1							; Menos um meteoro a tratar
+	CALL testa_colisao					; Testar colisão
+	CMP R0, 0							; Testar se houve colisão
+	JNZ tratar_colisao_meteoro_mau_rover; Tratar colisão ;FIXME: this ain't right! gotta be more generic...
+	ADD R1, 6							; Endereço do meteoro seguinte
+	CMP R5, 0							; Verificar se ainda há meteoros a tratar
+	JNZ loop_colisoes					; Tratar o meteoro seguinte
+	RET									; Retornar
+
+
+; **********************************************************************
+; * Rotinas que tratam do comportamento de colisões.
+; * Casos que são tratados:
+; * 	- Colisão rover-meteoro mau: som de explosão, 
+; *			substituir rover por explosão, acabar jogo
+; * 	- Colisão rover-meteoro bom: som de powerup, apagar meteoro, aumentar display
+; *  	- Colisão míssil-meteoro: som de explosão, substituir meteo. por explosão,
+; *			apagar míssil e meteoro, aumentar display (?)
+; * FIXME: implementar isto tudo
+; * Ver se é melhor separar rotinas, 
+; * já que o testa colisões trata cada caso separadamente
+; **********************************************************************
+tratar_colisao_meteoro_mau_rover: ; Assumindo meteoro em R3 (FIXME: doesn't matter)
+	PUSH R1
+	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
+	MOV R3, FIG_EXPLOSAO
+	MOV [R1], R3			; Rover é substituído por figura de explosão
+	SUB R1, 4				; Endereço normal do Rover
+	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
+	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
+	CALL atraso_colisao     ; 	Não usar uma interrupção para fazer um atraso
+	CALL atraso_colisao     ; 	para ter a certeza que não existe comportamento indesejado.
+	CALL atraso_colisao     
+	JMP termina_jogo		; Acabou o jogo
+
+tratar_colisao_meteoro_bom_rover: ; Assumindo meteoro EM R1 E ROVER EM R3
+	PUSH R1
+	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
+	MOV R3, FIG_EXPLOSAO
+	MOV [R1], R3			; Rover é substituído por figura de explosão
+	SUB R1, 4				; Endereço normal do Rover
+	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
+	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
+	JMP termina_jogo		; Acabou o jogo
+
+	
+; **********************************************************************
+; * Rotina esta se ocorreu uma colisão entre dois bonecos.
+; * Argumentos:    R1 - Definição do boneco A
+; * Argumentos:    R3 - Definição do boneco B
+; * Outros registos usados:
+;				   R2 - Figura do boneco A
+;				   R4 - Figura do boneco B
+;
+; Retorna: 	R0 - 0 caso não haja colisão, 1 caso contrário
+; fixme: REMOVE L8r
+; Condições em que não há colisão:
+; 	Se coluna do canto sup. esq. de B estiver à direita 
+;   do canto inferior direito de A não há colisão
+; * 
+; Condições em que há colisão;
+; Canto superior direito de A está à direita ou coincide com o 
+;     canto inf esq. de B AND 
+; ******************************************************************
+
+testa_colisao:
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	MOV R2, [R1+4]	  ; Def. de A + 4 = figura de A
+	MOV R4, [R3+4]    ; Figura de B
+	JMP caso_colisao_1_1
+
+; R5 -> limite inferior de A
+; R6 -> limite inferior de A
+; R7 -> Registo auxiliar
+caso_colisao_1_1:	; Verificar se a linha inferior de A é está abaixo (ou igual) a limite superior de B
+					; Caso positivo, há colisão (FIXME: not really...)
+					; Por convenção, A(R1) será sempre um meteoro e B(R3) o Rover ou o míssil
+	MOV R5, [R1]	; Limite inferior de A
+
+	MOV R6, [R3]	; Limite inferior de B
+	MOV R7, [R4+2]  ; Figura de B + 2 = Altura de B
+	ADD R6, R7		; Lim. inf. de B + altura = Lim. sup. de B
+	
+	CMP R5, R6
+	JGE ha_colisao  ; FIXME: more conditions after this...
+	JMP nao_ha_colisao
+
+caso_colisao_1_2:
+	JMP sai_testa_colisao
+
+ha_colisao:
+	MOV R0, 1
+	JMP sai_testa_colisao
+
+nao_ha_colisao:
+	MOV R0, 0
+	JMP sai_testa_colisao
+	
+sai_testa_colisao:
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	RET
+
+
+; ***************************************************************
 ; * Desenha um meteoro neutro no tamanho máximo, no meio do ecrã.
-; *********************************************************************************
+; ***************************************************************
 PROCESS SP_desce_meteoro
 testa_tecla_descer_meteoro:
 
@@ -323,7 +458,6 @@ testa_tecla_descer_meteoro:
 	JMP testa_tecla_descer_meteoro
 
 desce_meteoro: 							; Rotina a ser generalizada na entrega final.
-
     MOV [tecla_carregada], R2            ; informa quem estiver bloqueado neste LOCK que uma tecla foi carregada
 
 	MOV R1, POS_METEORO_1				; Tabela que define o meteoro
@@ -342,6 +476,7 @@ sai_desce_meteoro:
 	MOV R6, 4
     CALL ha_tecla
     JMP testa_tecla_descer_meteoro
+
 ; *********************************************************************************
 ; * Desenha o rover no ecrã.
 ; *********************************************************************************
@@ -361,7 +496,7 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
     MOV [tecla_continua], R0
 
 	MOV	R7, -1							; vai deslocar para a esquerda
-	CALL atraso
+	CALL atraso_rover
 	JMP	ve_limites_rover
 
 testa_direita:
@@ -371,7 +506,7 @@ testa_direita:
     MOV [tecla_continua], R0
 
 	MOV	R7, +1							; vai deslocar para a direita
-	CALL atraso 						; se mover, chama a rotina atraso para não mover demasiado rápido
+	CALL atraso_rover 						; se mover, chama a rotina atraso para não mover demasiado rápido
 	JMP    ve_limites_rover 			; verifica se ao mover o rover os limites do ecrã não são ultrapassados
 
 ve_limites_rover:
@@ -406,10 +541,10 @@ recomeca:								; volta ao ecrã do jogo
 	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
 	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	
-	CALL ha_tecla	   					; espera que se largue D, caso contrario voltaria ao ciclo de novo
+	CALL ha_tecla	   					; espera que se largue D, caso contrário voltaria ao ciclo de novo
 					   					; (ficando preso no menu)
 
-	CALL desenha_rover 				; desenha-se o rover novamente
+	CALL desenha_rover 					; desenhar o rover novamente
 	CALL desenha_um_meteoro
     RET
 
@@ -453,19 +588,18 @@ desenha_rover:
 	RET
 
 escreve_decimal:
-	PUSH R11	; num
-
 	PUSH R0		; fator
 	PUSH R1		; digito
 	PUSH R2		; resultado
 	PUSH R10
+	PUSH R11	; num
 
 	MOV R11, R8	
 
 	MOV R0, 1000 ; fator inicial
 	MOV R10, 10	 ; R10 - registo com o valor 10 fixo
 
-	ciclo_conversao:
+ciclo_conversao:
 	MOD R11, R0	; resto do numero pelo fator
 	
 	DIV R0, R10	; divisao inteira do fator por 10
@@ -481,12 +615,12 @@ escreve_decimal:
 
 	MOV [R4], R2	; escreve o resultado nos displays e retorna, a seguir
 
+	POP R11
 	POP R10
 	POP R2
 	POP R1
 	POP R0
 
-	POP R11
 	RET
 
 PROCESS SP_display_energia
@@ -497,19 +631,19 @@ le_tecla_energia:
 	MOV R4, DISPLAYS
     MOV R5, evento_int
     MOV R2, [R5+4]			; Vai buscar o valor da interrupcao 2 na tabela evento_int
-    CMP R2, 0		
-    JZ mid_energia			; Valor 0 - sem interrupcao - salta (para ja) a escrita nos displays
+    CMP R2, 0				; Verifica se a interrupção aconteceu
+    JZ mid_energia			; Valor 0 - sem interrupção - salta para a escrita nos displays
 
-	MOV R2, 0
-	MOV [R5+4], R2
+	MOV R2, 0				; Registo auxiliar
+	MOV [R5+4], R2			; "Consome" a interrupção
 
-	CALL diminui_cinco
-	JMP le_tecla_energia
+	CALL diminui_cinco		; Diminuir display em 5 valores
+	JMP le_tecla_energia	; Reiniciar processo
 
 mid_energia:
     CALL testa_estado_jogo
     MOV R11, TECLADO_4	  				; constante 08
-    MOV R4,  DISPLAYS	  				; R4 tem o endereco dos displays
+    MOV R4,  DISPLAYS	  				; R4 tem o endereço dos displays
     MOV R6,  TECLADO_3 					; linha 3 (aumenta display)
     
     CALL teclado
@@ -522,18 +656,17 @@ mid_energia:
     JZ call_diminui_um					; se for zero diminui o valor do display de energia
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
-	MOV R10, 8			  				; procura na coluna 4
+	MOV R10, TECLADO_4			  		; procura na coluna 4
     CALL ha_tecla
     JMP le_tecla_energia
 
-call_aumenta_um:
+call_aumenta_um:						; Rotina auxiliar. Aumenta os displays de energia em um valor
 	CALL aumenta_um
 	JMP pop_e_espera
 
 call_diminui_um:
 	CALL diminui_um
 	JMP pop_e_espera
-
 
 aumenta_um:
 	PUSH R1
@@ -560,10 +693,10 @@ aumenta_display_generico:
 	PUSH R9
 
     MOV  [tecla_carregada], R0
-    MOV R9, MAX_ENERGIA   
-    SUB R9, R1
-	CMP R9, R8			  				; limite superior atingido (100) - salta a adição
-    JLE maxim_energia 
+    MOV R9, MAX_ENERGIA   				; Valor máx. de energia
+    SUB R9, R1							; TODO: pedir p/ explicar
+	CMP R9, R8			  				; Verifica se foi atingido o valor máx. de energia
+    JLE maxim_energia 					; Limite superior atingido (100) - salta a adição
          
     ADD R8, R1			  				; R8 <- R8 + 1
 
@@ -590,12 +723,12 @@ diminui_display_generico:
 	JMP __escreve_decimal
 
 termina_jogo_:
-	MOV R8, 0
-	CALL escreve_decimal
-	JMP termina_jogo
+	MOV R8, 0							; Registo auxiliar
+	CALL escreve_decimal				; Escreve zero nos displays de energia
+	JMP termina_jogo					; Acabou
 
 __escreve_decimal:
-    CALL escreve_decimal						; escreve nos displays, em decimal
+    CALL escreve_decimal				; escreve nos displays, em decimal
 	POP R9
     RET
 
@@ -806,9 +939,14 @@ escreve_pixel:
 ; Argumentos:   R1 - valor que define o atraso
 ;
 ; **********************************************************************
-atraso:
-	PUSH	R1
-	MOV R1, ATRASO
+atraso_rover:
+	PUSH R1
+	MOV R1, ATRASO_ROVER				; Ciclo de atrasar movimento do rover
+	JMP ciclo_atraso
+atraso_colisao:
+	PUSH R1
+	MOV R1, ATRASO_EXPLOSAO				; Ciclo de atrasar fim do jogo após rover explodir
+	JMP ciclo_atraso
 ciclo_atraso:
 	SUB	R1, 1
 	JNZ	ciclo_atraso
@@ -944,8 +1082,8 @@ rot_int_2:
     PUSH R0
 	PUSH R1
 	MOV  R0, evento_int
-	MOV  R1, 1			; assinala que houve uma interrup��o 0
-	MOV  [R0+4], R1			; na componente 2 da vari�vel evento_int
+	MOV  R1, 1			; assinala que houve uma interrupção 0
+	MOV  [R0+4], R1			; na componente 2 da variável evento_int
 	POP  R1
 	POP  R0
 	RFE
