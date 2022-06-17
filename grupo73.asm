@@ -966,12 +966,15 @@ ve_modo_jogo:
 	MOV R1, [modo_jogo]
 	CMP R1, 1			
 	JNZ bloqueia_processo				; se o modo do jogo não for ativo bloqueia o processo
+
+continua:	
 	POP R1
 	RET
 
 bloqueia_processo:
 	MOV R1, [modo]						; bloqueia o processo
-	JMP 0388H
+	JMP continua
+
 
 ; **********************************************************************
 ; *Processo de controlo: para as teclas começar, suspender/continuar e 
