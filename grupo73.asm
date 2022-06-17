@@ -47,7 +47,7 @@ COLUNA_2 			    EQU 2
 ; **********************************
 LINHA_LIMITE_DISPARO 	EQU 5       ; linha limite do alcance do disparo
 LINHA_DISPARO 			EQU 27		; linha onde o disparo começa
-LARGURA_ALTURA_DISPARO   EQU 1		; largura e altura do disparo(tamanho 1*1)
+LARGURA_ALTURA_DISPARO  EQU 1		; largura e altura do disparo(tamanho 1*1)
 
 LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
 COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
@@ -73,7 +73,7 @@ COL_METEORO_8           EQU 30H     ; 8ª coluna de início de um meteoro
 
 MIN_COLUNA	        	EQU 0		; número da coluna mais à esquerda que o objeto pode ocupar
 MAX_COLUNA	        	EQU 63      ; número da coluna mais à direita que o objeto pode ocupar
-ATRASO_ROVER		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
+ATRASO_ROVER		    EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
 ATRASO_EXPLOSAO		    EQU	0FFFFH	; atraso para "atrasar" fim do jogo após rover explodir
 
 
@@ -186,7 +186,7 @@ FIG_METEORO_BOM_1:              ; Definição do primeiro meteoro bom
     WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
     WORD 0, VERDE_FORA, 0
 
-METEORO_BOM_2:              ; Definição do segundo meteoro bom
+FIG_METEORO_BOM_2:              ; Definição do segundo meteoro bom
     WORD 4,4                ; Largura e altura do meteoro (4x4 pixels)
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
@@ -194,7 +194,7 @@ METEORO_BOM_2:              ; Definição do segundo meteoro bom
     WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
 
-METEORO_BOM_3:              ; Definição do terceiro meteoro bom
+FIG_METEORO_BOM_3:              ; Definição do terceiro meteoro bom
     WORD 5,5                ; Largura e altura do meteoro (5x5 pixels)
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
@@ -203,14 +203,14 @@ METEORO_BOM_3:              ; Definição do terceiro meteoro bom
     WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
 
-METEORO_MAU_1:              ; Definição do primeiro meteoro mau
+FIG_METEORO_MAU_1:              ; Definição do primeiro meteoro mau
     WORD 3,3                ; Largura e altura do meteoro (3x3 pixels)
 
     WORD VERMELHO,  VERMELHO,   VERMELHO
     WORD 0,         VERMELHO,   0
     WORD VERMELHO,  0,          VERMELHO
 
-METEORO_MAU_2:              ; Definição do segundo meteoro mau
+FIG_METEORO_MAU_2:              ; Definição do segundo meteoro mau
     WORD 4,4                ; Largura e altura do meteoro (4x4 pixels)
 
     WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
@@ -348,7 +348,6 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
 	JMP le_tecla_rover
 
 testa_esquerda:
-
     MOV [tecla_continua], R0
 
 	MOV	R7, -1							; vai deslocar para a esquerda
@@ -356,7 +355,6 @@ testa_esquerda:
 	JMP    ve_limites_rover 
 
 testa_direita:
-
     MOV [tecla_continua], R0
 
 	MOV	R7, +1							; vai deslocar para a direita
@@ -396,14 +394,14 @@ loop_colisoes:
 	SUB R5, 1							; Menos um meteoro a tratar
 	CALL testa_colisao					; Testar colisão
 	CMP R0, 0							; Testar se houve colisão
-	JNZ tratar_colisao_meteoro_mau_rover; Tratar colisão ;FIXME: this ain't right! gotta be more generic...
+	JNZ tratar_colisao					; Tratar da colisão
 	ADD R1, 6							; Endereço do meteoro seguinte
 	CMP R5, 0							; Verificar se ainda há meteoros a tratar
 	JNZ loop_colisoes					; Tratar o meteoro seguinte
 	RET									; Retornar
 
 
-; **********************************************************************
+; ************************************************************************************
 ; * Rotinas que tratam do comportamento de colisões.
 ; * Casos que são tratados:
 ; * 	- Colisão rover-meteoro mau: som de explosão, 
@@ -414,8 +412,38 @@ loop_colisoes:
 ; * FIXME: implementar isto tudo
 ; * Ver se é melhor separar rotinas, 
 ; * já que o testa colisões trata cada caso separadamente
-; **********************************************************************
-tratar_colisao_meteoro_mau_rover: ; Assumindo meteoro em R3 (FIXME: doesn't matter)
+; * 
+; * Por convenção, assumir que R3 contém sempre o Rover ou um míssil
+; * E R1 um meteoro.
+; *
+; * Argumentos:    R1 - Definição do meteoro
+; *				   R3 - Definição do Rover ou míssil
+; * Outros registos:
+; *   			   R2 - Registo auxiliar
+; ************************************************************************************
+tratar_colisao:
+	MOV R2, POS_MISSIL						; É uma colisão meteoro-míssil?
+	CMP R2, R3
+	JZ tratar_colisao_missil_meteoro
+
+											; A partir daqui tem que ser uma colisão meteoro-rover
+	MOV R5, [R3+4]							; Figura do meteoro a comparar
+
+	MOV R2, FIG_METEORO_BOM_1
+	CMP R2, R5								; É uma colisão de um meteoro bom? (As figuras são iguais?)
+	JZ	tratar_colisao_rover_meteoro_bom
+
+	MOV R2, FIG_METEORO_BOM_2
+	CMP R2, R5								; É uma colisão de um meteoro bom? (As figuras são iguais?)
+	JZ	tratar_colisao_rover_meteoro_bom
+
+	MOV R2, FIG_METEORO_BOM_3
+	CMP R2, R5							 	; É uma colisão de um meteoro bom? (As figuras são iguais?)
+	JZ	tratar_colisao_rover_meteoro_bom
+	
+	JMP tratar_colisao_rover_mau			; Caso contrário, é colisão com um meteoro mau
+
+tratar_colisao_rover_meteoro_mau: 		; Assumindo meteoro em R3 (FIXME: doesn't matter) (yes it does)
 	PUSH R1
 	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
 	MOV R3, FIG_EXPLOSAO
@@ -423,22 +451,32 @@ tratar_colisao_meteoro_mau_rover: ; Assumindo meteoro em R3 (FIXME: doesn't matt
 	SUB R1, 4				; Endereço normal do Rover
 	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
 	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
-	CALL atraso_colisao     ; 	Não usar uma interrupção para fazer um atraso
-	CALL atraso_colisao     ; 	para ter a certeza que não existe comportamento indesejado.
+	CALL atraso_colisao     ; Não usar uma interrupção para fazer um atraso
+	CALL atraso_colisao     ; para ter a certeza que não existe comportamento indesejado.
 	CALL atraso_colisao     
 	JMP termina_jogo		; Acabou o jogo
 
-tratar_colisao_meteoro_bom_rover: ; Assumindo meteoro EM R1 E ROVER EM R3
+tratar_colisao_rover_meteoro_bom: ; Assumindo meteoro EM R1 E ROVER EM R3; FIXME: look here
 	PUSH R1
-	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
+	MOV R1, POS_ROVER+4    		; Endereço da figura do Rover
 	MOV R3, FIG_EXPLOSAO
-	MOV [R1], R3			; Rover é substituído por figura de explosão
-	SUB R1, 4				; Endereço normal do Rover
-	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
-	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
-	JMP termina_jogo		; Acabou o jogo
+	MOV [R1], R3				; Rover é substituído por figura de explosão
+	SUB R1, 4					; Endereço normal do Rover
+	CALL desenha_boneco			; Desenha uma explosão na posição do Rover
+	CALL atraso_colisao  	    ; Pequeno atraso antes de fim do jogo
+	JMP termina_jogo			; Acabou o jogo
 
-	
+tratar_colisao_missil_meteoro:	; Não interessa se o meteoro é bom ou mau neste caso
+; TODO: Adicionar rotina para fazer som de explosão
+; *  	- Colisão míssil-meteoro: som de explosão, substituir meteo. por explosão,
+; *			apagar míssil e meteoro, aumentar display (?)
+	MOV R2,     FIG_EXPLOSAO		; Figura de explosão
+	MOV [R1+4], R2					; Substituir figura do meteoro por uma explosão
+	JMP	atraso_colisao
+
+
+
+
 ; **********************************************************************
 ; * Rotina esta se ocorreu uma colisão entre dois bonecos.
 ; * Argumentos:    R1 - Definição do boneco A
@@ -549,10 +587,9 @@ sai_testa_colisao:
 	POP R1
 	RET
 
-
-; *********************************************************************************
+; **********************************
 ; * Escreve nos displays de energia.
-; *********************************************************************************
+; **********************************
 
 desenha_um_meteoro:
     PUSH R1
@@ -632,7 +669,6 @@ mid_energia:
     CALL ve_modo_jogo
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
-	
 	CALL energia_memoria
     JMP interrupcao_energia
 
@@ -912,6 +948,7 @@ atraso_colisao:
 	PUSH R1
 	MOV R1, ATRASO_EXPLOSAO				; Ciclo de atrasar fim do jogo após rover explodir
 	JMP ciclo_atraso
+
 ciclo_atraso:
 	SUB	R1, 1
 	JNZ	ciclo_atraso
@@ -1053,7 +1090,7 @@ rot_int_2:				; rotina de interrupcao da energia
 	POP  R0
 	RFE
 
-rot_int_0:
+int_rel_meteoros:		; (INT0) Interrupção causada pelo relógio dos meteoros
 	RFE
 
 reset_int_2:		; funcao que evita diminuicoes da energia,
@@ -1068,14 +1105,14 @@ reset_int_2:		; funcao que evita diminuicoes da energia,
 	POP R0
 	RET
 
-; **********************************************************************
-; ROT_INT_1 - 	Rotina de atendimento da interrupção 1, do missíl
+; **************************************************************************
+; INT_REL_MISSIL - Rotina de atendimento da interrupção 1, do relógio do missíl.
 ;			Faz simplesmente uma escrita no LOCK que o processo boneco lê.
 ;			Como basta indicar que a interrupção ocorreu (não há mais
 ;			informação a transmitir), basta a escrita em si, pelo que
 ;			o registo usado, bem como o seu valor, é irrelevante
-; **********************************************************************
-rot_int_1:
+; **************************************************************************
+int_rel_missil:
 	PUSH R0
 	PUSH R1
 	MOV  R0, evento_int
@@ -1086,7 +1123,7 @@ rot_int_1:
 	RFE
 
 ; **********************************************************************
-; *Processo do missíl
+; * Processo do missíl
 ; **********************************************************************
 PROCESS SP_dispara_missil
 le_tecla_missil:
@@ -1143,7 +1180,6 @@ desenha_missil:
 	CALL desenha_boneco
     POP R1
 	RETF
-
 
 atualiza_coluna_missil:					; a rotina  atualiza a coluna do missíl caso este se tenha movido
     PUSH R1
@@ -1256,7 +1292,7 @@ testa_recomeca:
 	MOV R1, [modo_jogo]				
 	CMP R1, 2							; verifica se o jogo está no modo para recomçar
 	JZ testa_tecla_recomeca				; verifica se a tecla para recomçar é premida
-	RET
+	RET									
 	
 recomeca:			
 	MOV R10, 2
@@ -1271,9 +1307,8 @@ recomeca:
 	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
 										; caso fique em pausa mais de 1 ciclo do relogio de energia
 
-	CALL desenha_rover 				; desenha-se o rover novamente
-	CALL desenha_um_meteoro
-	JMP testa_estado_jogo
+	CALL desenha_rover 					; desenha-se o rover novamente
+	CALL desenha_um_meteoro				
 
 testa_fim:
 	CALL	varre_teclado						; leitura às teclas
