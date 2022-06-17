@@ -137,7 +137,8 @@ evento_int:
 	LOCK 0				; se 1, indica que a interrupção 1 ocorreu
 	WORD 0				; se 1, indica que a interrupção 2 ocorreu
 ; ------------------------------------------------------------------- ;
-
+missíl_ativo:
+	WORD 0 ; se estiver 1 significa que o missíl foi disparado
 modo_jogo:
     WORD 0 ; o modo do jogo define o seu estado
            ; 0 - o jogo está para começar ou à para recomeçar
@@ -321,8 +322,11 @@ testa_colisoes:
 
 	MOV R3, POS_ROVER					; Testar colisões meteoro-rover.
 	CALL aux_testa_colisoes
-	;MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
-	;CALL aux_testa_colisoes
+	MOV R1, [missíl_ativo]
+	CMP R1, 1
+	JNZ testa_colisoes
+	MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
+	CALL aux_testa_colisoes
 
 	JMP testa_colisoes					; Fim
 
@@ -1164,7 +1168,10 @@ disparo:
 
 
 dispara_missil:
-						
+
+	MOV R2, 1
+	MOV [missíl_ativo], R2
+
 	CALLF desenha_missil
 
 	MOV R4, [evento_int+2]	
@@ -1191,6 +1198,8 @@ sai_disparo:
 	MOV R10, 2
 	MOV R6, 1
     CALL ha_tecla
+	MOV R1, 0
+	MOV [missíl_ativo], R1
     JMP le_tecla_missil
 
 desenha_missil:
