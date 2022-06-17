@@ -45,9 +45,9 @@ COLUNA_2 			    EQU 2
 ; **********************************
 ; * Constantes de bonecos e do ecrã
 ; **********************************
-LINHA_LIMITE_DISPARO 	EQU 5
-LINHA_DISPARO 			EQU 27
-LARGURA_ALTURA_DISPARO   EQU 1
+LINHA_LIMITE_DISPARO 	EQU 5       ; linha limite do alcance do disparo
+LINHA_DISPARO 			EQU 27		; linha onde o disparo começa
+LARGURA_ALTURA_DISPARO   EQU 1		; largura e altura do disparo(tamanho 1*1)
 
 LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
 COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
@@ -112,14 +112,16 @@ SP_desce_meteoro:
 	STACK 100H
 SP_dispara_missil:
 
+	STACK 100H
+SP_modo_jogo:
+
 tecla_continua:
 	LOCK 0
 
 tecla_carregada:
 	LOCK 0
 
-missil:
-	LOCK 0
+
 
 ; --------------------- Tabelas de interrupcoes --------------------- ;
 tab:
@@ -132,12 +134,15 @@ evento_int:
 	LOCK 0				; se 1, indica que a interrup��o 1 ocorreu
 	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
 ; ------------------------------------------------------------------- ;
-
+modo:
+	LOCK 0
+	
 modo_jogo:
-    WORD 0 ; o modo do jogo define o seu estado
-           ; 0 - o jogo está para começar ou à para recomeçar
-           ; 1 - o jogo está a decorre
-           ; 2 - em pausa,  e 3 signfica que o jogo acabou
+    WORD 0 ; o modo do jogo define o estado do jogo
+           ; 0 - o jogo está para começar
+		   ; 1 - o jogo está a decorrer
+           ; 2 - o jogo está em pausa/ para recomeçar 
+           ; 3 - o jogo acabou
 
 ;---------------------------------------------------------------------------------;
 ;--------------------Tabelas de Figuras dos vários Bonecos------------------------;
@@ -262,50 +267,24 @@ inicio:
     MOV  SP, SP_programa_principal			       ; inicializa SP para a palavra a seguir
     MOV  [APAGA_AVISO], R1		   	   ; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
     MOV  [APAGA_ECRÃ], R1		   	   ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-    MOV	 R1, 0				   		   ; cenário de fundo número 0
+	MOV	 R1, 0				   		   ; cenário de fundo número 0
     MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
-    MOV  R7, 1				   		   ; valor a somar à coluna do boneco, para o movimentar
 
-  	MOV  BTE, tab		; inicializa BTE (registo de Base da Tabela de Exce��es)
-    EI0					; permite interrup��es 0
-	EI1					; permite interrup��es 1
-	EI2					; permite interrup��es 2
-	EI					; permite interrup��es (geral) 
+  	MOV  BTE, tab		; inicializa BTE (registo de Base da Tabela de Exceções)
+    EI0					; permite interrupções 0
+	EI1					; permite interrupções 1
+	EI2					; permite interrupções 2
+	EI					; permite interrupções (geral) 
 
-    CALL inicializa_energia            ; Inicialização do display de energia
-    JMP  ecra_inicial 		           ; Ecrã de início de jogo
-
-    
-inicializa_energia:						
-    PUSH R4
-    MOV  R4, DISPLAYS
-
-    MOV  R8, MAX_ENERGIA            ; Energia inicial
-	CALL escreve_decimal 			; escreve 100 nos displays
-
-    POP R4
-    RET
-
-
-ecra_inicial:
-	MOV R11, ATRASO
-	MOV  R6, LINHA_START				; linha a testar no teclado
-	CALL	teclado						; leitura às teclas
-	CMP	R0, TECLADO_1  					; compara para ver se a tecla C foi premida
-	JNZ ecra_inicial					; se não foi premida, espera-se que seja premida para começar o jogo
-	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 1							; cenário de fundo número 1
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-    CALL desenha_rover                 ; desenha o rover 
-	CALL desenha_um_meteoro        	; Desenha o meteoro inicial no topo do ecrã
-
+	CALL inicializa_energia            ; Inicialização do display de energia
 	CALL reset_int_2
 
+	CALL testa_estado_jogo
     CALL le_tecla_rover
     CALL testa_tecla_descer_meteoro
     CALL interrupcao_energia
 	CALL le_tecla_missil
-
+    
 ; *********************************************************************************
 ; * Desenha um meteoro neutro no tamanho máximo, no meio do ecrã.
 ; *********************************************************************************
@@ -314,7 +293,7 @@ testa_tecla_descer_meteoro:
 
     YIELD
 
-    CALL testa_estado_jogo
+    CALL ve_modo_jogo
 	MOV  R6, TECLADO_3 					; Argumento de 'teclado' (testa 3ª linha)
 	CALL teclado           				; Output em R0
 	MOV R2, TECLADO_1        			; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
@@ -350,7 +329,7 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
     
     YIELD
 
-    CALL testa_estado_jogo
+    CALL ve_modo_jogo
 	MOV  R6, LINHA_TECLADO				; linha a testar no teclado
 	CALL	teclado						; leitura às teclas
 	CMP	R0, 0
@@ -385,56 +364,6 @@ ve_limites_rover:
 ; * Pausa e fim do jogo
 ; *********************************************************************************
 
-testa_pausa:
-	MOV R6, LINHA_START 				; guarda no registo R6 a 4ª linha
-	CALL teclado 						; chama a rotina teclado
-	CMP R0, COLUNA_2 					; verifica se  a tecla D é premida
-	JZ pausa 							; se for vai para pausa
-	RET 								; se não for premida a tecla D, fa-ze return
-
-pausa:
-	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 4							; cenário de fundo número 4
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	MOV R10, 2
-    CALL ha_tecla
-	JMP recomeca 						; vai para a rotina recomeça
-
-recomeca:								; volta ao ecrã do jogo
-	MOV R6, LINHA_START 				; guarda no registo R6 
-	CALL nao_ha_tecla 					; fica à espera que uma tecla seja pressionada
-	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
-	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
-										; caso fique em pausa mais de 1 ciclo do relogio de energia
-
-	CALL ha_tecla	   					; espera que se largue D, caso contrario voltaria ao ciclo de novo
-					   					; (ficando preso no menu)
-
-	CALL desenha_rover 				; desenha-se o rover novamente
-	CALL desenha_um_meteoro
-    RET
-
-testa_fim:
-	MOV  R6, LINHA_START				; linha a testar no teclado
-	CALL	teclado						; leitura às teclas
-	CMP	R0, TECLADO_3					; verifica se a tecla E foi premida
-	JZ termina_jogo 					; se foi premida, termina-se o jogo
-	RET 								; se não foi premida faz-se return
-
-termina_jogo: 
-	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 2							; cenário de fundo número 2
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
-    JMP fim       						; termina o jogo
-
-fim: JMP fim 							; termina o jogo
-
-
-testa_estado_jogo:
-    CALL testa_pausa
-    CALL testa_fim
-    RET
 
 ; *********************************************************************************
 ; * Escreve nos displays de energia.
@@ -490,7 +419,9 @@ escreve_decimal:
 
 	POP R11
 	RET
-
+;*********************************************************************************
+; *Processo - Displays de Energia
+;*********************************************************************************
 PROCESS SP_display_energia
 interrupcao_energia:
 
@@ -509,7 +440,7 @@ interrupcao_energia:
 	JMP interrupcao_energia
 
 mid_energia:
-    CALL testa_estado_jogo
+    CALL ve_modo_jogo
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
 	MOV R10, 8			  				; procura na coluna 4
@@ -960,54 +891,54 @@ rot_int_1:
 	POP  R0
 	RFE
 
+; **********************************************************************
+; *Processo do missíl
+; **********************************************************************
 PROCESS SP_dispara_missil
 le_tecla_missil:
  	YIELD
 	
-	CALL testa_estado_jogo
+	CALL ve_modo_jogo
 	MOV  R6, TECLADO_1 					; Argumento de 'teclado' (testa 1ª linha)
 	CALL teclado           				; Output em R0
 	MOV R2, TECLADO_2        			; Tecla de descer o meteoro (1ª linha, 2ª coluna = tecla '1')
 	CMP R0, R2             				; Verificar se a tecla de para disparar o missíl foi premida
-	JZ  disparo
-	JMP le_tecla_missil
+	JZ  disparo							; se a tecla for premida vai para disparo
+	JMP le_tecla_missil					; ciclo principal do processo do missíl
 
 disparo:
 	MOV R1, POS_DISPARO 				; Tabela que define o disparo
-	MOV R2, [R1]           			; Obtém a linha atual do missíl
-	CALLF atualiza_coluna_missil
-	JMP dispara_missil
+	MOV R2, [R1]           				; Obtém a linha atual do missíl
+	CALLF atualiza_coluna_missil		; atualiza a coluna do missíl em caso do rover se ter movido
+	JMP dispara_missil					; dispara o missíl
 
 
 dispara_missil:
 						
-	CALLF desenha_missil
-
-	MOV R4, [evento_int+2]	
-
+	CALLF desenha_missil				; desenha o missíl
+	MOV R4, [evento_int+2]				; ativa a interrupção do missíl
 	CALL apaga_boneco     				; Apagar o missíl na posição atual
-
 	MOV R1, POS_DISPARO 				; Tabela que define o disparo
-	MOV R2, [R1]           			; Obtém a linha atual do missíl
-	MOV R3, LINHA_LIMITE_DISPARO
+	MOV R2, [R1]           				; Obtém a linha atual do missíl
+	MOV R3, LINHA_LIMITE_DISPARO		
 	CMP R2, R3             				; Testa se o missíl chegou ao seu alcance máximo
 	JZ reinicia_disparo  				; Se estiver, então não atualizar a linha
 	SUB R2, 2             				; Sobe o missíl 2 linhas (decrementa 2 vezes a linha atual)
 	MOV [R1], R2           				; Atualiza a linha do disparo
-	CALLF desenha_missil
-    JMP dispara_missil
+	CALLF desenha_missil				; Volta a desenhar o missíl na nova posição
+    JMP dispara_missil					; repete o ciclo até o missíl chegar ao seu alcance máximo ou haver uma colisão
 
 reinicia_disparo:
-	MOV R0, POS_DISPARO
+	MOV R0, POS_DISPARO				
 	MOV R1, LINHA_DISPARO
-	MOV [R0], R1
-	JMP sai_disparo
+	MOV [R0], R1						; reinicia a linha do missíl para o próximo missíl
+	JMP sai_disparo						; sai desta parte do processo
 
 sai_disparo:  
-	MOV R10, 2
-	MOV R6, 1
-    CALL ha_tecla
-    JMP le_tecla_missil
+	MOV R10, 2							; R10 guarda o valor da coluna da tecla do missíl(1)
+	MOV R6, 1							; R6 guarda o valor da linha da tecla do missíl(1)
+    CALL ha_tecla						; espera que a tecla 1, do missíl, seja largada
+    JMP le_tecla_missil					; volta para o ciclo principal do processo
 
 desenha_missil:
 	PUSH R1
@@ -1017,16 +948,158 @@ desenha_missil:
 	RETF
 
 
-atualiza_coluna_missil:
+atualiza_coluna_missil:					; a rotina  atualiza a coluna do missíl caso este se tenha movido
     PUSH R1
 	PUSH R2
 	PUSH R3
-	MOV R2, POS_ROVER
-	MOV R3, [R2+2]
-	ADD R3, 2
-	MOV R1, POS_DISPARO
-	MOV [R1+2], R3
+	MOV R2, POS_ROVER					; guarda em R2 a tabela com a posição do ROVER
+	MOV R3, [R2+2]						; guarda em R3 a coluna do rover
+	ADD R3, 2							; obtém-se a coluna atual do missíl
+	MOV R1, POS_DISPARO					; guarda em R1 a tabela com a posição do missíl
+	MOV [R1+2], R3						; atualiza a colluna do missíl para a atual
 	POP R3
 	POP R2
     POP R1
 	RETF
+
+
+ve_modo_jogo:
+	PUSH R1
+	MOV R1, [modo_jogo]
+	CMP R1, 1			
+	JNZ bloqueia_processo				; se o modo do jogo não for ativo bloqueia o processo
+	POP R1
+	RET
+
+bloqueia_processo:
+	MOV R1, [modo]						; bloqueia o processo
+	JMP 0388H
+
+; **********************************************************************
+; *Processo de controlo: para as teclas começar, suspender/continuar e 
+; *terminar o jogo
+; **********************************************************************
+PROCESS SP_modo_jogo
+testa_estado_jogo:	; rotina principal do processo modo jogo
+			
+	YIELD		
+
+	CALL testa_inicio 		; verifica se a tecla para começar o jogo foi premida
+    CALL testa_pausa  		; verifica se a tecla para pôr o jogo em pausa foi premida
+    CALL testa_fim    		; verifuca se a tecla para terminar o jogo foi premida		
+	CALL testa_recomeca		; verifica se a tecla para recomeçar o jogo foi premida
+    JMP testa_estado_jogo	; repete o processo
+
+testa_inicio:
+	MOV  R6, LINHA_START				; linha a testar no teclado
+	CALL	teclado						; leitura às teclas
+	CMP	R0, TECLADO_1  					; compara para ver se a tecla C foi premida
+	JZ testa_estado_comeco				; se for premida, vai-se ver qual o modo do jogo
+	RET
+
+testa_estado_comeco:
+	MOV R10, 1
+	MOV R6, 8
+	CALL ha_tecla			; espera-se que a tecla seja largada
+	MOV R1, [modo_jogo]
+	CMP R1, 0				; verifica se o jogo está no modo para começar
+	JNZ testa_estado_jogo	; se não estiver volta-se ao ciclo principal do processo
+	JMP ecra_inicial		; se for inicia-se o jogo
+
+ecra_inicial:
+	MOV R1, 1
+	MOV [modo_jogo], R1					; muda a variável global do jogo para o valor 1(informa que o jogo está no modo ativo)
+	MOV [modo], R1
+	MOV  R7, 1				   		    ; valor a somar à coluna do boneco, para o movimentar
+	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 1							; cenário de fundo número 1
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+    CALL desenha_rover                 	; desenha o rover 
+	CALL desenha_um_meteoro        		; Desenha o meteoro inicial no topo do ecrã
+	JMP testa_estado_jogo
+
+
+testa_estado_pausa:
+	MOV R6, LINHA_START 				; guarda no registo R6 a 4ª linha
+	CALL teclado 						; chama a rotina teclado
+	CMP R0, COLUNA_2 					; verifica se  a tecla D é premida
+	JZ pausa 							; se for vai para pausa
+	RET 								; se não for premida a tecla D, fa-ze return
+
+testa_pausa:
+	MOV R1, [modo_jogo]				
+	CMP R1, 1							; verifica se o jogo está no modo ativo
+	JZ testa_estado_pausa				; se não estiver vai para o ciclo principal
+	RET									
+
+pausa:
+	MOV R10, 2
+	MOV R6, 8
+	CALL ha_tecla						; espera-se que a tecla D seja largada
+	MOV R2, 2
+	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
+	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 4							; cenário de fundo número 4
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	JMP testa_estado_jogo 				; vai para o ciclo principal do processo
+
+
+testa_tecla_recomeca:
+	MOV R6, LINHA_START 				; guarda no registo R6 a 4ª linha
+	CALL teclado 						; chama a rotina teclado
+	CMP R0, COLUNA_2 					; verifica se  a tecla D é premida
+	JZ recomeca 						; se for vai para recomeca
+	RET
+
+testa_recomeca:
+	MOV R1, [modo_jogo]				
+	CMP R1, 2							; verifica se o jogo está no modo para recomçar
+	JZ testa_tecla_recomeca				; verifica se a tecla para recomçar é premida
+	RET
+	
+recomeca:			
+	MOV R10, 2
+	MOV R6, 8
+	CALL ha_tecla						; espera-se que a tecla D seja largada
+	MOV R1, 1
+	MOV [modo_jogo], R1					; muda-se a variável que guarda o modo do jogo para o modo ativo
+	MOV  R1, 1
+	MOV [modo], R1						; desbloqueiam-se os vários processos
+	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
+	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
+										; caso fique em pausa mais de 1 ciclo do relogio de energia
+
+	CALL desenha_rover 				; desenha-se o rover novamente
+	CALL desenha_um_meteoro
+	JMP testa_estado_jogo
+
+testa_fim:
+	MOV  R6, LINHA_START				; linha a testar no teclado
+	CALL	teclado						; leitura às teclas
+	CMP	R0, TECLADO_3					; verifica se a tecla E foi premida
+	JZ termina_jogo 					; se foi premida, termina-se o jogo
+	RET 								; se não foi premida faz-se return
+
+termina_jogo: 
+	MOV R10, 1
+	MOV R6, 8
+	CALL ha_tecla						; espera-se que a tecla E seja largada
+	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 2							; cenário de fundo número 2
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
+    JMP fim       						; termina o jogo
+
+fim: JMP fim 							; termina o jogo
+
+
+
+inicializa_energia:						
+    PUSH R4
+    MOV  R4, DISPLAYS
+
+    MOV  R8, MAX_ENERGIA            ; Energia inicial
+	CALL escreve_decimal 			; escreve 100 nos displays
+
+    POP R4
+    RET
