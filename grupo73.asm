@@ -1199,7 +1199,9 @@ escreve_letra_registo: ; Funcao que escreve a tecla pretendida no registo:
 	JMP acaba_varrer
 
 mid:
-	MOV R0, 0FH
+	MOV R0, 0FH	; Sem esta atribuicao, o registo sairia com valor 8 se nao carregarmos em nenhuma tecla
+				; (era como se 8 estivesse sempre premido nesse caso) - e assim atribuido um valor
+				; arbitrario a R0 (F pois essa mesma tecla nao e utilizada no projeto)
 
 acaba_varrer:
     POP R10
@@ -1211,14 +1213,18 @@ acaba_varrer:
     POP R2
     POP R1
     RET
+;----------------------------------------------------------------------------------------;
+;-----------Funcoes que enviam e recebem o valor da energia da memoria-------------------;
+;-------(Deste modo o valor da energia pode passar de processo em processo)--------------;
+;----------------------------------------------------------------------------------------;
 
-energia_memoria:
+energia_memoria:		; Escreve o valor da energia na memoria
 
 	MOV [valor_energia], R8
 	
 	RET
 
-recebe_memoria:
+recebe_memoria:			; Le o valor da energia da memoria
 
 	MOV R8, [valor_energia]
 
