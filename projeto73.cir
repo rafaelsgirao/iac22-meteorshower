@@ -1512,7 +1512,7 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 51063,
-    "image paths" : [ "Imagens/inicio.jpg", "Imagens/jogo_1.jpg", "Imagens/fim.jpg", "Imagens/perdeu.jpg", "Imagens/pausa.jpg", "Imagens/jogo_2.jpeg", "Imagens/jogo_3.jpeg" ],
+    "image paths" : [ "Imagens/inicio.jpg", "Imagens/jogo_1.jpg", "Imagens/fim.jpg", "Imagens/perdeu.jpg", "Imagens/pausa.png", "Imagens/jogo_2.jpeg", "Imagens/jogo_3.jpeg" ],
     "sounds/videos settings" : [ {
       "filePathName" : "Sons/disparo.mp3",
       "relative sound volume" : 1.0,
