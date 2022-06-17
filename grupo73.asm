@@ -122,7 +122,8 @@ tecla_carregada:
 	LOCK 0
 
 
-
+valor_energia:
+	WORD 0
 ; --------------------- Tabelas de interrupcoes --------------------- ;
 tab:
 	WORD rot_int_0			; rotina de atendimento da interrup��o 0
@@ -292,7 +293,7 @@ PROCESS SP_desce_meteoro
 testa_tecla_descer_meteoro:
 
     YIELD
-
+	CALL recebe_memoria
     CALL ve_modo_jogo
 
 	CALL varre_teclado          				; Output em R0
@@ -388,9 +389,11 @@ escreve_decimal:
 	PUSH R0		; fator
 	PUSH R1		; digito
 	PUSH R2		; resultado
+	PUSH R4
 	PUSH R10
 
 	MOV R11, R8	
+	MOV R4, DISPLAYS
 
 	MOV R0, 1000 ; fator inicial
 	MOV R10, 10	 ; R10 - registo com o valor 10 fixo
@@ -412,6 +415,7 @@ escreve_decimal:
 	MOV [R4], R2	; escreve o resultado nos displays e retorna, a seguir
 
 	POP R10
+	POP R4
 	POP R2
 	POP R1
 	POP R0
@@ -425,7 +429,7 @@ PROCESS SP_display_energia
 interrupcao_energia:
 
     YIELD
-
+	CALL recebe_memoria
 	MOV R4, DISPLAYS
     MOV R5, evento_int
     MOV R2, [R5+4]			; Vai buscar o valor da interrupcao 2 na tabela evento_int
@@ -436,14 +440,15 @@ interrupcao_energia:
 	MOV [R5+4], R2
 
 	CALL diminui_cinco
+	CALL energia_memoria
 	JMP interrupcao_energia
 
 mid_energia:
     CALL ve_modo_jogo
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
-	MOV R10, 8			  				; procura na coluna 4
-    CALL ha_tecla
+	
+	CALL energia_memoria
     JMP interrupcao_energia
 
 
@@ -1103,7 +1108,9 @@ inicializa_energia:
     MOV  R8, MAX_ENERGIA            ; Energia inicial
 	CALL escreve_decimal 			; escreve 100 nos displays
 
-    POP R4
+	CALL energia_memoria
+
+    POP R4 
     RET
 
 varre_teclado:  ; Obtem o valor da tecla premida:
@@ -1193,7 +1200,7 @@ escreve_letra_registo: ; Funcao que escreve a tecla pretendida no registo:
 
 mid:
 	MOV R0, 0FH
-	
+
 acaba_varrer:
     POP R10
     POP R9
@@ -1204,3 +1211,15 @@ acaba_varrer:
     POP R2
     POP R1
     RET
+
+energia_memoria:
+
+	MOV [valor_energia], R8
+	
+	RET
+
+recebe_memoria:
+
+	MOV R8, [valor_energia]
+
+	RET
