@@ -168,6 +168,11 @@ FIG_ROVER:			    	; Tabela que define o rover.
 	WORD CASTANHO, 0, AZUL, 0, CASTANHO
 	WORD 0, 0, CASTANHO, 0, 0
      
+FIG_METEORO_VAZIO:			; Figura a ser usada como placeholder
+							; quando um meteoro tem de estar invisível.
+	WORD 1,1
+	WORD 0,0
+
 FIG_METEORO_NEUTRO_1:           ; Definição do primeiro meteoro neutro
     WORD 1,1                ; Largura e altura do meteoro (1x1 pixels)
 
@@ -390,6 +395,7 @@ testa_colisoes:
 aux_testa_colisoes:						; Testa colisões meteoro-rover.
 	MOV R1, POS_METEOROS				; Inicializa R1 ao 1º meteoro
 	MOV R5, NR_METEOROS					; Testa colisão para cada um dos N meteoros
+
 loop_colisoes:
 	SUB R5, 1							; Menos um meteoro a tratar
 	CALL testa_colisao					; Testar colisão
@@ -470,9 +476,17 @@ tratar_colisao_missil_meteoro:	; Não interessa se o meteoro é bom ou mau neste
 ; TODO: Adicionar rotina para fazer som de explosão
 ; *  	- Colisão míssil-meteoro: som de explosão, substituir meteo. por explosão,
 ; *			apagar míssil e meteoro, aumentar display (?)
+;	CALL apaga_boneco				; Apaga forma antiga do meteoro TODO: stuff
 	MOV R2,     FIG_EXPLOSAO		; Figura de explosão
 	MOV [R1+4], R2					; Substituir figura do meteoro por uma explosão
-	JMP	atraso_colisao
+	CALL desenha_boneco				; Desenha explosão por cima dos restos do meteoro antigo
+	CALL atraso_colisao				; Atraso para que a explosão seja percetível
+	; YIELD (?)
+	CALL apaga_boneco
+	MOV R2, FIG_METEORO_VAZIO		; 'Desativar' o meteoro.
+	
+	
+	; TODO: fazer atrasos mas deixar outros processos correr
 
 
 
