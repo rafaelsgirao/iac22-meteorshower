@@ -296,7 +296,7 @@ testa_tecla_descer_meteoro:
     CALL ve_modo_jogo
 
 	CALL varre_teclado          				; Output em R0
-	MOV R2, 0BH       			; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
+	MOV R2, 8       			; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
 	CMP R0, R2             				; Verificar se a tecla de descer o meteoro foi premida
 	JZ  desce_meteoro
 	JMP testa_tecla_descer_meteoro
@@ -328,23 +328,23 @@ PROCESS SP_teclado_rover
 le_tecla_rover:							; Verificar se uma tecla para mover o rover está pressionada
     
     YIELD
-
     CALL ve_modo_jogo			; linha a testar no teclado
-	CALL varre_teclado						; leitura às teclas
-	CMP	R0, 0
-	JZ	le_tecla_rover			; se não há tecla pressionada, sair da rotina
-	CMP	R0, 0
-	JNZ	testa_direita
+	CALL varre_teclado
+	CMP R0, 0						; leitura às teclas
+	JZ testa_esquerda		; se não há tecla pressionada, sair da rotina
+	CMP	R0, 2
+	JZ	testa_direita
+	JMP le_tecla_rover
+
+testa_esquerda:
 
     MOV [tecla_continua], R0
 
 	MOV	R7, -1							; vai deslocar para a esquerda
-	CALL atraso
-	JMP	ve_limites_rover
+	CALL atraso 						; se mover, chama a rotina atraso para não mover demasiado rápido
+	JMP    ve_limites_rover 
 
 testa_direita:
-	CMP	R0, 2 					; verifica se a tecla para mover o rover para a direita foi premida
-	JNZ	le_tecla_rover
 
     MOV [tecla_continua], R0
 
@@ -1136,7 +1136,7 @@ escolhe_linha: ; Função que salta para a linha seguinte:
     CMP R0, 4  
     JZ linha4
    
-    JMP acaba_varrer
+    JMP mid
 
 espera_tecla:          ; neste ciclo espera-se at� uma tecla ser premida
  
@@ -1189,7 +1189,11 @@ escreve_letra_registo: ; Funcao que escreve a tecla pretendida no registo:
 
     MUL R0, R7 ; 4 * linhas (R7 = 4)
     ADD R0, R1 ; Obtem-se assim o numero desejado (4 * linhas + colunas)
+	JMP acaba_varrer
 
+mid:
+	MOV R0, 0FH
+	
 acaba_varrer:
     POP R10
     POP R9
