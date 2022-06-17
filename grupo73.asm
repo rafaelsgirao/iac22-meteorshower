@@ -280,7 +280,7 @@ inicio:
     CALL inicializa_energia            ; Inicialização do display de energia
     JMP  ecra_inicial 		           ; Ecrã de início de jogo
 
-    
+
 inicializa_energia:						
     PUSH R4
     MOV  R4, DISPLAYS
@@ -321,9 +321,9 @@ testa_colisoes:
 
 	MOV R3, POS_ROVER					; Testar colisões meteoro-rover.
 	CALL aux_testa_colisoes
-	MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
-	CALL aux_testa_colisoes
-	
+	;MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
+	;CALL aux_testa_colisoes
+
 	JMP testa_colisoes					; Fim
 
 aux_testa_colisoes:						; Testa colisões meteoro-rover.
@@ -403,13 +403,13 @@ testa_colisao:
 	PUSH R5
 	MOV R2, [R1+4]	  ; Def. de A + 4 = figura de A
 	MOV R4, [R3+4]    ; Figura de B
-	JMP caso_colisao_1_1
+	JMP caso_colisao_horizontal
 
 ; R5 -> limite inferior de A
 ; R6 -> limite inferior de A
 ; R7 -> Registo auxiliar
-caso_colisao_1_1:	; Verificar se a linha inferior de A é está abaixo (ou igual) a limite superior de B
-					; Caso positivo, há colisão (FIXME: not really...)
+caso_colisao_horizontal:	; Verificar se a linha inferior de A é está abaixo do limite superior de B
+					; Caso positivo, poderá haver colisão
 					; Por convenção, A(R1) será sempre um meteoro e B(R3) o Rover ou o míssil
 	MOV R5, [R1]	; Limite inferior de A
 
@@ -418,8 +418,55 @@ caso_colisao_1_1:	; Verificar se a linha inferior de A é está abaixo (ou igual
 	ADD R6, R7		; Lim. inf. de B + altura = Lim. sup. de B
 	
 	CMP R5, R6
-	JGE ha_colisao  ; FIXME: more conditions after this...
-	JMP nao_ha_colisao
+	JGE caso_vertical_1_1  ; Testar caso seguinte
+	JMP nao_ha_colisao	   ; Impossível haver colisão: sair
+
+;caso_colisao_horizontal_2: ; Não precisamos FIXME: ver RMarkable e remover
+caso_vertical_1_1:	; Verificar que lim. dir. de B 
+					; está à direita de lim. esq. de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+
+	MOV R6, [R3+2]	; Limite esquerdo de B
+	MOV R7, [R4]	; Largura de B
+	ADD R6, R7		; Lim. esq. de B + largura = Lim. dir. de B
+	CMP R6, R5		; (Col. do lim. dir. de B) > (Col. do lim. esq. de A)?
+	JGE caso_vertical_1_2	; Passar ao caso seguinte
+	JMP caso_vertical_2_1	; Ainda é possível haver colisão no 2º caso
+
+caso_vertical_1_2: 	; Verificar que lim. esq. de B NÃO está à direita
+					; de lim. dir. de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+	MOV R7, [R2]	; Largura de A
+	ADD R5, R7		; Lim esq. de A + largura = lim. dir. de A
+
+	MOV R6, [R3+2]	; Lim. esq. de B
+	CMP R6, R5		; (Col. do lim. esq. de B) > (Col. do lim. dir. de A)?
+	JGE	nao_ha_colisao			; Se sim, é impossível haver colisão
+	JMP ha_colisao	; Caso contrário, temos colisão
+
+caso_vertical_2_1:	; Verificar que lim. esq. de B
+					; está à esquerda de limite direito de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+	MOV R7, [R2]	; Largura de A
+	ADD R5, R7		; Lim esq. de A + largura = lim. dir. de A
+
+	MOV R6, [R3+2]	; Limite esquerdo de B
+	CMP R6, R5		; (Col. do lim. esq. de B) < (Col. do lim. dir. de A)?
+	JLE caso_vertical_2_2 ; Se sim, tesstar caso seguinte
+	JMP nao_ha_colisao	; Caso contrário, é impossível haver colisão
+
+caso_vertical_2_2:  ; Verificar que lim. dir. de B
+					; NÃO está à esq. de lim. esq. de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+	
+	MOV R6, [R3+2]	; Limite esquerdo de B
+	MOV R7, [R4]	; Largura de B
+	ADD R6, R7		; Lim. esq. de B + altura = lim. dir. de B
+	CMP R6, R5		; (Col. do lim. dir. de B) < (Col. do lim. esq. de A)?
+	JLT	nao_ha_colisao	; Se sim, é impossível haver colisão
+	JMP ha_colisao  ; Caso contrário, há colisão
+
+
 
 caso_colisao_1_2:
 	JMP sai_testa_colisao
@@ -659,7 +706,7 @@ aumenta_cinco:
 diminui_cinco:
 	PUSH R1
 	MOV R1, 5
-	CALL diminui_display_generico
+	CALL diminui_display
 	POP R1
 	RET
 
