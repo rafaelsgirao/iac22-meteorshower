@@ -1156,7 +1156,7 @@ linha3:
     MOV R0, 04H
     JMP espera_tecla
 linha4:
-    MOV R0, TECLADO_4; 
+    MOV R0, 08H; 
     JMP espera_tecla
 
 ;-------------------------------------------------------------------;
