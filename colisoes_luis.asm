@@ -242,12 +242,12 @@ POS_DISPARO:
 	WORD FIG_DISPARO
 
 POS_ROVER:
-	
 	WORD LINHA_FUNDO_ECRA, COLUNA_MEIO_ECRA
+
 	WORD FIG_ROVER
 
 
-NR_METEOROS             EQU 2       ; Nº de meteoros que existem no jogo.
+NR_METEOROS             EQU 1       ; Nº de meteoros que existem no jogo.
 ;FIXME: Quando tivermos a rotina de escolher um valor aleatório, alterar isto para ser só uma tabela
 
 POS_METEOROS:
@@ -419,7 +419,7 @@ caso_colisao_horizontal:	; Verificar se a linha inferior de A é está abaixo do
 
 	MOV R6, [R3]	; Limite inferior de B
 	MOV R7, [R4+2]  ; Figura de B + 2 = Altura de B
-	ADD R6, R7		; Lim. inf. de B + altura = Lim. sup. de B
+	SUB R6, R7		; Lim. inf. de B + altura = Lim. sup. de B
 	
 	CMP R5, R6
 	JGE caso_vertical_1_1  ; Testar caso seguinte
