@@ -294,9 +294,9 @@ testa_tecla_descer_meteoro:
     YIELD
 
     CALL ve_modo_jogo
-	MOV  R6, TECLADO_3 					; Argumento de 'teclado' (testa 3ª linha)
-	CALL teclado           				; Output em R0
-	MOV R2, TECLADO_1        			; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
+
+	CALL varre_teclado          				; Output em R0
+	MOV R2, 0BH       			; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
 	CMP R0, R2             				; Verificar se a tecla de descer o meteoro foi premida
 	JZ  desce_meteoro
 	JMP testa_tecla_descer_meteoro
@@ -329,12 +329,11 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
     
     YIELD
 
-    CALL ve_modo_jogo
-	MOV  R6, LINHA_TECLADO				; linha a testar no teclado
-	CALL	teclado						; leitura às teclas
+    CALL ve_modo_jogo			; linha a testar no teclado
+	CALL varre_teclado						; leitura às teclas
 	CMP	R0, 0
 	JZ	le_tecla_rover			; se não há tecla pressionada, sair da rotina
-	CMP	R0, TECLADO_1
+	CMP	R0, 0
 	JNZ	testa_direita
 
     MOV [tecla_continua], R0
@@ -344,7 +343,7 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
 	JMP	ve_limites_rover
 
 testa_direita:
-	CMP	R0, TECLADO_3 					; verifica se a tecla para mover o rover para a direita foi premida
+	CMP	R0, 2 					; verifica se a tecla para mover o rover para a direita foi premida
 	JNZ	le_tecla_rover
 
     MOV [tecla_continua], R0
@@ -898,10 +897,9 @@ PROCESS SP_dispara_missil
 le_tecla_missil:
  	YIELD
 	
-	CALL ve_modo_jogo
-	MOV  R6, TECLADO_1 					; Argumento de 'teclado' (testa 1ª linha)
-	CALL teclado           				; Output em R0
-	MOV R2, TECLADO_2        			; Tecla de descer o meteoro (1ª linha, 2ª coluna = tecla '1')
+	CALL ve_modo_jogo										; Argumento de 'teclado' (testa 1ª linha)
+	CALL varre_teclado         				; Output em R0
+	MOV R2, 1      			; Tecla de descer o meteoro (1ª linha, 2ª coluna = tecla '1')
 	CMP R0, R2             				; Verificar se a tecla de para disparar o missíl foi premida
 	JZ  disparo							; se a tecla for premida vai para disparo
 	JMP le_tecla_missil					; ciclo principal do processo do missíl
@@ -991,9 +989,10 @@ testa_estado_jogo:	; rotina principal do processo modo jogo
     JMP testa_estado_jogo	; repete o processo
 
 testa_inicio:
-	MOV  R6, LINHA_START				; linha a testar no teclado
-	CALL	teclado						; leitura às teclas
-	CMP	R0, TECLADO_1  					; compara para ver se a tecla C foi premida
+	
+	CALL varre_teclado						; leitura às teclas
+	MOV R2, 0CH
+	CMP	R0, R2  					; compara para ver se a tecla C foi premida
 	JZ testa_estado_comeco				; se for premida, vai-se ver qual o modo do jogo
 	RET
 
@@ -1020,9 +1019,9 @@ ecra_inicial:
 
 
 testa_estado_pausa:
-	MOV R6, LINHA_START 				; guarda no registo R6 a 4ª linha
-	CALL teclado 						; chama a rotina teclado
-	CMP R0, COLUNA_2 					; verifica se  a tecla D é premida
+	MOV R2, 0DH
+	CALL varre_teclado						; chama a rotina teclado
+	CMP R0, R2					; verifica se  a tecla D é premida
 	JZ pausa 							; se for vai para pausa
 	RET 								; se não for premida a tecla D, fa-ze return
 
@@ -1045,9 +1044,9 @@ pausa:
 
 
 testa_tecla_recomeca:
-	MOV R6, LINHA_START 				; guarda no registo R6 a 4ª linha
-	CALL teclado 						; chama a rotina teclado
-	CMP R0, COLUNA_2 					; verifica se  a tecla D é premida
+	MOV R2, 0DH 
+	CALL varre_teclado 						; chama a rotina teclado
+	CMP R0, R2					; verifica se  a tecla D é premida
 	JZ recomeca 						; se for vai para recomeca
 	RET
 
@@ -1075,9 +1074,9 @@ recomeca:
 	JMP testa_estado_jogo
 
 testa_fim:
-	MOV  R6, LINHA_START				; linha a testar no teclado
-	CALL	teclado						; leitura às teclas
-	CMP	R0, TECLADO_3					; verifica se a tecla E foi premida
+	CALL	varre_teclado						; leitura às teclas
+	MOV R2, 0EH
+	CMP	R0, R2					; verifica se a tecla E foi premida
 	JZ termina_jogo 					; se foi premida, termina-se o jogo
 	RET 								; se não foi premida faz-se return
 
@@ -1102,4 +1101,99 @@ inicializa_energia:
 	CALL escreve_decimal 			; escreve 100 nos displays
 
     POP R4
+    RET
+
+varre_teclado:  ; Obtem o valor da tecla premida:
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    PUSH R4
+    PUSH R5
+    PUSH R7
+    PUSH R9
+    PUSH R10
+
+    MOV R2, TEC_LIN
+    MOV R3, TEC_COL
+    MOV R4, DISPLAYS
+    MOV R5, MASCARA
+    MOV R7, 4
+    MOV R9, 0
+    MOV R10, 0
+	JMP linha1
+
+
+escolhe_linha: ; Função que salta para a linha seguinte:
+    CMP R0, 1
+	JZ linha2
+	
+    CMP R0, 2  
+    JZ linha3
+
+    CMP R0, 4  
+    JZ linha4
+   
+    JMP acaba_varrer
+
+espera_tecla:          ; neste ciclo espera-se at� uma tecla ser premida
+ 
+    MOVB [R2], R0      ; escrever no perif�rico de sa�da (linhas)
+    MOVB R1, [R3]      ; ler do perif�rico de entrada (colunas) 
+    AND  R1, R5        ; elimina bits para al�m dos bits 0-3
+    CMP  R1, 0         ; h� tecla premida?
+    JZ   escolhe_linha  ; se nenhuma tecla premida, repete
+    JMP altera_linha
+
+; Funcoes que passam para a linha seguinte
+; (no caso da linha 4, retorna à linha 1):
+linha1:
+    MOV R0, 01H
+    JMP espera_tecla
+linha2:
+    MOV R0, 02H
+    JMP espera_tecla
+linha3:
+    MOV R0, 04H
+    JMP espera_tecla
+linha4:
+    MOV R0, TECLADO_4; 
+    JMP espera_tecla
+
+;-------------------------------------------------------------------;
+; Funcoes que alteram o input, obtendo o output desejado nos displays:
+;-------------------------------------------------------------------;
+altera_linha: ; Ciclo - conta o numero de SHRs ate 0:
+    SHR R0, 1
+    ADD R9, 1 ; registo contador das linhas
+
+    CMP R0, 0
+    JNZ altera_linha ; Enquanto R0 nao for zero, repete o ciclo
+
+altera_coluna: ; Ciclo - conta o numero de SHRs ate 0:
+    SHR R1, 1
+    ADD R10, 1 ; registo contador de colunas
+
+    CMP R1, 0
+    JNZ altera_coluna ; Enquanto R1 nao for zero, altera o valor da linha
+
+escreve_letra_registo: ; Funcao que escreve a tecla pretendida no registo:
+
+    MOV R0, R9 ; Valor do contador de linhas para R0
+    SUB R0, 1 ; Passa o numero da linha para R0
+
+    MOV R1, R10 ; Valor do contador de colunas para R1
+    SUB R1, 1 ; Passa o numero da coluna para R1
+
+    MUL R0, R7 ; 4 * linhas (R7 = 4)
+    ADD R0, R1 ; Obtem-se assim o numero desejado (4 * linhas + colunas)
+
+acaba_varrer:
+    POP R10
+    POP R9
+    POP R7
+    POP R5
+    POP R4
+    POP R3
+    POP R2
+    POP R1
     RET
