@@ -73,13 +73,16 @@ COL_METEORO_8           EQU 30H     ; 8ª coluna de início de um meteoro
 
 MIN_COLUNA	        	EQU 0		; número da coluna mais à esquerda que o objeto pode ocupar
 MAX_COLUNA	        	EQU 63      ; número da coluna mais à direita que o objeto pode ocupar
-ATRASO		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
+ATRASO_ROVER		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
+ATRASO_EXPLOSAO		    EQU	0FFFFH	; atraso para "atrasar" fim do jogo após rover explodir
+
 
 ; ********************
 ; * Outras constantes
 ; ********************
 MAX_ENERGIA		        EQU 64H     ; Energia do Rover ao começar o jogo (100 em hexadecimal)
 MIN_ENERGIA             EQU 0H      ; Energia mínima do Rover
+ENERGIA_METEORO_BOM 	EQU 20H		; Energia que "consumir" um meteoro bom fornece
 
 ; **********************
 ; * Constantes de cores
@@ -115,6 +118,9 @@ SP_dispara_missil:
 	STACK 100H
 SP_modo_jogo:
 
+	STACK 100H
+SP_testa_colisoes:
+
 tecla_continua:
 	LOCK 0
 
@@ -135,6 +141,9 @@ evento_int:
 	LOCK 0				; se 1, indica que a interrup��o 1 ocorreu
 	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
 ; ------------------------------------------------------------------- ;
+missíl_ativo:
+	WORD 0 ; se estiver 1 significa que o missíl foi disparado
+
 modo:
 	LOCK 0
 	
@@ -283,6 +292,7 @@ inicio:
 	CALL testa_estado_jogo
     CALL le_tecla_rover
     CALL testa_tecla_descer_meteoro
+	CALL testa_colisoes
     CALL interrupcao_energia
 	CALL le_tecla_missil
     
@@ -360,9 +370,184 @@ ve_limites_rover:
 	CALL     move_rover         		; Caso contrário, movimentar rover
 	JMP le_tecla_rover  	
 
-; *********************************************************************************
-; * Pausa e fim do jogo
-; *********************************************************************************
+; **********************************************************************
+; * Rotina que testa colisões entre todos os meteoros e o míssil/rover.
+; **********************************************************************
+PROCESS SP_testa_colisoes
+testa_colisoes:
+	YIELD
+
+	CALL ve_modo_jogo
+
+	MOV R3, POS_ROVER					; Testar colisões meteoro-rover.
+	CALL aux_testa_colisoes
+	MOV R1, [missíl_ativo]
+	CMP R1, 1
+	JNZ testa_colisoes
+	MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
+	CALL aux_testa_colisoes
+
+	JMP testa_colisoes					; Fim
+
+aux_testa_colisoes:						; Testa colisões meteoro-rover.
+	MOV R1, POS_METEOROS				; Inicializa R1 ao 1º meteoro
+	MOV R5, NR_METEOROS					; Testa colisão para cada um dos N meteoros
+loop_colisoes:
+	SUB R5, 1							; Menos um meteoro a tratar
+	CALL testa_colisao					; Testar colisão
+	CMP R0, 0							; Testar se houve colisão
+	JNZ tratar_colisao_meteoro_mau_rover; Tratar colisão ;FIXME: this ain't right! gotta be more generic...
+	ADD R1, 6							; Endereço do meteoro seguinte
+	CMP R5, 0							; Verificar se ainda há meteoros a tratar
+	JNZ loop_colisoes					; Tratar o meteoro seguinte
+	RET									; Retornar
+
+
+; **********************************************************************
+; * Rotinas que tratam do comportamento de colisões.
+; * Casos que são tratados:
+; * 	- Colisão rover-meteoro mau: som de explosão, 
+; *			substituir rover por explosão, acabar jogo
+; * 	- Colisão rover-meteoro bom: som de powerup, apagar meteoro, aumentar display
+; *  	- Colisão míssil-meteoro: som de explosão, substituir meteo. por explosão,
+; *			apagar míssil e meteoro, aumentar display (?)
+; * FIXME: implementar isto tudo
+; * Ver se é melhor separar rotinas, 
+; * já que o testa colisões trata cada caso separadamente
+; **********************************************************************
+tratar_colisao_meteoro_mau_rover: ; Assumindo meteoro em R3 (FIXME: doesn't matter)
+	PUSH R1
+	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
+	MOV R3, FIG_EXPLOSAO
+	MOV [R1], R3			; Rover é substituído por figura de explosão
+	SUB R1, 4				; Endereço normal do Rover
+	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
+	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
+	CALL atraso_colisao     ; 	Não usar uma interrupção para fazer um atraso
+	CALL atraso_colisao     ; 	para ter a certeza que não existe comportamento indesejado.
+	CALL atraso_colisao     
+	JMP termina_jogo		; Acabou o jogo
+
+tratar_colisao_meteoro_bom_rover: ; Assumindo meteoro EM R1 E ROVER EM R3
+	PUSH R1
+	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
+	MOV R3, FIG_EXPLOSAO
+	MOV [R1], R3			; Rover é substituído por figura de explosão
+	SUB R1, 4				; Endereço normal do Rover
+	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
+	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
+	JMP termina_jogo		; Acabou o jogo
+
+	
+; **********************************************************************
+; * Rotina esta se ocorreu uma colisão entre dois bonecos.
+; * Argumentos:    R1 - Definição do boneco A
+; * Argumentos:    R3 - Definição do boneco B
+; * Outros registos usados:
+;				   R2 - Figura do boneco A
+;				   R4 - Figura do boneco B
+;
+; Retorna: 	R0 - 0 caso não haja colisão, 1 caso contrário
+; fixme: REMOVE L8r
+; Condições em que não há colisão:
+; 	Se coluna do canto sup. esq. de B estiver à direita 
+;   do canto inferior direito de A não há colisão
+; * 
+; Condições em que há colisão;
+; Canto superior direito de A está à direita ou coincide com o 
+;     canto inf esq. de B AND 
+; ******************************************************************
+
+testa_colisao:
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	MOV R2, [R1+4]	  ; Def. de A + 4 = figura de A
+	MOV R4, [R3+4]    ; Figura de B
+	JMP caso_colisao_horizontal
+
+; R5 -> limite inferior de A
+; R6 -> limite inferior de A
+; R7 -> Registo auxiliar
+caso_colisao_horizontal:	; Verificar se a linha inferior de A é está abaixo do limite superior de B
+					; Caso positivo, poderá haver colisão
+					; Por convenção, A(R1) será sempre um meteoro e B(R3) o Rover ou o míssil
+	MOV R5, [R1]	; Limite inferior de A
+
+	MOV R6, [R3]	; Limite inferior de B
+	MOV R7, [R4+2]  ; Figura de B + 2 = Altura de B
+	SUB R6, R7		; Lim. inf. de B + altura = Lim. sup. de B
+	
+	CMP R5, R6
+	JGE caso_vertical_1_1  ; Testar caso seguinte
+	JMP nao_ha_colisao	   ; Impossível haver colisão: sair
+
+;caso_colisao_horizontal_2: ; Não precisamos FIXME: ver RMarkable e remover
+caso_vertical_1_1:	; Verificar que lim. dir. de B 
+					; está à direita de lim. esq. de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+
+	MOV R6, [R3+2]	; Limite esquerdo de B
+	MOV R7, [R4]	; Largura de B
+	ADD R6, R7		; Lim. esq. de B + largura = Lim. dir. de B
+	CMP R6, R5		; (Col. do lim. dir. de B) > (Col. do lim. esq. de A)?
+	JGE caso_vertical_1_2	; Passar ao caso seguinte
+	JMP caso_vertical_2_1	; Ainda é possível haver colisão no 2º caso
+
+caso_vertical_1_2: 	; Verificar que lim. esq. de B NÃO está à direita
+					; de lim. dir. de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+	MOV R7, [R2]	; Largura de A
+	ADD R5, R7		; Lim esq. de A + largura = lim. dir. de A
+
+	MOV R6, [R3+2]	; Lim. esq. de B
+	CMP R6, R5		; (Col. do lim. esq. de B) > (Col. do lim. dir. de A)?
+	JGE	nao_ha_colisao			; Se sim, é impossível haver colisão
+	JMP ha_colisao	; Caso contrário, temos colisão
+
+caso_vertical_2_1:	; Verificar que lim. esq. de B
+					; está à esquerda de limite direito de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+	MOV R7, [R2]	; Largura de A
+	ADD R5, R7		; Lim esq. de A + largura = lim. dir. de A
+
+	MOV R6, [R3+2]	; Limite esquerdo de B
+	CMP R6, R5		; (Col. do lim. esq. de B) < (Col. do lim. dir. de A)?
+	JLE caso_vertical_2_2 ; Se sim, tesstar caso seguinte
+	JMP nao_ha_colisao	; Caso contrário, é impossível haver colisão
+
+caso_vertical_2_2:  ; Verificar que lim. dir. de B
+					; NÃO está à esq. de lim. esq. de A
+	MOV R5, [R1+2]	; Limite esquerdo de A
+	
+	MOV R6, [R3+2]	; Limite esquerdo de B
+	MOV R7, [R4]	; Largura de B
+	ADD R6, R7		; Lim. esq. de B + altura = lim. dir. de B
+	CMP R6, R5		; (Col. do lim. dir. de B) < (Col. do lim. esq. de A)?
+	JLT	nao_ha_colisao	; Se sim, é impossível haver colisão
+	JMP ha_colisao  ; Caso contrário, há colisão
+
+caso_colisao_1_2:
+	JMP sai_testa_colisao
+
+ha_colisao:
+	MOV [tecla_carregada], R0
+	MOV R0, 1
+	JMP sai_testa_colisao
+
+nao_ha_colisao:
+	MOV R0, 0
+	JMP sai_testa_colisao
+	
+sai_testa_colisao:
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	RET
 
 
 ; *********************************************************************************
@@ -721,7 +906,12 @@ escreve_pixel:
 ; **********************************************************************
 atraso:
 	PUSH	R1
-	MOV R1, ATRASO
+	MOV R1, ATRASO_ROVER
+	JMP ciclo_atraso
+atraso_colisao:
+	PUSH R1
+	MOV R1, ATRASO_EXPLOSAO				; Ciclo de atrasar fim do jogo após rover explodir
+	JMP ciclo_atraso
 ciclo_atraso:
 	SUB	R1, 1
 	JNZ	ciclo_atraso
@@ -917,7 +1107,9 @@ disparo:
 
 
 dispara_missil:
-						
+
+	MOV R2, 1
+	MOV [missíl_ativo], R2	
 	CALLF desenha_missil				; desenha o missíl
 	MOV R4, [evento_int+2]				; ativa a interrupção do missíl
 	CALL apaga_boneco     				; Apagar o missíl na posição atual
@@ -941,6 +1133,8 @@ sai_disparo:
 	MOV R10, 2							; R10 guarda o valor da coluna da tecla do missíl(1)
 	MOV R6, 1							; R6 guarda o valor da linha da tecla do missíl(1)
     CALL ha_tecla						; espera que a tecla 1, do missíl, seja largada
+	MOV R1, 0
+	MOV [missíl_ativo], R1
     JMP le_tecla_missil					; volta para o ciclo principal do processo
 
 desenha_missil:
