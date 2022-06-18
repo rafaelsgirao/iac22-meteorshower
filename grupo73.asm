@@ -1434,11 +1434,11 @@ gera_num_aleatorio:		; Gera um de quatro numeros aleatoriamente
 
 gera_meteoro_mau:			; Caso contrario, gera um meteoro mau
 	MOV R1, METEORO_MAU_1
-	JMP fim
+	JMP fim_aleat
 
 gera_meteoro_bom:
 	MOV R1, METEORO_BOM_1
 
-fim:
+fim_aleat:
     POP R0
 	RET
