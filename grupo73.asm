@@ -119,8 +119,10 @@ tecla_carregada:					; LOCK para o teclado comunicar aos restantes processos que
 	LOCK 0							; uma vez por cada tecla carregada
 
 
-valor_energia:
-	WORD 0
+valor_energia:						; Variavel global da energia - desta forma, os processos podem passar 
+	WORD 0							; uns aos outros o valor atual da energia (tal nao acontece com R8,
+									; pois cada processo pode ter um valor diferente)
+									
 ; --------------------- Tabelas de interrupcoes --------------------- ;
 tab:
 	WORD int_rel_meteoros			; rotina de atendimento da interrupção 0
@@ -281,7 +283,7 @@ inicio:
 	EI					; permite interrupções (geral) 
 
 	CALL inicializa_energia            ; Inicialização do display de energia
-	CALL reset_int_2
+	CALL reset_int_2				   ; Reset da interrupçao responsavel pela diminuicao da energia
 
 	CALL testa_estado_jogo			   ; cria o processo responsável por ver qual o modo de jogo
     CALL le_tecla_rover				   ; cria o processo teclado por mover o rover
@@ -356,7 +358,7 @@ pausa:
 	CALL ha_tecla						; espera-se que a tecla D seja largada
 	MOV R2, 2
 	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
-	DI
+	DI									; Desativa as interrupçoes
 	MOV  [ESCONDE_ECRA], R1				; esconde o ecrã do jogo (o valor de R1 não é relevante)
 	MOV	R1, 4							; cenário de fundo número 4
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
@@ -392,25 +394,25 @@ retoma:
 	JMP testa_estado_jogo
 
 testa_fim:
-	CALL varre_teclado						; leitura às teclas
-	MOV R2, 0EH
+	CALL varre_teclado			; leitura às teclas
+	MOV R2, 0EH					; Verifica tecla E
 	CMP	R0, R2					; verifica se a tecla E foi premida
-	JNZ retornar 				; se foi premida, termina-se o jogo
+	JNZ retornar 				; se foi nao premida, continua o jogo
 
-	MOV R8, 0
-	CALL escreve_decimal
+	MOV R8, 0					; caso contrario, escreve 0 nos displays
+	CALL escreve_decimal		
 	MOV R8, 064H
-	CALL energia_memoria
-	JMP termina_jogo
+	CALL energia_memoria		; e inicializa a variavel global da energia (mete a 100)
+	JMP termina_jogo			; terminando o jogo a seguir
 retornar:
-	RET 								; se não foi premida faz-se return
+	RET 						; se não foi premida faz-se return	
 
 
 termina_jogo: 
 	MOV R10, 1
 	MOV R6, 8
 	CALL ha_tecla						; espera-se que a tecla E seja largada
-	DI
+	DI									; Desativa as interrupçoes
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, [cenario_fim]				; cenário de fundo para o fim do jogo ou para game over(depende do valor da variável cenário_fim)
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
@@ -440,8 +442,9 @@ recomeca:
 	MOV	 R1, 0				   		   ; cenário de fundo número 0
     MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
 	CALL inicializa_energia            ; Inicialização do display de energia
-	CALL energia_memoria			
-	CALL reset_int_2
+	CALL energia_memoria			   ; Inicializa tambem a variavel global de energia
+	CALL reset_int_2				   ; Reset na interrupçao da energia, para nao diminuir
+									   ; a energia instataneamente
 	JMP testa_estado_jogo
 
 ; *********************************************************************************
@@ -475,7 +478,7 @@ bloqueia_processo:
 PROCESS SP_desce_meteoro
 gerir_meteoros:
 	YIELD
-	CALL recebe_memoria					; FIXME: ew.
+	CALL recebe_memoria					; Recebe o valor global da energia (FIXME: ew).
 	CALL ve_modo_jogo
 
 	MOV R0, 0							; Registo auxiliar
@@ -618,11 +621,11 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
     
     YIELD
     CALL ve_modo_jogo			; linha a testar no teclado
-	CALL varre_teclado
-	CMP R0, 0						; leitura às teclas
-	JZ testa_esquerda		; se não há tecla pressionada, sair da rotina
+	CALL varre_teclado			; leitura as teclas
+	CMP R0, 0						
+	JZ testa_esquerda			; se não há tecla pressionada, sair da rotina
 	CMP	R0, 2
-	JZ	testa_direita
+	JZ	testa_direita		
 	JMP le_tecla_rover
 
 testa_esquerda:
@@ -929,8 +932,8 @@ interrupcao_energia:
 	MOV R2, 0
 	MOV [R5], R2
 
-	CALL diminui_cinco
-	CALL energia_memoria
+	CALL diminui_cinco		; energia = energia - 5
+	CALL energia_memoria	; Envia a energia para a variavel global
 	JMP interrupcao_energia
 
 mid_energia:
@@ -938,17 +941,17 @@ mid_energia:
     JMP interrupcao_energia
 
 
-aumenta_cinco:
+aumenta_cinco:				; energia = energia + 5
 	PUSH R1
 	MOV R1, 5
-	CALL aumenta_display
+	CALL aumenta_display	; chama a funcao generica
 	POP R1
 	RET
 
-diminui_cinco:
+diminui_cinco:				; energia = energia - 5
 	PUSH R1
 	MOV R1, 5
-	CALL diminui_display
+	CALL diminui_display	; chama a funcao generica
 	POP R1
 	RET
 
@@ -990,7 +993,7 @@ diminui_display:	; Funcao generica de alteracao da energia
 
 termina_jogo_:		; Coloca a energia a zero e termina o jogo
 	MOV R8, 0
-	CALL escreve_decimal
+	CALL escreve_decimal	; 0 nos displays
 	MOV R1, 3
 	MOV [cenario_fim], R1
 	JMP termina_jogo
@@ -1351,8 +1354,8 @@ int_rel_energia:				; rotina de interrupcao da energia
     PUSH R0
 	PUSH R1
 	MOV  R0, evento_energia
-	MOV  R1, 1			; assinala que houve uma interrup��o 0
-	MOV  [R0], R1			; no evento_energia
+	MOV  R1, 1					; assinala que houve uma interrup��o 0
+	MOV  [R0], R1				; no evento_energia
 	POP  R1
 	POP  R0
 	RFE
@@ -1485,7 +1488,7 @@ inicializa_energia:
     MOV  R8, MAX_ENERGIA            ; Energia inicial
 	CALL escreve_decimal 			; escreve 100 nos displays
 
-	CALL energia_memoria
+	CALL energia_memoria			; envia o valor da energia para a memoria
 
     POP R4 
     RET
@@ -1520,7 +1523,11 @@ escolhe_linha: ; Função que salta para a linha seguinte:
     CMP R0, 4  
     JZ linha4
    
-    JMP mid
+    JMP acaba_varrer   ; Apos ter corrido todas as linhas sem teclas premidas,
+					   ; sai da funcao com valor 8 (nao prejudica o programa, pois
+					   ; R0 guarda o valor das teclas premidas e a tecla 8
+					   ; nao possui nenhuma funcionalidade nesta entrega final,
+					   ; nao entrando em conflito com nenhuma outra tecla)
 
 espera_tecla:          ; neste ciclo espera-se at� uma tecla ser premida
  
@@ -1531,6 +1538,7 @@ espera_tecla:          ; neste ciclo espera-se at� uma tecla ser premida
     JZ   escolhe_linha  ; se nenhuma tecla premida, repete
     JMP altera_linha
 
+;------------------------------------------;
 ; Funcoes que passam para a linha seguinte
 ; (no caso da linha 4, retorna à linha 1):
 linha1:
@@ -1575,12 +1583,7 @@ escreve_letra_registo: ; Funcao que escreve a tecla pretendida no registo:
     ADD R0, R1 ; Obtem-se assim o numero desejado (4 * linhas + colunas)
 	JMP acaba_varrer
 
-mid:
-	MOV R0, 08H	; Sem esta atribuicao, o registo sairia com valor 8 se nao carregarmos em nenhuma tecla
-				; (era como se 8 estivesse sempre premido nesse caso) - e assim atribuido um valor
-				; arbitrario a R0 (F pois essa mesma tecla nao e utilizada no projeto)
-
-acaba_varrer:
+acaba_varrer: ; Pop nos registos usados (exceto R0)
     POP R10
     POP R9
     POP R7
