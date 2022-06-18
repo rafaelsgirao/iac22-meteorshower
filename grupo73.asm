@@ -731,7 +731,8 @@ tratar_colisao_rover_meteoro_mau:
 
 tratar_colisao_rover_meteoro_bom:
 	CALL reset_meteoro				; Rover 'consome' o meteoro (reinicializá lo)
-	CALL aumenta_cinco				; Aumentar energia em cinco
+	CALL aumenta_cinco				; Aumentar energia em dez pontos
+	CALL aumenta_cinco
 	;TODO: meter som aqui
 	JMP testa_colisoes			; Colisão tratada! Reiniciar processo.
 
@@ -743,6 +744,7 @@ tratar_colisao_missil_meteoro:	; Não interessa se o meteoro é bom ou mau neste
 	MOV R2,     FIG_EXPLOSAO		; Figura de explosão
 	MOV [R1+4], R2					; Substituir figura do meteoro por uma explosão
 	CALL desenha_boneco				; Desenha explosão por cima dos restos do meteoro antigo
+	CALL aumenta_cinco				; Aumenta cinco pontos por destruir um meteoro 
 	YIELD							; Permitir que outros processos corram antes de atraso
 	CALL atraso_colisao				; Atraso para que a explosão seja percetível
 	YIELD							; Permitir outra vez que corram
@@ -1420,6 +1422,7 @@ disparo:
 ativa_missil:
 	MOV R2, 1
 	MOV [missil_ativo], R2	
+	CALL diminui_cinco					; Perder cinco energia ao disparar
 	MOV R2, 0
 	MOV [TOCA_SOM], R2
 	JMP dispara_missil
