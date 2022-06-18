@@ -590,9 +590,10 @@ testar_4a_transicao:					; Da 4ª fase (bom/mau 4x4) p/ 5ª fase (bom/mau 5x5)
 	JNZ transicao_4_aux					; Se sim, transitar p/ meteoro mau seguinte
 	MOV R11, FIG_METEORO_BOM_3			; Caso contrário é porque é bom
 	MOV [R1+4], R11						; Escrever novo meteoro
+	RET
 transicao_4_aux:
 	MOV R11, FIG_METEORO_MAU_3			; FIXME:! Ver FIXME imediatamente acima
-	MOV [R1+2], R11
+	MOV [R1+4], R11
 	RET
 
 
