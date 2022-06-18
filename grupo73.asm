@@ -357,6 +357,7 @@ pausa:
 	MOV R10, 2
 	MOV R6, 8
 	CALL ha_tecla						; espera-se que a tecla D seja largada
+	DI
 	MOV R2, 2
 	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
@@ -405,6 +406,7 @@ termina_jogo:
 	MOV R10, 1
 	MOV R6, 8
 	CALL ha_tecla						; espera-se que a tecla E seja largada
+	DI
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 2							; cenário de fundo número 2
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
@@ -427,12 +429,14 @@ testa_tecla_recomeca:
 
 recomeca:
   	MOV R1, 0
+	EI
 	MOV [modo_jogo], R1
 	MOV  [APAGA_AVISO], R1		   	   ; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
     MOV  [APAGA_ECRÃ], R1		   	   ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	 R1, 0				   		   ; cenário de fundo número 0
     MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
 	CALL inicializa_energia            ; Inicialização do display de energia
+	CALL energia_memoria			
 	CALL reset_int_2
 	JMP testa_estado_jogo
 
@@ -874,10 +878,7 @@ interrupcao_energia:
 	JMP interrupcao_energia
 
 mid_energia:
-    CALL ve_modo_jogo
-
-pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
-	CALL energia_memoria
+    CALL ve_modo_jogo	
     JMP interrupcao_energia
 
 
