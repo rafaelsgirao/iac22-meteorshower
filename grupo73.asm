@@ -1437,7 +1437,7 @@ gera_meteoro_mau:			; Caso contrario, gera um meteoro mau
 	JMP fim_aleat
 
 gera_meteoro_bom:
-	MOV R1, METEORO_BOM_1
+	MOV R1, FIG_METEORO_BOM_1
 
 fim_aleat:
     POP R0
