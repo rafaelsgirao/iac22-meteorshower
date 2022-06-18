@@ -25,6 +25,8 @@ APAGA_AVISO             EQU 6040H   ; endereço do comando para apagar o aviso d
 APAGA_ECRÃ	 		    EQU 6002H  	; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
 TOCA_SOM				EQU 605AH   ; endereço do comando para tocar um som
+ESCONDE_ECRA			EQU 6008H   ; endereço do comando para esconder um ecrã
+
 
 LINHA_TECLADO	        EQU 1		; linha a testar (1ª linha, 1000b)
 LINHA_START 	        EQU 8       ; linha a testar para começar o jogo(4ª linha)
@@ -360,7 +362,7 @@ pausa:
 	DI
 	MOV R2, 2
 	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
-	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV  [ESCONDE_ECRA], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, 4							; cenário de fundo número 4
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	JMP testa_estado_jogo 				; vai para o ciclo principal do processo
@@ -392,8 +394,6 @@ retoma:
 	EI
 	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
 										; caso fique em pausa mais de 1 ciclo do relogio de energia
-
-	CALL desenha_rover 					; desenha-se o rover novamente		
 	JMP testa_estado_jogo
 
 testa_fim:
