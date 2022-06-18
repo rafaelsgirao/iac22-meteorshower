@@ -23,6 +23,7 @@ APAGA_AVISO             EQU 6040H   ; endereço do comando para apagar o aviso d
 APAGA_ECRÃ	 		    EQU 6002H  	; endereço do comando para apagar todos os pixels já desenhados
 SELECIONA_CENARIO_FUNDO EQU 6042H	; endereço do comando para selecionar uma imagem de fundo
 TOCA_SOM				EQU 605AH   ; endereço do comando para tocar um som
+PAUSA_SOM 				EQU 605EH   ; endereço do comando para pausar um som
 ESCONDE_ECRA			EQU 6008H   ; endereço do comando para esconder um ecrã
 
 
@@ -426,6 +427,8 @@ termina_jogo:
 	JMP testa_estado_jogo
 
 som_perdeu_jogo:						;toca um som caso o jogador tenha chocado com uma nave inimiga ou a enrgia tenha chegado a zero
+	MOV R2, 6
+	MOV [PAUSA_SOM], R2
 	MOV R2, 5
 	MOV [TOCA_SOM], R2					; toca o som número 5
 	MOV R1, 3							
@@ -748,6 +751,8 @@ tratar_colisao_rover_meteoro_mau:
 	CALL atraso_colisao     ; Não usar uma interrupção para fazer um atraso
 	CALL atraso_colisao     ; para ter a certeza que não existe comportamento indesejado.
 	CALL atraso_colisao     
+	MOV R1, 3
+	MOV [cenario_fim], R1
 	JMP termina_jogo		; Acabou o jogo
 
 tratar_colisao_rover_meteoro_bom:
