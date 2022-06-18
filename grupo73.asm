@@ -1357,13 +1357,17 @@ disparo:
 	MOV R1, POS_DISPARO 				; Tabela que define o disparo
 	MOV R2, [R1]           				; Obtém a linha atual do missíl
 	CALLF atualiza_coluna_missil		; atualiza a coluna do missíl em caso do rover se ter movido
-	JMP dispara_missil					; dispara o missíl
+	JMP	ativa_missil					; dispara o missíl
 
 
-dispara_missil:
-
+ativa_missil:
 	MOV R2, 1
 	MOV [missil_ativo], R2	
+	MOV R2, 0
+	MOV [TOCA_SOM], R2
+	JMP dispara_missil
+
+dispara_missil:
 	CALLF desenha_missil				; desenha o missíl
 	MOV R4, [evento_missil]				; ativa a interrupção do missíl
 	CALL apaga_boneco     				; Apagar o missíl na posição atual
