@@ -509,7 +509,7 @@ descer_um_meteoro: 						; Desce um único meteoro.
 	CALL apaga_boneco     				; Apagar o meteoro na posição atual
 	CMP R2, R3             				; Testa se o meteoro está na última linha do ecrã
 	JZ meteoro_chegou_chao				; Se estiver, meteoro colidiu com o planeta
-	CALL testar_transicao_meteoro		; Testar se o meteoro tem que passar à próx. fase TODO: descomentar
+	CALL testar_transicao_meteoro		; Testar se o meteoro tem que passar à próx. fase
 
 	ADD R2, 1             				; Desce o meteoro uma linha (incrementa a linha atual)
 	MOV [R1], R2           				; Atualiza a linha do meteoro
@@ -520,6 +520,7 @@ meteoro_chegou_chao:					; Comportamento quando um meteoro chega ao chão
 	CALL diminui_cinco					; Diminui energia em cinco pontos
 	CALL reset_meteoro					; Reinicializa o meteoro
 	RET
+
 ; *********************************************************
 ; * Reinicializa o meteoro passado como argumento em R1.
 ; *********************************************************
@@ -596,7 +597,6 @@ transicao_4_aux:
 	MOV [R1+4], R11
 	RET
 
-
 ; ********************************************************************************
 ; * Rotina que tem 25% chance de retornar a figura de um meteoro bom (3x3) no R11
 ; * E 75% chance de retornar a figura de um meteoro mau (3x3).
@@ -672,9 +672,8 @@ testa_colisoes:
 
 testa_colisao_missil:
 	MOV R1, [missil_ativo]
-	CMP R1, 1
 	JNZ jmp_ret							; Retornar caso míssil não esteja ativo
-	MOV R1, POS_DISPARO
+	MOV R3, POS_DISPARO
 	CALL aux_testa_colisoes				; Testar colisões com o míssil
 
 aux_testa_colisoes:						; Testa colisões meteoro-rover.
@@ -717,7 +716,7 @@ tratar_colisao:
 	CMP R2, R3
 	JZ tratar_colisao_missil_meteoro
 											; A partir daqui tem que ser uma colisão meteoro-rover
-	MOV R5, [R3+4]							; Figura do meteoro a comparar
+	MOV R5, [R1+4]							; Figura do meteoro a comparar
 
 	MOV R2, FIG_METEORO_BOM_3
 	CMP R2, R5								; Testar se é uma colisão meteoro bom <-> rover
@@ -743,6 +742,8 @@ tratar_colisao_rover_meteoro_bom:
 	CALL reset_meteoro				; Rover 'consome' o meteoro (reinicializá lo)
 	CALL aumenta_cinco				; Aumentar energia em dez pontos
 	CALL aumenta_cinco
+	CALL energia_memoria			; Escreve o valor do display em memória
+
 	MOV R2, 4
 	MOV [TOCA_SOM], R2
 	;TODO: meter som aqui
@@ -759,6 +760,7 @@ tratar_colisao_missil_meteoro:	; Não interessa se o meteoro é bom ou mau neste
 	CALL aumenta_cinco				; Aumenta cinco pontos por destruir um meteoro 
 	MOV R2, 2
 	MOV [TOCA_SOM], R2
+	CALL energia_memoria
 	YIELD							; Permitir que outros processos corram antes de atraso
 	CALL atraso_colisao				; Atraso para que a explosão seja percetível
 	YIELD							; Permitir outra vez que corram
@@ -975,10 +977,8 @@ aumenta_display:	; Funcao generica de alteracao da energia
     MOV R9, MAX_ENERGIA   
     SUB R9, R1
 	CMP R9, R8			  				; limite superior atingido (100) - salta a adição
-    JLE maxim_energia 
-         
+    JLE maxim_energia    
     ADD R8, R1			  				; R8 <- R8 + 1
-
 	JMP  _escreve_decimal				; escreve nos displays, em decimal
     
 maxim_energia:		; Caso o valor da energia seja igual ou superior ao limite, 
@@ -1440,6 +1440,7 @@ ativa_missil:
 	MOV R2, 1
 	MOV [missil_ativo], R2	
 	CALL diminui_cinco					; Perder cinco energia ao disparar
+	CALL energia_memoria
 	MOV R2, 0
 	MOV [TOCA_SOM], R2
 	JMP dispara_missil
