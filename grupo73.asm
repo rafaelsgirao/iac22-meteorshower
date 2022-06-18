@@ -303,7 +303,6 @@ PROCESS SP_desce_meteoro
 testa_tecla_descer_meteoro:
 
     YIELD
-	CALL recebe_memoria
     CALL ve_modo_jogo
 
 	CALL varre_teclado          				; Output em R0
@@ -548,11 +547,6 @@ sai_testa_colisao:
 	POP R2
 	POP R1
 	RET
-
-
-; *********************************************************************************
-; * Escreve nos displays de energia.
-; *********************************************************************************
 
 desenha_um_meteoro:
     PUSH R1
@@ -1422,4 +1416,29 @@ recebe_memoria:			; Le o valor da energia da memoria
 
 	MOV R8, [valor_energia]
 
+	RET
+
+
+gera_num_aleatorio:		; Gera um de quatro numeros aleatoriamente
+						; (pois a chance de um meteoro bom e de 1 em 4)
+    PUSH R0
+
+    MOV R0, TEC_COL
+    MOV R1, [R0]
+    SHR R1, 5
+    MOV R0, 4
+    MOD R2, R0
+
+	CMP R1, 0
+	JZ gera_meteoro_mau
+
+gera_meteoro_bom:
+	MOV R1, METEORO_BOM_1
+	JMP fim
+
+gera_meteoro_mau:
+	MOV R1, METEORO_MAU_1
+
+fim:
+    POP R0
 	RET
