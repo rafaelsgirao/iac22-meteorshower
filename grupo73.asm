@@ -292,7 +292,150 @@ inicio:
 	CALL testa_colisoes
     CALL interrupcao_energia
 	CALL le_tecla_missil
-    
+
+
+
+; **********************************************************************
+; * Processo de controlo: 
+; * para as teclas começar, suspender/continuar, terminar o jogo e recomeçar
+; **********************************************************************
+PROCESS SP_modo_jogo
+testa_estado_jogo:	; rotina principal do processo modo jogo
+			
+	YIELD		
+
+	CALL testa_inicio 		; verifica se a tecla para começar o jogo foi premida
+    CALL testa_pausa  		; verifica se a tecla para pôr o jogo em pausa foi premida
+    CALL testa_fim    		; verifuca se a tecla para terminar o jogo foi premida		
+	CALL testa_retoma		; verifica se a tecla para retomar o jogo após a pausa foi premida
+	CALL testa_recomeca     ; verifica se a tecla para recomeçar um jogo após o fim é premida
+    JMP testa_estado_jogo	; repete o processo
+
+testa_inicio:
+	
+	CALL varre_teclado						; leitura às teclas
+	MOV R2, 0CH
+	CMP	R0, R2  					; compara para ver se a tecla C foi premida
+	JZ testa_estado_comeco				; se for premida, vai-se ver qual o modo do jogo
+	RET
+
+testa_estado_comeco:
+	MOV R10, 1
+	MOV R6, 8
+	CALL ha_tecla			; espera-se que a tecla seja largada
+	MOV R1, [modo_jogo]
+	CMP R1, 0				; verifica se o jogo está no modo para começar
+	JNZ testa_estado_jogo	; se não estiver volta-se ao ciclo principal do processo
+	JMP ecra_inicial		; se for inicia-se o jogo
+
+ecra_inicial:
+	MOV R1, 1
+	MOV [modo_jogo], R1					; muda a variável global do jogo para o valor 1(informa que o jogo está no modo ativo)
+	MOV [modo], R1
+	MOV  R7, 1				   		    ; valor a somar à coluna do boneco, para o movimentar
+	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 1							; cenário de fundo número 1
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+    CALL desenha_rover                 	; desenha o rover 
+	JMP testa_estado_jogo
+
+
+testa_estado_pausa:
+	MOV R2, 0DH
+	CALL varre_teclado						; chama a rotina teclado
+	CMP R0, R2					; verifica se  a tecla D é premida
+	JZ pausa 							; se for vai para pausa
+	RET 								; se não for premida a tecla D, fa-ze return
+
+testa_pausa:
+	MOV R1, [modo_jogo]				
+	CMP R1, 1							; verifica se o jogo está no modo ativo
+	JZ testa_estado_pausa				; se não estiver vai para o ciclo principal
+	RET									
+
+pausa:
+	MOV R10, 2
+	MOV R6, 8
+	CALL ha_tecla						; espera-se que a tecla D seja largada
+	MOV R2, 2
+	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
+	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 4							; cenário de fundo número 4
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	JMP testa_estado_jogo 				; vai para o ciclo principal do processo
+
+
+testa_tecla_retoma:
+	MOV R2, 0DH 
+	CALL varre_teclado 						; chama a rotina teclado
+	CMP R0, R2					; verifica se  a tecla D é premida
+	JZ retoma 						; se for vai para recomeca
+	RET
+
+testa_retoma:
+	MOV R1, [modo_jogo]				
+	CMP R1, 2							; verifica se o jogo está no modo para recomçar
+	JZ testa_tecla_retoma			; verifica se a tecla para recomçar é premida
+	RET									
+	
+retoma:			
+	MOV R10, 2
+	MOV R6, 8
+	CALL ha_tecla						; espera-se que a tecla D seja largada
+	MOV R1, 1
+	MOV [modo_jogo], R1					; muda-se a variável que guarda o modo do jogo para o modo ativo
+	MOV  R1, 1
+	MOV [modo], R1						; desbloqueiam-se os vários processos
+	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
+	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
+										; caso fique em pausa mais de 1 ciclo do relogio de energia
+
+	CALL desenha_rover 					; desenha-se o rover novamente		
+	JMP testa_estado_jogo
+
+testa_fim:
+	CALL varre_teclado						; leitura às teclas
+	MOV R2, 0EH
+	CMP	R0, R2					; verifica se a tecla E foi premida
+	JZ termina_jogo 					; se foi premida, termina-se o jogo
+	RET 								; se não foi premida faz-se return
+
+termina_jogo: 
+	MOV R10, 1
+	MOV R6, 8
+	CALL ha_tecla						; espera-se que a tecla E seja largada
+	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	R1, 2							; cenário de fundo número 2
+    MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
+    MOV R1, 3
+	MOV [modo_jogo], R1
+	JMP testa_estado_jogo
+
+testa_recomeca:
+	MOV R1, [modo_jogo]
+	CMP R1, 3
+	JZ testa_tecla_recomeca
+	RET
+
+testa_tecla_recomeca:
+	MOV R2, 0FH 
+	CALL varre_teclado 			; chama a rotina teclado
+	CMP R0, R2					; verifica se  a tecla F é premida
+	JZ recomeca 					; se for vai para recomeca
+	RET
+
+recomeca:
+  	MOV R1, 0
+	MOV [modo_jogo], R1
+	MOV  [APAGA_AVISO], R1		   	   ; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
+    MOV  [APAGA_ECRÃ], R1		   	   ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	MOV	 R1, 0				   		   ; cenário de fundo número 0
+    MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
+	CALL inicializa_energia            ; Inicialização do display de energia
+	CALL reset_int_2
+	JMP testa_estado_jogo
+
 ; *********************************************************************************
 ; * Rotinas que tratam dos comportamentos dos meteoros:
 ; *   Criação de novos meteoros
@@ -1285,120 +1428,6 @@ bloqueia_processo:
 	JMP continua
 
 
-; **********************************************************************
-; * Processo de controlo: para as teclas começar, suspender/continuar e 
-; * terminar o jogo
-; **********************************************************************
-PROCESS SP_modo_jogo
-testa_estado_jogo:	; rotina principal do processo modo jogo
-			
-	YIELD		
-
-	CALL testa_inicio 		; verifica se a tecla para começar o jogo foi premida
-    CALL testa_pausa  		; verifica se a tecla para pôr o jogo em pausa foi premida
-    CALL testa_fim    		; verifuca se a tecla para terminar o jogo foi premida		
-	CALL testa_recomeca		; verifica se a tecla para recomeçar o jogo foi premida
-    JMP testa_estado_jogo	; repete o processo
-
-testa_inicio:
-	
-	CALL varre_teclado						; leitura às teclas
-	MOV R2, 0CH
-	CMP	R0, R2  					; compara para ver se a tecla C foi premida
-	JZ testa_estado_comeco				; se for premida, vai-se ver qual o modo do jogo
-	RET
-
-testa_estado_comeco:
-	MOV R10, 1
-	MOV R6, 8
-	CALL ha_tecla			; espera-se que a tecla seja largada
-	MOV R1, [modo_jogo]
-	CMP R1, 0				; verifica se o jogo está no modo para começar
-	JNZ testa_estado_jogo	; se não estiver volta-se ao ciclo principal do processo
-	JMP ecra_inicial		; se for inicia-se o jogo
-
-ecra_inicial:
-	MOV R1, 1
-	MOV [modo_jogo], R1					; muda a variável global do jogo para o valor 1(informa que o jogo está no modo ativo)
-	MOV [modo], R1
-	MOV  R7, 1				   		    ; valor a somar à coluna do boneco, para o movimentar
-	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 1							; cenário de fundo número 1
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-    CALL desenha_rover                 	; desenha o rover 
-	JMP testa_estado_jogo
-
-
-testa_estado_pausa:
-	MOV R2, 0DH
-	CALL varre_teclado						; chama a rotina teclado
-	CMP R0, R2					; verifica se  a tecla D é premida
-	JZ pausa 							; se for vai para pausa
-	RET 								; se não for premida a tecla D, fa-ze return
-
-testa_pausa:
-	MOV R1, [modo_jogo]				
-	CMP R1, 1							; verifica se o jogo está no modo ativo
-	JZ testa_estado_pausa				; se não estiver vai para o ciclo principal
-	RET									
-
-pausa:
-	MOV R10, 2
-	MOV R6, 8
-	CALL ha_tecla						; espera-se que a tecla D seja largada
-	MOV R2, 2
-	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
-	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 4							; cenário de fundo número 4
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	JMP testa_estado_jogo 				; vai para o ciclo principal do processo
-
-
-testa_tecla_recomeca:
-	MOV R2, 0DH 
-	CALL varre_teclado 						; chama a rotina teclado
-	CMP R0, R2					; verifica se  a tecla D é premida
-	JZ recomeca 						; se for vai para recomeca
-	RET
-
-testa_recomeca:
-	MOV R1, [modo_jogo]				
-	CMP R1, 2							; verifica se o jogo está no modo para recomçar
-	JZ testa_tecla_recomeca				; verifica se a tecla para recomçar é premida
-	RET									
-	
-recomeca:			
-	MOV R10, 2
-	MOV R6, 8
-	CALL ha_tecla						; espera-se que a tecla D seja largada
-	MOV R1, 1
-	MOV [modo_jogo], R1					; muda-se a variável que guarda o modo do jogo para o modo ativo
-	MOV  R1, 1
-	MOV [modo], R1						; desbloqueiam-se os vários processos
-	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
-	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
-	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
-										; caso fique em pausa mais de 1 ciclo do relogio de energia
-
-	CALL desenha_rover 					; desenha-se o rover novamente		
-
-testa_fim:
-	CALL	varre_teclado						; leitura às teclas
-	MOV R2, 0EH
-	CMP	R0, R2					; verifica se a tecla E foi premida
-	JZ termina_jogo 					; se foi premida, termina-se o jogo
-	RET 								; se não foi premida faz-se return
-
-termina_jogo: 
-	MOV R10, 1
-	MOV R6, 8
-	CALL ha_tecla						; espera-se que a tecla E seja largada
-	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 2							; cenário de fundo número 2
-    MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
-    JMP fim       						; termina o jogo
-
-fim: JMP fim 							; termina o jogo
 
 
 
@@ -1500,7 +1529,7 @@ escreve_letra_registo: ; Funcao que escreve a tecla pretendida no registo:
 	JMP acaba_varrer
 
 mid:
-	MOV R0, 0FH	; Sem esta atribuicao, o registo sairia com valor 8 se nao carregarmos em nenhuma tecla
+	MOV R0, 08H	; Sem esta atribuicao, o registo sairia com valor 8 se nao carregarmos em nenhuma tecla
 				; (era como se 8 estivesse sempre premido nesse caso) - e assim atribuido um valor
 				; arbitrario a R0 (F pois essa mesma tecla nao e utilizada no projeto)
 
@@ -1546,7 +1575,7 @@ gera_num_aleatorio:		; Gera um de quatro numeros aleatoriamente
 	JZ gera_meteoro_bom	; Gera um meteoro bom
 
 gera_meteoro_mau:			; Caso contrario, gera um meteoro mau
-	MOV R1, METEORO_MAU_1
+	MOV R1, FIG_METEORO_MAU_1
 	JMP fim_aleat
 
 gera_meteoro_bom:
