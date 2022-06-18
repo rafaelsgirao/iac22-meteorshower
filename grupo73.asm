@@ -264,11 +264,6 @@ NR_METEOROS             EQU 2       ; Nº de meteoros que existem no jogo.
 POS_METEOROS:
 POS_METEORO_1:			WORD  LINHA_INICIAL_METEOROS, COLUNA_MEIO_ECRA, FIG_METEORO_NEUTRO_1
 POS_METEORO_2: 			WORD  LINHA_INICIAL_METEOROS, COL_METEORO_4, FIG_METEORO_NEUTRO_1
-;POS_METEOROS:        	TABLE 6H    ; Tabela que guarda os N meteoros.
-                                    ; Cada meteoro ocupa 3 WORDs (A linha, coluna e a sua figura)
-                                    ; Quando o nº de meteoros se quer alterado,
-                                    ; multiplicar o  valor de NR_METEOROS por 3 e alterar aqui
-
 
 
 ; *********************************************************************************
@@ -1291,8 +1286,8 @@ bloqueia_processo:
 
 
 ; **********************************************************************
-; *Processo de controlo: para as teclas começar, suspender/continuar e 
-; *terminar o jogo
+; * Processo de controlo: para as teclas começar, suspender/continuar e 
+; * terminar o jogo
 ; **********************************************************************
 PROCESS SP_modo_jogo
 testa_estado_jogo:	; rotina principal do processo modo jogo
