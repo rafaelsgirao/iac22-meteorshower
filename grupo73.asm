@@ -132,16 +132,16 @@ valor_energia:
 	WORD 0
 ; --------------------- Tabelas de interrupcoes --------------------- ;
 tab:
-	WORD rot_int_0			; rotina de atendimento da interrup��o 0
-	WORD rot_int_1			; rotina de atendimento da interrup��o 1
-	WORD rot_int_2			; rotina de atendimento da interrup��o 2
+	WORD int_rel_meteoros			; rotina de atendimento da interrupção 0
+	WORD int_rel_missil				; rotina de atendimento da interrupção 1
+	WORD int_rel_energia			; rotina de atendimento da interrupção 2
 
 evento_int:
-	LOCK 0				; se 1, indica que a interrup��o 0 ocorreu
-	LOCK 0				; se 1, indica que a interrup��o 1 ocorreu
-	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
+	LOCK 0				; se 1, indica que a interrupção 0 ocorreu
+	LOCK 0				; se 1, indica que a interrupção 1 ocorreu
+	WORD 0				; se 1, indica que a interrupção 2 ocorreu
 ; ------------------------------------------------------------------- ;
-missíl_ativo:
+missil_ativo:
 	WORD 0 ; se estiver 1 significa que o missíl foi disparado
 
 modo:
@@ -384,7 +384,7 @@ testa_colisoes:
 
 	MOV R3, POS_ROVER					; Testar colisões meteoro-rover.
 	CALL aux_testa_colisoes
-	MOV R1, [missíl_ativo]
+	MOV R1, [missil_ativo]
 	CMP R1, 1
 	JNZ testa_colisoes
 	MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
@@ -428,7 +428,7 @@ loop_colisoes:
 ; *   			   R2 - Registo auxiliar
 ; ************************************************************************************
 tratar_colisao:
-	MOV R2, POS_MISSIL						; É uma colisão meteoro-míssil?
+	MOV R2, POS_DISPARO						; É uma colisão meteoro-míssil?
 	CMP R2, R3
 	JZ tratar_colisao_missil_meteoro
 
@@ -447,7 +447,7 @@ tratar_colisao:
 	CMP R2, R5							 	; É uma colisão de um meteoro bom? (As figuras são iguais?)
 	JZ	tratar_colisao_rover_meteoro_bom
 	
-	JMP tratar_colisao_rover_mau			; Caso contrário, é colisão com um meteoro mau
+	JMP tratar_colisao_rover_meteoro_mau			; Caso contrário, é colisão com um meteoro mau
 
 tratar_colisao_rover_meteoro_mau: 		; Assumindo meteoro em R3 (FIXME: doesn't matter) (yes it does)
 	PUSH R1
@@ -1094,7 +1094,7 @@ nht:			   ; ciclo interior do nao_ha_tecla, sem os push'es
     POP R0
 	RET
 
-rot_int_2:				; rotina de interrupcao da energia
+int_rel_energia:				; rotina de interrupcao da energia
     PUSH R0
 	PUSH R1
 	MOV  R0, evento_int
@@ -1160,7 +1160,7 @@ disparo:
 dispara_missil:
 
 	MOV R2, 1
-	MOV [missíl_ativo], R2	
+	MOV [missil_ativo], R2	
 	CALLF desenha_missil				; desenha o missíl
 	MOV R4, [evento_int+2]				; ativa a interrupção do missíl
 	CALL apaga_boneco     				; Apagar o missíl na posição atual
@@ -1185,7 +1185,7 @@ sai_disparo:
 	MOV R6, 1							; R6 guarda o valor da linha da tecla do missíl(1)
     CALL ha_tecla						; espera que a tecla 1, do missíl, seja largada
 	MOV R1, 0
-	MOV [missíl_ativo], R1
+	MOV [missil_ativo], R1
     JMP le_tecla_missil					; volta para o ciclo principal do processo
 
 desenha_missil:
