@@ -359,7 +359,6 @@ pausa:
 	MOV R10, 2
 	MOV R6, 8
 	CALL ha_tecla						; espera-se que a tecla D seja largada
-	DI
 	MOV R2, 2
 	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
 	MOV  [ESCONDE_ECRA], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
