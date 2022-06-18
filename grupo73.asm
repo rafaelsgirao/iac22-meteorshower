@@ -37,17 +37,11 @@ COLUNA_2 			    EQU 2
 
 
 ; **********************************
-; * Posições (coluna) de importância dos 8 meteoros 
-; **********************************
-
-
-
-; **********************************
 ; * Constantes de bonecos e do ecrã
 ; **********************************
 LINHA_LIMITE_DISPARO 	EQU 5       ; linha limite do alcance do disparo
 LINHA_DISPARO 			EQU 27		; linha onde o disparo começa
-LARGURA_ALTURA_DISPARO   EQU 1		; largura e altura do disparo(tamanho 1*1)
+LARGURA_ALTURA_DISPARO  EQU 1		; largura e altura do disparo(tamanho 1*1)
 
 LINHA_FUNDO_ECRA        EQU  31     ; linha do Rover (no fundo do ecrã)
 COLUNA_MEIO_ECRA		EQU  30     ; coluna inicial do Rover (a meio do ecrã)
@@ -73,7 +67,7 @@ COL_METEORO_8           EQU 30H     ; 8ª coluna de início de um meteoro
 
 MIN_COLUNA	        	EQU 0		; número da coluna mais à esquerda que o objeto pode ocupar
 MAX_COLUNA	        	EQU 63      ; número da coluna mais à direita que o objeto pode ocupar
-ATRASO_ROVER		        	EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
+ATRASO_ROVER		    EQU	0400H	; atraso para limitar a velocidade de movimento do boneco
 ATRASO_EXPLOSAO		    EQU	0FFFFH	; atraso para "atrasar" fim do jogo após rover explodir
 
 
@@ -132,16 +126,21 @@ valor_energia:
 	WORD 0
 ; --------------------- Tabelas de interrupcoes --------------------- ;
 tab:
-	WORD rot_int_0			; rotina de atendimento da interrup��o 0
-	WORD rot_int_1			; rotina de atendimento da interrup��o 1
-	WORD rot_int_2			; rotina de atendimento da interrup��o 2
+	WORD int_rel_meteoros			; rotina de atendimento da interrupção 0
+	WORD int_rel_missil				; rotina de atendimento da interrupção 1
+	WORD int_rel_energia			; rotina de atendimento da interrupção 2
 
-evento_int:
-	LOCK 0				; se 1, indica que a interrup��o 0 ocorreu
-	LOCK 0				; se 1, indica que a interrup��o 1 ocorreu
-	WORD 0				; se 1, indica que a interrup��o 2 ocorreu
+evento_meteoros:					; (INT0) Indica se a interrupção do rel. dos meteoros aconteceu
+	LOCK 0
+
+evento_missil:						; (INT1) Indica se a interrupção do rel. do míssil aconteceu
+	LOCK 0
+
+evento_energia:						; (INT2) Indica se a interrupção do rel. de energia aconteceu
+	WORD 0
+
 ; ------------------------------------------------------------------- ;
-missíl_ativo:
+missil_ativo:
 	WORD 0 ; se estiver 1 significa que o missíl foi disparado
 
 modo:
@@ -168,6 +167,11 @@ FIG_ROVER:			    	; Tabela que define o rover.
 	WORD CASTANHO, 0, AZUL, 0, CASTANHO
 	WORD 0, 0, CASTANHO, 0, 0
      
+FIG_METEORO_VAZIO:			; Figura a ser usada como placeholder
+							; quando um meteoro tem de estar invisível.
+	WORD 1,1
+	WORD 0,0
+
 FIG_METEORO_NEUTRO_1:           ; Definição do primeiro meteoro neutro
     WORD 1,1                ; Largura e altura do meteoro (1x1 pixels)
 
@@ -186,7 +190,7 @@ FIG_METEORO_BOM_1:              ; Definição do primeiro meteoro bom
     WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA
     WORD 0, VERDE_FORA, 0
 
-METEORO_BOM_2:              ; Definição do segundo meteoro bom
+FIG_METEORO_BOM_2:              ; Definição do segundo meteoro bom
     WORD 4,4                ; Largura e altura do meteoro (4x4 pixels)
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
@@ -194,7 +198,7 @@ METEORO_BOM_2:              ; Definição do segundo meteoro bom
     WORD VERDE_FORA,    VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
     WORD 0,             VERDE_FORA,     VERDE_FORA,     0
 
-METEORO_BOM_3:              ; Definição do terceiro meteoro bom
+FIG_METEORO_BOM_3:              ; Definição do terceiro meteoro bom
     WORD 5,5                ; Largura e altura do meteoro (5x5 pixels)
 
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
@@ -203,14 +207,14 @@ METEORO_BOM_3:              ; Definição do terceiro meteoro bom
     WORD VERDE_FORA,    VERDE_FORA,     VERDE_DENTRO,   VERDE_FORA,     VERDE_FORA
     WORD 0,             VERDE_FORA,     VERDE_FORA,     VERDE_FORA,     0
 
-METEORO_MAU_1:              ; Definição do primeiro meteoro mau
+FIG_METEORO_MAU_1:              ; Definição do primeiro meteoro mau
     WORD 3,3                ; Largura e altura do meteoro (3x3 pixels)
 
     WORD VERMELHO,  VERMELHO,   VERMELHO
     WORD 0,         VERMELHO,   0
     WORD VERMELHO,  0,          VERMELHO
 
-METEORO_MAU_2:              ; Definição do segundo meteoro mau
+FIG_METEORO_MAU_2:              ; Definição do segundo meteoro mau
     WORD 4,4                ; Largura e altura do meteoro (4x4 pixels)
 
     WORD VERMELHO,  VERMELHO,   VERMELHO,   VERMELHO
@@ -247,26 +251,19 @@ FIG_DISPARO:                    ; Definição dos disparos da nave
 ;---------------------------------------------------------------------------------;
 POS_DISPARO:
 	WORD LINHA_DISPARO, COLUNA_MEIO_ECRA                           ; Valor inicial p/ o disparo. Caso não esteja inicializado
-										; será colocado em cima do Rover
+																   ; será colocado em cima do Rover
 	WORD FIG_DISPARO
 
 POS_ROVER:
-	
 	WORD LINHA_FUNDO_ECRA, COLUNA_MEIO_ECRA
 	WORD FIG_ROVER
 
 
 NR_METEOROS             EQU 2       ; Nº de meteoros que existem no jogo.
-;FIXME: Quando tivermos a rotina de escolher um valor aleatório, alterar isto para ser só uma tabela
 
 POS_METEOROS:
-POS_METEORO_1:			WORD  LINHA_INICIAL_METEOROS, COLUNA_MEIO_ECRA, FIG_METEORO_MAU_3
-POS_METEORO_2: 			WORD  LINHA_INICIAL_METEOROS, COL_METEORO_4, FIG_METEORO_NEUTRO_2
-;POS_METEOROS:        	TABLE 6H    ; Tabela que guarda os N meteoros.
-                                    ; Cada meteoro ocupa 3 WORDs (A linha, coluna e a sua figura)
-                                    ; Quando o nº de meteoros se quer alterado,
-                                    ; multiplicar o  valor de NR_METEOROS por 3 e alterar aqui
-
+POS_METEORO_1:			WORD  LINHA_INICIAL_METEOROS, COLUNA_MEIO_ECRA, FIG_METEORO_NEUTRO_1
+POS_METEORO_2: 			WORD  LINHA_INICIAL_METEOROS, COL_METEORO_4, FIG_METEORO_NEUTRO_1
 
 
 ; *********************************************************************************
@@ -291,49 +288,116 @@ inicio:
 
 	CALL testa_estado_jogo
     CALL le_tecla_rover
-    CALL testa_tecla_descer_meteoro
+    CALL gerir_meteoros
 	CALL testa_colisoes
     CALL interrupcao_energia
 	CALL le_tecla_missil
     
 ; *********************************************************************************
-; * Desenha um meteoro neutro no tamanho máximo, no meio do ecrã.
+; * Rotinas que tratam dos comportamentos dos meteoros:
+; *   Criação de novos meteoros
+; *   Descer meteoros existentes
+; *   'Evoluir' meteoros
 ; *********************************************************************************
 PROCESS SP_desce_meteoro
-testa_tecla_descer_meteoro:
+gerir_meteoros:
+	YIELD
+	CALL recebe_memoria					; FIXME: ew.
+	CALL ve_modo_jogo
 
-    YIELD
-    CALL ve_modo_jogo
+	MOV R0, 0							; Registo auxiliar
+	MOV R6, [evento_meteoros]			; Testa se interrupção ocorreu
+	CMP R6, R0							; Verifica se evento ocorreu (não está a zero)
+	JZ gerir_meteoros					; Se não há evento a consumir, reiniciar processo
+	MOV [evento_meteoros], R0			; Consome o evento
+	
 
-	CALL varre_teclado          				; Output em R0
-	MOV R2, 8       			; Tecla de descer o meteoro (3ª linha, 1ª coluna = tecla 'B')
-	CMP R0, R2             				; Verificar se a tecla de descer o meteoro foi premida
-	JZ  desce_meteoro
-	JMP testa_tecla_descer_meteoro
+	CALL descer_meteoros				; Descer meteoros, caso estejam ativos
+	CALL criar_meteoros					; Cria de modo aleatório novos meteoros
+	JMP gerir_meteoros					; Reiniciar processo
 
-desce_meteoro: 							; Rotina a ser generalizada na entrega final.
+descer_meteoros:
+	MOV R5, NR_METEOROS					; Nº de meteoros a tratar
+	MOV R1, POS_METEOROS				; Inicializar endereço ao 1º meteoro
+loop_descer_meteoros:
+	CALL descer_um_meteoro
+	SUB R5, 1							; Menos um meteoro a tratar
+	JZ 	sai_descer_meteoros				; Acaba de descer meteoros
+	ADD R1, 6							; Endereço do meteoro seguinte
+	JMP loop_descer_meteoros			; Processa o meteoro seguinte
 
-    MOV [tecla_carregada], R2            ; informa quem estiver bloqueado neste LOCK que uma tecla foi carregada
+sai_descer_meteoros:
+	RET
 
-	MOV R1, POS_METEORO_1				; Tabela que define o meteoro
+; TODO: make meteors progressive
+
+descer_um_meteoro: 						; Desce um único meteoro.
 	MOV R2, [R1]           				; Obtém a linha atual do meteoro
 	MOV R3, LINHA_FUNDO_ECRA
 	CALL apaga_boneco     				; Apagar o meteoro na posição atual
 	CMP R2, R3             				; Testa se o meteoro está na última linha do ecrã
-	JZ sai_desce_meteoro  				; Se estiver, então não atualizar a linha
+	JZ sai_descer_meteoros  			; Se estiver, então não fazer nada (retornar)
+	;CALL testar_transicao_meteoro		; Testar se o meteoro tem que passar à próx. fase TODO: descomentar
+
 	ADD R2, 1             				; Desce o meteoro uma linha (incrementa a linha atual)
 	MOV [R1], R2           				; Atualiza a linha do meteoro
-	CALL desenha_um_meteoro
-    JMP sai_desce_meteoro
+	CALL desenha_boneco					; Desenha o meteoro na nova linha
+    RET
     
-sai_desce_meteoro:
-	MOV R10, 1
-	MOV R6, 4
-    CALL ha_tecla
-    JMP testa_tecla_descer_meteoro
-; *********************************************************************************
+; *********************************************************
+; * Testa se o meteoro se encontra numa linha de transição
+; * E passa o à fase seguinte se sim.
+; *********************************************************
+testar_transicao_meteoro:				
+	MOV R6, [R1]						; Linha do meteoro
+testar_1a_transicao:					; Da 1ª fase (neutro 1x1) para 2ª fase (neutro 2x2)
+	MOV R7, LINHA_TRANSICAO_1
+	CMP R6, R7 							; Testar linha da 2ª fase
+	JNZ testar_2a_transicao				; Se não for esta, testar a próxima
+	MOV R11, FIG_METEORO_NEUTRO_2		; Registo auxiliar
+	MOV [R1+2], R11						; Mudar figura da 1ª p/ a 2ª fase
+	RET									; Transição feita! Sair
+
+testar_2a_transicao:					; Da 2ª fase (neutro 2x2) para 2ª fase (bom ou mau 3x3
+	MOV R7, LINHA_TRANSICAO_2
+	CMP R6, R7							; Linha atual = linha transição de 2ª fase?
+	JNZ testar_3a_tansicao				; Se não for esta, testar a próxima
+	CALL escolher_fig_meteoro			; Na 2ª transição temos que escolher se um meteoro será bom ou mau.
+	MOV [R1+2], R11						; Transicionar para o meteoro que a rotina acima deu de output
+	RET									; Transição feita! Sair
+
+testar_3a_tansicao:						; Da 3ª fase (bom/mau 3x3) p/ 4ª fase (bom/mau 3x3)
+	MOV R7, LINHA_TRANSICAO_3		
+	CMP R6, R7
+	JNZ testar_4a_transicao				; Senão for esta, testar a próx. linha
+	MOV R11, FIG_METEORO_BOM_2			; FIXME: ! Implementar ver se meteo. é bom ou mau. Por agora apenas quero ver se funciona
+	MOV [R1+2], R11
+	RET
+
+testar_4a_transicao:					; Da 4ª fase (bom/mau 4x4) p/ 5ª fase (bom/mau 5x5)
+	MOV R7, LINHA_TRANSICAO_4
+	CMP R6, R7
+	JNZ sai_descer_meteoros				; Senão for esta, sair (não há mais p/ testar)
+	MOV R11, FIG_METEORO_BOM_3			; FIXME:! Ver FIXME imediatamente acima
+	MOV [R1+2], R11
+	RET
+
+criar_meteoros: ; TODO: Implement
+	RET
+
+	
+; ********************************************************************************
+; * Rotina que tem 25% chance de retornar a figura de um meteoro bom (3x3) no R11
+; * E 75% chance de retornar a figura de um meteoro mau (3x3).
+; ********************************************************************************
+escolher_fig_meteoro: ; TODO: actually implement random function
+	MOV R11, FIG_METEORO_BOM_2
+	RET
+
+
+; ***************************
 ; * Desenha o rover no ecrã.
-; *********************************************************************************
+; ***************************
 PROCESS SP_teclado_rover
 le_tecla_rover:							; Verificar se uma tecla para mover o rover está pressionada
     
@@ -347,7 +411,6 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
 	JMP le_tecla_rover
 
 testa_esquerda:
-
     MOV [tecla_continua], R0
 
 	MOV	R7, -1							; vai deslocar para a esquerda
@@ -355,7 +418,6 @@ testa_esquerda:
 	JMP    ve_limites_rover 
 
 testa_direita:
-
     MOV [tecla_continua], R0
 
 	MOV	R7, +1							; vai deslocar para a direita
@@ -380,7 +442,7 @@ testa_colisoes:
 
 	MOV R3, POS_ROVER					; Testar colisões meteoro-rover.
 	CALL aux_testa_colisoes
-	MOV R1, [missíl_ativo]
+	MOV R1, [missil_ativo]
 	CMP R1, 1
 	JNZ testa_colisoes
 	MOV R3, POS_DISPARO					; Testar colisões meteoro-míssil.
@@ -391,18 +453,19 @@ testa_colisoes:
 aux_testa_colisoes:						; Testa colisões meteoro-rover.
 	MOV R1, POS_METEOROS				; Inicializa R1 ao 1º meteoro
 	MOV R5, NR_METEOROS					; Testa colisão para cada um dos N meteoros
+
 loop_colisoes:
 	SUB R5, 1							; Menos um meteoro a tratar
 	CALL testa_colisao					; Testar colisão
 	CMP R0, 0							; Testar se houve colisão
-	JNZ tratar_colisao_meteoro_mau_rover; Tratar colisão ;FIXME: this ain't right! gotta be more generic...
+	JNZ tratar_colisao					; Tratar da colisão
 	ADD R1, 6							; Endereço do meteoro seguinte
 	CMP R5, 0							; Verificar se ainda há meteoros a tratar
 	JNZ loop_colisoes					; Tratar o meteoro seguinte
 	RET									; Retornar
 
 
-; **********************************************************************
+; ************************************************************************************
 ; * Rotinas que tratam do comportamento de colisões.
 ; * Casos que são tratados:
 ; * 	- Colisão rover-meteoro mau: som de explosão, 
@@ -413,8 +476,38 @@ loop_colisoes:
 ; * FIXME: implementar isto tudo
 ; * Ver se é melhor separar rotinas, 
 ; * já que o testa colisões trata cada caso separadamente
-; **********************************************************************
-tratar_colisao_meteoro_mau_rover: ; Assumindo meteoro em R3 (FIXME: doesn't matter)
+; * 
+; * Por convenção, assumir que R3 contém sempre o Rover ou um míssil
+; * E R1 um meteoro.
+; *
+; * Argumentos:    R1 - Definição do meteoro
+; *				   R3 - Definição do Rover ou míssil
+; * Outros registos:
+; *   			   R2 - Registo auxiliar
+; ************************************************************************************
+tratar_colisao:
+	MOV R2, POS_DISPARO						; É uma colisão meteoro-míssil?
+	CMP R2, R3
+	JZ tratar_colisao_missil_meteoro
+
+											; A partir daqui tem que ser uma colisão meteoro-rover
+	MOV R5, [R3+4]							; Figura do meteoro a comparar
+
+	MOV R2, FIG_METEORO_BOM_1
+	CMP R2, R5								; É uma colisão de um meteoro bom? (As figuras são iguais?)
+	JZ	tratar_colisao_rover_meteoro_bom
+
+	MOV R2, FIG_METEORO_BOM_2
+	CMP R2, R5								; É uma colisão de um meteoro bom? (As figuras são iguais?)
+	JZ	tratar_colisao_rover_meteoro_bom
+
+	MOV R2, FIG_METEORO_BOM_3
+	CMP R2, R5							 	; É uma colisão de um meteoro bom? (As figuras são iguais?)
+	JZ	tratar_colisao_rover_meteoro_bom
+	
+	JMP tratar_colisao_rover_meteoro_mau			; Caso contrário, é colisão com um meteoro mau
+
+tratar_colisao_rover_meteoro_mau: 		; Assumindo meteoro em R3 (FIXME: doesn't matter) (yes it does)
 	PUSH R1
 	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
 	MOV R3, FIG_EXPLOSAO
@@ -422,22 +515,40 @@ tratar_colisao_meteoro_mau_rover: ; Assumindo meteoro em R3 (FIXME: doesn't matt
 	SUB R1, 4				; Endereço normal do Rover
 	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
 	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
-	CALL atraso_colisao     ; 	Não usar uma interrupção para fazer um atraso
-	CALL atraso_colisao     ; 	para ter a certeza que não existe comportamento indesejado.
+	CALL atraso_colisao     ; Não usar uma interrupção para fazer um atraso
+	CALL atraso_colisao     ; para ter a certeza que não existe comportamento indesejado.
 	CALL atraso_colisao     
 	JMP termina_jogo		; Acabou o jogo
 
-tratar_colisao_meteoro_bom_rover: ; Assumindo meteoro EM R1 E ROVER EM R3
+tratar_colisao_rover_meteoro_bom: ; Assumindo meteoro EM R1 E ROVER EM R3; FIXME: look here
 	PUSH R1
-	MOV R1, POS_ROVER+4     ; Endereço da figura do Rover
+	MOV R1, POS_ROVER+4    		; Endereço da figura do Rover
 	MOV R3, FIG_EXPLOSAO
-	MOV [R1], R3			; Rover é substituído por figura de explosão
-	SUB R1, 4				; Endereço normal do Rover
-	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
-	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
-	JMP termina_jogo		; Acabou o jogo
+	MOV [R1], R3				; Rover é substituído por figura de explosão
+	SUB R1, 4					; Endereço normal do Rover
+	CALL desenha_boneco			; Desenha uma explosão na posição do Rover
+	CALL atraso_colisao  	    ; Pequeno atraso antes de fim do jogo
+	JMP termina_jogo			; Acabou o jogo
 
+tratar_colisao_missil_meteoro:	; Não interessa se o meteoro é bom ou mau neste caso
+; TODO: Adicionar rotina para fazer som de explosão
+; *  	- Colisão míssil-meteoro: som de explosão, substituir meteo. por explosão,
+; *			apagar míssil e meteoro, aumentar display (?)
+;	CALL apaga_boneco				; Apaga forma antiga do meteoro TODO: stuff
+	MOV R2,     FIG_EXPLOSAO		; Figura de explosão
+	MOV [R1+4], R2					; Substituir figura do meteoro por uma explosão
+	CALL desenha_boneco				; Desenha explosão por cima dos restos do meteoro antigo
+	CALL atraso_colisao				; Atraso para que a explosão seja percetível
+	; YIELD (?)
+	CALL apaga_boneco
+	MOV R2, FIG_METEORO_VAZIO		; 'Desativar' o meteoro.
 	
+	
+	; TODO: fazer atrasos mas deixar outros processos correr
+
+
+
+
 ; **********************************************************************
 ; * Rotina esta se ocorreu uma colisão entre dois bonecos.
 ; * Argumentos:    R1 - Definição do boneco A
@@ -548,12 +659,9 @@ sai_testa_colisao:
 	POP R1
 	RET
 
-desenha_um_meteoro:
-    PUSH R1
-	MOV R1, POS_METEORO_1
-	CALL desenha_boneco
-    POP R1
-	RET
+; **********************************
+; * Escreve nos displays de energia.
+; **********************************
 
 desenha_rover:
     PUSH R1
@@ -610,13 +718,13 @@ interrupcao_energia:
     YIELD
 	CALL recebe_memoria
 	MOV R4, DISPLAYS
-    MOV R5, evento_int
-    MOV R2, [R5+4]			; Vai buscar o valor da interrupcao 2 na tabela evento_int
+    MOV R5, evento_energia
+    MOV R2, [R5]			; Vai buscar o valor da interrupcao 2 na tabela evento_energia
     CMP R2, 0		
     JZ mid_energia			; Valor 0 - sem interrupcao - salta (para ja) a escrita nos displays
 
 	MOV R2, 0
-	MOV [R5+4], R2
+	MOV [R5], R2
 
 	CALL diminui_cinco
 	CALL energia_memoria
@@ -626,7 +734,6 @@ mid_energia:
     CALL ve_modo_jogo
 
 pop_e_espera:		  					; no caso de alguma das teclas estar premida, espera ate largar
-	
 	CALL energia_memoria
     JMP interrupcao_energia
 
@@ -906,6 +1013,7 @@ atraso_colisao:
 	PUSH R1
 	MOV R1, ATRASO_EXPLOSAO				; Ciclo de atrasar fim do jogo após rover explodir
 	JMP ciclo_atraso
+
 ciclo_atraso:
 	SUB	R1, 1
 	JNZ	ciclo_atraso
@@ -1037,17 +1145,26 @@ nht:			   ; ciclo interior do nao_ha_tecla, sem os push'es
     POP R0
 	RET
 
-rot_int_2:				; rotina de interrupcao da energia
+int_rel_energia:				; rotina de interrupcao da energia
     PUSH R0
 	PUSH R1
-	MOV  R0, evento_int
+	MOV  R0, evento_energia
 	MOV  R1, 1			; assinala que houve uma interrup��o 0
-	MOV  [R0+4], R1			; na componente 2 da vari�vel evento_int
+	MOV  [R0], R1			; no evento_energia
 	POP  R1
 	POP  R0
 	RFE
 
-rot_int_0:
+int_rel_meteoros:			  ; (INT0) Interrupção causada pelo relógio dos meteoros
+	PUSH R0
+	PUSH R1
+	
+	MOV R0, 1				  ; Registo auxiliar
+	;MOV R1, [R] ; Registar que interrupção ocorreu
+	MOV [evento_meteoros], R0	; Registar que interrupção ocorreu
+
+	POP R1
+	POP R0
 	RFE
 
 reset_int_2:		; funcao que evita diminuicoes da energia,
@@ -1055,32 +1172,32 @@ reset_int_2:		; funcao que evita diminuicoes da energia,
 	PUSH R0
 	PUSH R1
 
-	MOV R0, evento_int
 	MOV R1, 0
-	MOV [R0+4], R1	; coloca o valor da interrupcao a 0
+	MOV [evento_energia], R1	; coloca o valor da interrupcao a 0
+
 	POP R1
 	POP R0
 	RET
 
-; **********************************************************************
-; ROT_INT_1 - 	Rotina de atendimento da interrupção 1, do missíl
+; **************************************************************************
+; INT_REL_MISSIL - Rotina de atendimento da interrupção 1, do relógio do missíl.
 ;			Faz simplesmente uma escrita no LOCK que o processo boneco lê.
 ;			Como basta indicar que a interrupção ocorreu (não há mais
 ;			informação a transmitir), basta a escrita em si, pelo que
 ;			o registo usado, bem como o seu valor, é irrelevante
-; **********************************************************************
-rot_int_1:
+; **************************************************************************
+int_rel_missil:
 	PUSH R0
 	PUSH R1
-	MOV  R0, evento_int
+	MOV  R0, evento_missil
 	MOV  R1, 1			; assinala que houve uma interrupção do missíl
-	MOV  [R0+2], R1			; na componente 0 da variável evento_int
+	MOV  [R0], R1			; na variável evento_missil
 	POP  R1
 	POP  R0
 	RFE
 
 ; **********************************************************************
-; *Processo do missíl
+; * Processo do missíl
 ; **********************************************************************
 PROCESS SP_dispara_missil
 le_tecla_missil:
@@ -1103,9 +1220,9 @@ disparo:
 dispara_missil:
 
 	MOV R2, 1
-	MOV [missíl_ativo], R2	
+	MOV [missil_ativo], R2	
 	CALLF desenha_missil				; desenha o missíl
-	MOV R4, [evento_int+2]				; ativa a interrupção do missíl
+	MOV R4, [evento_missil]				; ativa a interrupção do missíl
 	CALL apaga_boneco     				; Apagar o missíl na posição atual
 	MOV R1, POS_DISPARO 				; Tabela que define o disparo
 	MOV R2, [R1]           				; Obtém a linha atual do missíl
@@ -1128,7 +1245,7 @@ sai_disparo:
 	MOV R6, 1							; R6 guarda o valor da linha da tecla do missíl(1)
     CALL ha_tecla						; espera que a tecla 1, do missíl, seja largada
 	MOV R1, 0
-	MOV [missíl_ativo], R1
+	MOV [missil_ativo], R1
     JMP le_tecla_missil					; volta para o ciclo principal do processo
 
 desenha_missil:
@@ -1137,7 +1254,6 @@ desenha_missil:
 	CALL desenha_boneco
     POP R1
 	RETF
-
 
 atualiza_coluna_missil:					; a rotina  atualiza a coluna do missíl caso este se tenha movido
     PUSH R1
@@ -1170,8 +1286,8 @@ bloqueia_processo:
 
 
 ; **********************************************************************
-; *Processo de controlo: para as teclas começar, suspender/continuar e 
-; *terminar o jogo
+; * Processo de controlo: para as teclas começar, suspender/continuar e 
+; * terminar o jogo
 ; **********************************************************************
 PROCESS SP_modo_jogo
 testa_estado_jogo:	; rotina principal do processo modo jogo
@@ -1210,7 +1326,6 @@ ecra_inicial:
 	MOV	R1, 1							; cenário de fundo número 1
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
     CALL desenha_rover                 	; desenha o rover 
-	CALL desenha_um_meteoro        		; Desenha o meteoro inicial no topo do ecrã
 	JMP testa_estado_jogo
 
 
@@ -1250,7 +1365,7 @@ testa_recomeca:
 	MOV R1, [modo_jogo]				
 	CMP R1, 2							; verifica se o jogo está no modo para recomçar
 	JZ testa_tecla_recomeca				; verifica se a tecla para recomçar é premida
-	RET
+	RET									
 	
 recomeca:			
 	MOV R10, 2
@@ -1265,9 +1380,7 @@ recomeca:
 	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
 										; caso fique em pausa mais de 1 ciclo do relogio de energia
 
-	CALL desenha_rover 				; desenha-se o rover novamente
-	CALL desenha_um_meteoro
-	JMP testa_estado_jogo
+	CALL desenha_rover 					; desenha-se o rover novamente		
 
 testa_fim:
 	CALL	varre_teclado						; leitura às teclas
