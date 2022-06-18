@@ -96,32 +96,33 @@ CINZENTO	         	EQU	0C777H	; Cor neutra - Meteoros de longe
 ; *********************************************************************************
 PLACE   1000H
 
-    STACK 100H
-SP_programa_principal:
+; Reserva do espaço para as pilhas dos processos
+    STACK 100H						; espaço reservado para a pilha do processo "programa principal"
+SP_programa_principal:				; este é o endereço com que o SP deste processo deve ser inicializado
 
-    STACK 100H
-SP_teclado_rover:
+    STACK 100H						; espaço reservado para a pilha do processo "teclado rover"
+SP_teclado_rover:					; este é o endereço com que o SP deste processo deve ser inicializado
 
-    STACK 100H
-SP_display_energia:
+    STACK 100H						; espaço reservado para a pilha do processo "display energia"
+SP_display_energia:					; este é o endereço com que o SP deste processo deve ser inicializado
 
-    STACK 100H
-SP_desce_meteoro:
+    STACK 100H						; espaço reservado para a pilha do processo "desce meteoro"
+SP_desce_meteoro:					; este é o endereço com que o SP deste processo deve ser inicializado
 
-	STACK 100H
-SP_dispara_missil:
+	STACK 100H						; espaço reservado para a pilha do processo "dispara missíl"
+SP_dispara_missil:					; este é o endereço com que o SP deste processo deve ser inicializado
 
-	STACK 100H
-SP_modo_jogo:
+	STACK 100H						; espaço reservado para a pilha do processo "modo_jogo"
+SP_modo_jogo:						; este é o endereço com que o SP deste processo deve ser inicializado
 
-	STACK 100H
-SP_testa_colisoes:
+	STACK 100H						; espaço reservado para a pilha do processo "testa colisões"
+SP_testa_colisoes:					; este é o endereço com que o SP deste processo deve ser inicializado
 
-tecla_continua:
-	LOCK 0
+tecla_continua:						; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
+	LOCK 0							; enquanto a tecla estiver carregada
 
-tecla_carregada:
-	LOCK 0
+tecla_carregada:					; LOCK para o teclado comunicar aos restantes processos que tecla detetou,
+	LOCK 0							; uma vez por cada tecla carregada
 
 
 valor_energia:
@@ -143,17 +144,17 @@ evento_energia:						; (INT2) Indica se a interrupção do rel. de energia acont
 
 ; ------------------------------------------------------------------- ;
 missil_ativo:
-	WORD 0 ; se estiver 1 significa que o missíl foi disparado
+	WORD 0 ; se estiver 1 significa que o missíl foi disparado, a 0 o missíl não está em movimento
 
 modo:
-	LOCK 0
+	LOCK 0 ; variável do tipo LOCK usada para bloquear processos caso o estado do jogo não seja ativo
 	
 modo_jogo:
     WORD 0 ; o modo do jogo define o estado do jogo
            ; 0 - o jogo está para começar
 		   ; 1 - o jogo está a decorrer
-           ; 2 - o jogo está em pausa/ para recomeçar 
-           ; 3 - o jogo acabou
+           ; 2 - o jogo está em pausa/ para ser retomado
+           ; 3 - o jogo acabou/ está à espera que um novo jogo seja começado
 
 cenario_fim:
 	WORD 2 ; cenario para o fim de jogo, caso o utilizador tenha perdido mete-se uma imagem diferente
@@ -245,6 +246,7 @@ FIG_EXPLOSAO:                   ; Definição das explosões
     WORD 0,         ROSA_EXP,   0,          ROSA_EXP,      0
 
 FIG_DISPARO:                    ; Definição dos disparos da nave
+							; Largura e altura do disparo (1x1 pixels)
 	WORD LARGURA_ALTURA_DISPARO, LARGURA_ALTURA_DISPARO
 
     WORD AZUL
@@ -275,7 +277,7 @@ POS_METEORO_2: 			WORD  LINHA_INICIAL_METEOROS, COL_METEORO_4, FIG_METEORO_NEUTR
 ; *********************************************************************************
 PLACE   0                              ; o código tem de começar em 0000H
 inicio:
-    MOV  SP, SP_programa_principal			       ; inicializa SP para a palavra a seguir
+    MOV  SP, SP_programa_principal	   ; inicializa SP do programa principal
     MOV  [APAGA_AVISO], R1		   	   ; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
     MOV  [APAGA_ECRÃ], R1		   	   ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	 R1, 0				   		   ; cenário de fundo número 0
@@ -290,12 +292,12 @@ inicio:
 	CALL inicializa_energia            ; Inicialização do display de energia
 	CALL reset_int_2
 
-	CALL testa_estado_jogo
-    CALL le_tecla_rover
-    CALL gerir_meteoros
-	CALL testa_colisoes
-    CALL interrupcao_energia
-	CALL le_tecla_missil
+	CALL testa_estado_jogo			   ; cria o processo responsável por ver qual o modo de jogo
+    CALL le_tecla_rover				   ; cria o processo teclado por mover o rover
+    CALL gerir_meteoros				   ; cria o processo teclado por gerir os meteoros
+	CALL testa_colisoes				   ; cria o processo teclado por testar as colisões
+    CALL interrupcao_energia		   ; cria o processo teclado pela interrupção da energia
+	CALL le_tecla_missil			   ; cria o processo teclado pelo disparo do missíl
 
 
 
@@ -402,7 +404,7 @@ testa_fim:
 	CALL varre_teclado						; leitura às teclas
 	MOV R2, 0EH
 	CMP	R0, R2					; verifica se a tecla E foi premida
-	JNZ retornar 					; se foi premida, termina-se o jogo
+	JNZ retornar 				; se foi premida, termina-se o jogo
 
 	MOV R8, 0
 	CALL escreve_decimal
@@ -419,7 +421,7 @@ termina_jogo:
 	CALL ha_tecla						; espera-se que a tecla E seja largada
 	DI
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, [cenario_fim]							; cenário de fundo número 2
+	MOV	R1, [cenario_fim]				; cenário de fundo para o fim do jogo ou para game over(depende do valor da variável cenário_fim)
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
     MOV R1, 3
 	MOV [modo_jogo], R1
@@ -435,7 +437,7 @@ testa_tecla_recomeca:
 	MOV R2, 0FH 
 	CALL varre_teclado 			; chama a rotina teclado
 	CMP R0, R2					; verifica se  a tecla F é premida
-	JZ recomeca 					; se for vai para recomeca
+	JZ recomeca 				; se for vai para recomeca
 	RET
 
 recomeca:
@@ -450,6 +452,28 @@ recomeca:
 	CALL energia_memoria			
 	CALL reset_int_2
 	JMP testa_estado_jogo
+
+; *********************************************************************************
+; * Rotina auxiliar para o processo responsável por ver o modo de jogo
+; * 
+; *********************************************************************************
+
+
+ve_modo_jogo:							; rotina responsável por bloquear os processos caso o jogo não esteja no modo ativo 
+	PUSH R1
+	MOV R1, [modo_jogo]
+	CMP R1, 1			
+	JNZ bloqueia_processo				; se o modo do jogo não for ativo bloqueia o processo
+
+continua_ve_modo_jogo:	
+	POP R1
+	RET									; retorna para o respetivo processo
+
+bloqueia_processo:
+	MOV R1, [modo]						; bloqueia o processo
+	JMP continua_ve_modo_jogo
+
+
 
 ; *********************************************************************************
 ; * Rotinas que tratam dos comportamentos dos meteoros:
@@ -1429,23 +1453,6 @@ atualiza_coluna_missil:					; a rotina  atualiza a coluna do missíl caso este s
 	POP R2
     POP R1
 	RETF
-
-
-ve_modo_jogo:
-	PUSH R1
-	MOV R1, [modo_jogo]
-	CMP R1, 1			
-	JNZ bloqueia_processo				; se o modo do jogo não for ativo bloqueia o processo
-
-continua:	
-	POP R1
-	RET
-
-bloqueia_processo:
-	MOV R1, [modo]						; bloqueia o processo
-	JMP continua
-
-
 
 
 
