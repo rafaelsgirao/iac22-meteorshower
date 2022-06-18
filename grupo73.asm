@@ -336,6 +336,8 @@ ecra_inicial:
 	MOV	R1, 1							; cenário de fundo número 1
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
     CALL desenha_rover                 	; desenha o rover 
+	MOV R2, 6
+	MOV [TOCA_SOM], R2					; toca o som número 6 (som inicial do jogo)
 	JMP testa_estado_jogo
 
 
@@ -416,8 +418,18 @@ termina_jogo:
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, [cenario_fim]				; cenário de fundo para o fim do jogo ou para game over(depende do valor da variável cenário_fim)
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
-    MOV R1, 3
-	MOV [modo_jogo], R1
+	MOV R1 [cenario_fim]
+	CMP R1, 3
+	JZ som_perdeu_jogo
+    MOV R1, 3							
+	MOV [modo_jogo], R1					; muda a variável modo_jogo para 3 para o jogo está em espera que um novo jogo seja recomeçado
+	JMP testa_estado_jogo
+
+som_perdeu_jogo:						;toca um som caso o jogador tenha chocado com uma nave inimiga ou a enrgia tenha chegado a zero
+	MOV R2, 5
+	MOV [TOCA_SOM], R2					; toca o som número 5
+	MOV R1, 3							
+	MOV [modo_jogo], R1					; muda a variável modo_jogo para 3 para o jogo está em espera que um novo jogo seja recomeçado
 	JMP testa_estado_jogo
 
 testa_recomeca:
