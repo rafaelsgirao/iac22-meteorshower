@@ -389,6 +389,7 @@ retoma:
 	MOV [modo], R1						; desbloqueiam-se os vários processos
 	MOV	R1, 1 							; guarda no registo R1 o valor 1(vai-se selecionar o cenário número 1)
 	MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
+	EI
 	CALL reset_int_2					; evita que a energia diminua imediatamente no recomeco, 
 										; caso fique em pausa mais de 1 ciclo do relogio de energia
 
@@ -399,8 +400,14 @@ testa_fim:
 	CALL varre_teclado						; leitura às teclas
 	MOV R2, 0EH
 	CMP	R0, R2					; verifica se a tecla E foi premida
-	JZ termina_jogo 					; se foi premida, termina-se o jogo
+	JNZ retornar 					; se foi premida, termina-se o jogo
+
+	MOV R8, 0
+	CALL escreve_decimal
+	JMP termina_jogo
+retornar:
 	RET 								; se não foi premida faz-se return
+
 
 termina_jogo: 
 	MOV R10, 1
