@@ -403,6 +403,8 @@ testa_fim:
 
 	MOV R8, 0
 	CALL escreve_decimal
+	MOV R8, 064H
+	CALL energia_memoria
 	JMP termina_jogo
 retornar:
 	RET 								; se não foi premida faz-se return
