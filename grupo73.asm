@@ -1425,19 +1425,19 @@ gera_num_aleatorio:		; Gera um de quatro numeros aleatoriamente
 
     MOV R0, TEC_COL
     MOV R1, [R0]
-    SHR R1, 5
+    SHR R1, 5			; Escolhidos os bits do teclado nao utilizados (numero pseudo aleatorio)
     MOV R0, 4
-    MOD R2, R0
+    MOD R2, R0			; Resto da divisao por 4, obtendo-se 1 de 4 numeros possiveis
 
-	CMP R1, 0
-	JZ gera_meteoro_mau
+	CMP R1, 0			; Se o numero for 0 (escolha arbitraria):
+	JZ gera_meteoro_bom	; Gera um meteoro bom
+
+gera_meteoro_mau:			; Caso contrario, gera um meteoro mau
+	MOV R1, METEORO_MAU_1
+	JMP fim
 
 gera_meteoro_bom:
 	MOV R1, METEORO_BOM_1
-	JMP fim
-
-gera_meteoro_mau:
-	MOV R1, METEORO_MAU_1
 
 fim:
     POP R0
