@@ -255,17 +255,15 @@ POS_DISPARO:
 	WORD FIG_DISPARO
 
 POS_ROVER:
-	
 	WORD LINHA_FUNDO_ECRA, COLUNA_MEIO_ECRA
 	WORD FIG_ROVER
 
 
 NR_METEOROS             EQU 2       ; Nº de meteoros que existem no jogo.
-;FIXME: Quando tivermos a rotina de escolher um valor aleatório, alterar isto para ser só uma tabela
 
 POS_METEOROS:
-POS_METEORO_1:			WORD  LINHA_INICIAL_METEOROS, COLUNA_MEIO_ECRA, FIG_METEORO_MAU_3
-POS_METEORO_2: 			WORD  LINHA_INICIAL_METEOROS, COL_METEORO_4, FIG_METEORO_NEUTRO_2
+POS_METEORO_1:			WORD  LINHA_INICIAL_METEOROS, COLUNA_MEIO_ECRA, FIG_METEORO_NEUTRO_1
+POS_METEORO_2: 			WORD  LINHA_INICIAL_METEOROS, COL_METEORO_4, FIG_METEORO_NEUTRO_1
 ;POS_METEOROS:        	TABLE 6H    ; Tabela que guarda os N meteoros.
                                     ; Cada meteoro ocupa 3 WORDs (A linha, coluna e a sua figura)
                                     ; Quando o nº de meteoros se quer alterado,
@@ -302,9 +300,9 @@ inicio:
     
 ; *********************************************************************************
 ; * Rotinas que tratam dos comportamentos dos meteoros:
-; * Criação de novos meteoros
-; * Descer meteoros existentes
-; * 'Evoluir' meteoros
+; *   Criação de novos meteoros
+; *   Descer meteoros existentes
+; *   'Evoluir' meteoros
 ; *********************************************************************************
 PROCESS SP_desce_meteoro
 gerir_meteoros:
@@ -1165,11 +1163,11 @@ int_rel_energia:				; rotina de interrupcao da energia
 int_rel_meteoros:			  ; (INT0) Interrupção causada pelo relógio dos meteoros
 	PUSH R0
 	PUSH R1
+	
 	MOV R0, 1				  ; Registo auxiliar
 	;MOV R1, [R] ; Registar que interrupção ocorreu
 	MOV [evento_meteoros], R0	; Registar que interrupção ocorreu
 
-	
 	POP R1
 	POP R0
 	RFE
@@ -1179,9 +1177,9 @@ reset_int_2:		; funcao que evita diminuicoes da energia,
 	PUSH R0
 	PUSH R1
 
-	MOV R0, evento_energia
 	MOV R1, 0
-	MOV [R0], R1	; coloca o valor da interrupcao a 0
+	MOV [evento_energia], R1	; coloca o valor da interrupcao a 0
+
 	POP R1
 	POP R0
 	RET
