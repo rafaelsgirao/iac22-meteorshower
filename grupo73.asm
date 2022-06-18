@@ -402,7 +402,7 @@ testa_fim:
 	MOV R8, 0					; caso contrario, escreve 0 nos displays
 	CALL escreve_decimal		
 	MOV R8, 064H
-	CALL energia_memoria		; e inicializa a variavel global da energia (mete a 100)
+	CALL envia_energia_memoria		; e inicializa a variavel global da energia (mete a 100)
 	JMP termina_jogo			; terminando o jogo a seguir
 retornar:
 	RET 						; se não foi premida faz-se return	
@@ -442,7 +442,7 @@ recomeca:
 	MOV	 R1, 0				   		   ; cenário de fundo número 0
     MOV  [SELECIONA_CENARIO_FUNDO], R1 ; seleciona o cenário de fundo
 	CALL inicializa_energia            ; Inicialização do display de energia
-	CALL energia_memoria			   ; Inicializa tambem a variavel global de energia
+	CALL envia_energia_memoria			   ; Inicializa tambem a variavel global de energia
 	CALL reset_int_2				   ; Reset na interrupçao da energia, para nao diminuir
 									   ; a energia instataneamente
 	JMP testa_estado_jogo
@@ -478,7 +478,7 @@ bloqueia_processo:
 PROCESS SP_desce_meteoro
 gerir_meteoros:
 	YIELD
-	CALL recebe_memoria					; Recebe o valor global da energia (FIXME: ew).
+	CALL recebe_energia_memoria					; Recebe o valor global da energia (FIXME: ew).
 	CALL ve_modo_jogo
 
 	MOV R0, 0							; Registo auxiliar
@@ -488,6 +488,8 @@ gerir_meteoros:
 	MOV [evento_meteoros], R0			; Consome o evento
 	
 	CALL descer_meteoros				; Descer meteoros, caso estejam ativos
+
+	CALL envia_energia_memoria				; envia valor da energia para a variavel global
 	JMP gerir_meteoros					; Reiniciar processo
 
 descer_meteoros:
@@ -658,11 +660,13 @@ jmp_ret:	RET			; Etiqueta cujo único propósito é permitir
 PROCESS SP_testa_colisoes
 testa_colisoes:
 	YIELD
-
+	CALL recebe_energia_memoria					; recebe o valor atual da energia
+	
 	CALL testa_colisao_missil			; Testar colisões míssil-meteoro
 	MOV R3, POS_ROVER					; Testar colisões meteoro-rover.
 	CALL aux_testa_colisoes
 
+	CALL envia_energia_memoria				; envia o valor da energia para a variavel global
 	JMP testa_colisoes					; Fim
 
 testa_colisao_missil:
@@ -922,7 +926,8 @@ PROCESS SP_display_energia
 interrupcao_energia:
 
     YIELD
-	CALL recebe_memoria
+	CALL recebe_energia_memoria		; recebe o valor atual da energia
+
 	MOV R4, DISPLAYS
     MOV R5, evento_energia
     MOV R2, [R5]			; Vai buscar o valor da interrupcao 2 na tabela evento_energia
@@ -933,7 +938,7 @@ interrupcao_energia:
 	MOV [R5], R2
 
 	CALL diminui_cinco		; energia = energia - 5
-	CALL energia_memoria	; Envia a energia para a variavel global
+	CALL envia_energia_memoria	; Envia a energia para a variavel global
 	JMP interrupcao_energia
 
 mid_energia:
@@ -1407,12 +1412,14 @@ int_rel_missil:
 PROCESS SP_dispara_missil
 le_tecla_missil:
  	YIELD
-	
+	CALL recebe_energia_memoria				; recebe o valor atual da energia
 	CALL ve_modo_jogo										; Argumento de 'teclado' (testa 1ª linha)
 	CALL varre_teclado         				; Output em R0
 	MOV R2, 1      			; Tecla de descer o meteoro (1ª linha, 2ª coluna = tecla '1')
 	CMP R0, R2             				; Verificar se a tecla de para disparar o missíl foi premida
 	JZ  disparo							; se a tecla for premida vai para disparo
+
+	CALL envia_energia_memoria				; envia o valor da energia para a variavel global
 	JMP le_tecla_missil					; ciclo principal do processo do missíl
 
 disparo:
@@ -1488,7 +1495,7 @@ inicializa_energia:
     MOV  R8, MAX_ENERGIA            ; Energia inicial
 	CALL escreve_decimal 			; escreve 100 nos displays
 
-	CALL energia_memoria			; envia o valor da energia para a memoria
+	CALL envia_energia_memoria			; envia o valor da energia para a memoria
 
     POP R4 
     RET
@@ -1598,11 +1605,11 @@ acaba_varrer: ; Pop nos registos usados (exceto R0)
 ;-------(Deste modo o valor da energia pode passar de processo em processo)--------------;
 ;----------------------------------------------------------------------------------------;
 
-energia_memoria:		; Escreve o valor da energia na memoria
+envia_energia_memoria:		; Escreve o valor da energia na memoria
 	MOV [valor_energia], R8
 	RET
 
-recebe_memoria:			; Le o valor da energia da memoria
+recebe_energia_memoria:			; Le o valor da energia da memoria
 	MOV R8, [valor_energia]
 	RET
 
