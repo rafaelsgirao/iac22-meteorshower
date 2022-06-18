@@ -155,6 +155,8 @@ modo_jogo:
            ; 2 - o jogo está em pausa/ para recomeçar 
            ; 3 - o jogo acabou
 
+cenario_fim:
+	WORD 2 ; cenario para o fim de jogo, caso o utilizador tenha perdido mete-se uma imagem diferente
 ;---------------------------------------------------------------------------------;
 ;--------------------Tabelas de Figuras dos vários Bonecos------------------------;
 ;---------------------------------------------------------------------------------;
@@ -361,7 +363,8 @@ pausa:
 	CALL ha_tecla						; espera-se que a tecla D seja largada
 	MOV R2, 2
 	MOV [modo_jogo], R2					; muda a variável esta_jogo para 2 para informar que o jogo está em pausa/ para recomeçar
-	MOV  [ESCONDE_ECRA], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+	DI
+	MOV  [ESCONDE_ECRA], R1				; esconde o ecrã do jogo (o valor de R1 não é relevante)
 	MOV	R1, 4							; cenário de fundo número 4
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; seleciona o cenário de fundo
 	JMP testa_estado_jogo 				; vai para o ciclo principal do processo
@@ -416,7 +419,7 @@ termina_jogo:
 	CALL ha_tecla						; espera-se que a tecla E seja largada
 	DI
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-	MOV	R1, 2							; cenário de fundo número 2
+	MOV	R1, [cenario_fim]							; cenário de fundo número 2
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
     MOV R1, 3
 	MOV [modo_jogo], R1
@@ -566,7 +569,7 @@ le_tecla_rover:							; Verificar se uma tecla para mover o rover está pression
 	JMP le_tecla_rover
 
 testa_esquerda:
-    MOV [tecla_continua], R0
+	MOV [tecla_continua], R0
 
 	MOV	R7, -1							; vai deslocar para a esquerda
 	CALL atraso 						; se mover, chama a rotina atraso para não mover demasiado rápido
@@ -943,6 +946,8 @@ diminui_display:	; Funcao generica de alteracao da energia
 termina_jogo_:		; Coloca a energia a zero e termina o jogo
 	MOV R8, 0
 	CALL escreve_decimal
+	MOV R1, 3
+	MOV [cenario_fim], R1
 	JMP termina_jogo
 
 __escreve_decimal:
