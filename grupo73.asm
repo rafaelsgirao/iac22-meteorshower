@@ -418,7 +418,7 @@ termina_jogo:
 	MOV  [APAGA_ECRÃ], R1				; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 	MOV	R1, [cenario_fim]				; cenário de fundo para o fim do jogo ou para game over(depende do valor da variável cenário_fim)
     MOV  [SELECIONA_CENARIO_FUNDO], R1	; muda cenário de fundo
-	MOV R1 [cenario_fim]
+	MOV R1, [cenario_fim]
 	CMP R1, 3
 	JZ som_perdeu_jogo
     MOV R1, 3							
