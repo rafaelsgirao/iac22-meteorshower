@@ -731,6 +731,8 @@ tratar_colisao_rover_meteoro_mau:
 	MOV [R1], R3			; Rover é substituído por figura de explosão
 	SUB R1, 4				; Endereço normal do Rover
 	CALL desenha_boneco		; Desenha uma explosão na posição do Rover
+	MOV R2, 3
+	MOV [TOCA_SOM], R2
 	CALL atraso_colisao     ; Pequeno atraso antes de fim do jogo
 	CALL atraso_colisao     ; Não usar uma interrupção para fazer um atraso
 	CALL atraso_colisao     ; para ter a certeza que não existe comportamento indesejado.
@@ -741,6 +743,8 @@ tratar_colisao_rover_meteoro_bom:
 	CALL reset_meteoro				; Rover 'consome' o meteoro (reinicializá lo)
 	CALL aumenta_cinco				; Aumentar energia em dez pontos
 	CALL aumenta_cinco
+	MOV R2, 4
+	MOV [TOCA_SOM], R2
 	;TODO: meter som aqui
 	JMP testa_colisoes			; Colisão tratada! Reiniciar processo.
 
@@ -753,6 +757,8 @@ tratar_colisao_missil_meteoro:	; Não interessa se o meteoro é bom ou mau neste
 	MOV [R1+4], R2					; Substituir figura do meteoro por uma explosão
 	CALL desenha_boneco				; Desenha explosão por cima dos restos do meteoro antigo
 	CALL aumenta_cinco				; Aumenta cinco pontos por destruir um meteoro 
+	MOV R2, 2
+	MOV [TOCA_SOM], R2
 	YIELD							; Permitir que outros processos corram antes de atraso
 	CALL atraso_colisao				; Atraso para que a explosão seja percetível
 	YIELD							; Permitir outra vez que corram
