@@ -123,7 +123,10 @@ tecla_carregada:					; LOCK para o teclado comunicar aos restantes processos que
 valor_energia:						; Variavel global da energia - desta forma, os processos podem passar 
 	WORD 0							; uns aos outros o valor atual da energia (tal nao acontece com R8,
 									; pois cada processo pode ter um valor diferente)
-									
+
+colisao_missil:
+	WORD 0							; Caso a variável esteja 1 houve uma colisão entre um meteoro e um missíl
+									; , se não houver colisão a variável fica a zero
 ; --------------------- Tabelas de interrupcoes --------------------- ;
 tab:
 	WORD int_rel_meteoros			; rotina de atendimento da interrupção 0
@@ -776,8 +779,10 @@ tratar_colisao_missil_meteoro:	; Não interessa se o meteoro é bom ou mau neste
 	CALL desenha_boneco				; Desenha explosão por cima dos restos do meteoro antigo
 	CALL aumenta_cinco				; Aumenta cinco pontos por destruir um meteoro 
 	CALL envia_energia_memoria
-	MOV R2, 2
+	MOV R2, 2						; toca o som número 2
 	MOV [TOCA_SOM], R2
+	MOV R8, 1
+	MOV [colisao_missil], R8		; avisa o processo do missíl que houve uma colisão
 	YIELD							; Permitir que outros processos corram antes de atraso
 	CALL atraso_colisao				; Atraso para que a explosão seja percetível
 	YIELD							; Permitir outra vez que corram
@@ -1466,6 +1471,7 @@ dispara_missil:
 	CALLF desenha_missil				; desenha o missíl
 	MOV R4, [evento_missil]				; ativa a interrupção do missíl
 	CALL apaga_boneco     				; Apagar o missíl na posição atual
+	CALL testa_colisao_ativa			; se houver colisão com um meteoro, sai da rotina dispara missíl
 	MOV R1, POS_DISPARO 				; Tabela que define o disparo
 	MOV R2, [R1]           				; Obtém a linha atual do missíl
 	MOV R3, LINHA_LIMITE_DISPARO		
@@ -1476,7 +1482,15 @@ dispara_missil:
 	CALLF desenha_missil				; Volta a desenhar o missíl na nova posição
     JMP dispara_missil					; repete o ciclo até o missíl chegar ao seu alcance máximo ou haver uma colisão
 
+testa_colisao_ativa:					; verifica se houve uma colisão entre um meteoro e um missil
+	MOV R1, [colisao_missil]			; para caso haja colisão apagar o missíl
+	CMP R1, 1
+	JZ reinicia_disparo
+	RET
+
 reinicia_disparo:
+	MOV R1, 0
+	MOV [colisao_missil], R1			; reinicia o valor da variável colisão missíl
 	MOV R0, POS_DISPARO				
 	MOV R1, LINHA_DISPARO
 	MOV [R0], R1						; reinicia a linha do missíl para o próximo missíl
